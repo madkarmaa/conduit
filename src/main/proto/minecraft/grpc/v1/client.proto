@@ -1,0 +1,184 @@
+syntax = "proto3";
+
+package minecraft.grpc.v1;
+
+import "google/protobuf/empty.proto";
+import "minecraft/grpc/v1/common.proto";
+
+option java_multiple_files = true;
+option java_package = "top.madkarma.minecraft.grpc.proto";
+
+// Controls the local game client. Only available when the mod runs on a client.
+service ClientService {
+    rpc GetState(google.protobuf.Empty) returns (ClientState);
+    rpc SetRotation(Rotation) returns (google.protobuf.Empty);
+    rpc LookAt(Vec3) returns (google.protobuf.Empty);
+    // Holds or releases a key mapping, e.g. "key.forward", "key.jump", "key.attack", "key.use".
+    rpc SetKey(SetKeyRequest) returns (google.protobuf.Empty);
+    // Presses a key mapping for a number of ticks, then releases it.
+    rpc PressKey(PressKeyRequest) returns (google.protobuf.Empty);
+    rpc ReleaseAllKeys(google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc ListKeys(google.protobuf.Empty) returns (KeyList);
+    rpc SelectHotbarSlot(HotbarSlot) returns (google.protobuf.Empty);
+    rpc Attack(google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc Use(google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc SendChat(ChatMessage) returns (google.protobuf.Empty);
+    // Runs a command as the player, without the leading slash.
+    rpc SendCommand(ChatMessage) returns (google.protobuf.Empty);
+    rpc GetScreen(google.protobuf.Empty) returns (ScreenInfo);
+    rpc ClickSlot(ClickSlotRequest) returns (google.protobuf.Empty);
+    rpc ClickWidget(ClickWidgetRequest) returns (google.protobuf.Empty);
+    // Types text into the focused text field of the current screen.
+    rpc TypeText(ChatMessage) returns (google.protobuf.Empty);
+    rpc CloseScreen(google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc OpenInventory(google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc Respawn(google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc Screenshot(google.protobuf.Empty) returns (Image);
+    rpc Connect(ConnectRequest) returns (google.protobuf.Empty);
+    rpc Disconnect(google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc GetChatHistory(ChatHistoryRequest) returns (ChatHistory);
+}
+
+message ClientState {
+    bool in_world = 1;
+    string username = 2;
+    string player_uuid = 3;
+    string screen = 4;
+    int32 fps = 5;
+    bool paused = 6;
+    bool singleplayer = 7;
+    optional string server_address = 8;
+    optional string dimension = 9;
+    optional Vec3 position = 10;
+    optional Rotation rotation = 11;
+    optional Vec3 velocity = 12;
+    optional float health = 13;
+    optional int32 food_level = 14;
+    optional int32 experience_level = 15;
+    optional string game_mode = 16;
+    optional int32 selected_slot = 17;
+    optional ItemStack main_hand = 18;
+    optional Target target = 19;
+    bool on_ground = 20;
+    bool dead = 21;
+}
+
+message Target {
+    oneof hit {
+        BlockTarget block = 1;
+        EntityInfo entity = 2;
+    }
+}
+
+message BlockTarget {
+    BlockPos pos = 1;
+    // down, up, north, south, west or east.
+    string face = 2;
+    BlockState state = 3;
+    Vec3 location = 4;
+}
+
+message SetKeyRequest {
+    string key = 1;
+    bool down = 2;
+}
+
+message PressKeyRequest {
+    string key = 1;
+    // Ticks to hold the key, default 1.
+    int32 ticks = 2;
+}
+
+message KeyList {
+    repeated KeyInfo keys = 1;
+}
+
+message KeyInfo {
+    string name = 1;
+    string category = 2;
+    string bound_to = 3;
+    bool down = 4;
+}
+
+message HotbarSlot {
+    int32 slot = 1;
+}
+
+message ChatMessage {
+    string message = 1;
+}
+
+message ScreenInfo {
+    // Empty when no screen is open (in-game view).
+    string type = 1;
+    string title = 2;
+    int32 width = 3;
+    int32 height = 4;
+    // Set for container screens (inventories, chests, furnaces, ...).
+    optional ContainerInfo container = 5;
+    repeated WidgetInfo widgets = 6;
+}
+
+message ContainerInfo {
+    int32 container_id = 1;
+    string menu_type = 2;
+    repeated ContainerSlot slots = 3;
+    // Item held by the cursor.
+    ItemStack carried = 4;
+}
+
+message ContainerSlot {
+    int32 index = 1;
+    ItemStack item = 2;
+    // True if the slot belongs to the player's own inventory.
+    bool player_inventory = 3;
+    // Index inside its container.
+    int32 container_slot = 4;
+}
+
+message WidgetInfo {
+    int32 index = 1;
+    string type = 2;
+    string message = 3;
+    int32 x = 4;
+    int32 y = 5;
+    int32 width = 6;
+    int32 height = 7;
+    bool active = 8;
+    bool visible = 9;
+    bool focused = 10;
+    // Contents of text fields.
+    optional string value = 11;
+}
+
+message ClickSlotRequest {
+    int32 slot = 1;
+    // Mouse button (0 left, 1 right) or hotbar number for SWAP.
+    int32 button = 2;
+    // PICKUP, QUICK_MOVE, SWAP, CLONE, THROW, QUICK_CRAFT or PICKUP_ALL. Default PICKUP.
+    string action = 3;
+}
+
+message ClickWidgetRequest {
+    int32 index = 1;
+    int32 button = 2;
+}
+
+message Image {
+    bytes png = 1;
+    int32 width = 2;
+    int32 height = 3;
+}
+
+message ConnectRequest {
+    // host[:port]
+    string address = 1;
+}
+
+message ChatHistoryRequest {
+    int32 limit = 1;
+}
+
+message ChatHistory {
+    repeated string messages = 1;
+}

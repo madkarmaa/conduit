@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package minecraft.grpc.v1;
+
+import "google/protobuf/empty.proto";
+import "minecraft/grpc/v1/common.proto";
+
+option java_multiple_files = true;
+option java_package = "top.madkarma.minecraft.grpc.proto";
+
+// Server-wide control. Available on dedicated servers and while a singleplayer world is open.
+service ServerService {
+    rpc GetInfo(google.protobuf.Empty) returns (ServerInfo);
+    rpc GetPerformance(google.protobuf.Empty) returns (Performance);
+    // Runs any command, exactly like the server console or a player would.
+    rpc ExecuteCommand(ExecuteCommandRequest) returns (ExecuteCommandResponse);
+    rpc Broadcast(BroadcastRequest) returns (google.protobuf.Empty);
+    rpc Save(SaveRequest) returns (google.protobuf.Empty);
+    rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+message ServerInfo {
+    string minecraft_version = 1;
+    string mod_version = 2;
+    string motd = 3;
+    bool dedicated = 4;
+    int32 player_count = 5;
+    int32 max_players = 6;
+    repeated string dimensions = 7;
+    int32 port = 8;
+    string default_game_mode = 9;
+    int64 seed = 10;
+    string difficulty = 11;
+    int32 tick_count = 12;
+    repeated string mods = 13;
+}
+
+message Performance {
+    double mspt = 1;
+    double tps = 2;
+    double target_tps = 3;
+    bool frozen = 4;
+    int64 memory_used_bytes = 5;
+    int64 memory_max_bytes = 6;
+}
+
+message ExecuteCommandRequest {
+    // Command with or without the leading slash.
+    string command = 1;
+    // Optional player (name or UUID) or entity UUID to execute as. Defaults to the server console.
+    optional string as = 2;
+    optional string dimension = 3;
+    optional Vec3 position = 4;
+    optional Rotation rotation = 5;
+    // Permission level 0-4, defaults to 4 (owner).
+    optional int32 permission_level = 6;
+}
+
+message ExecuteCommandResponse {
+    bool success = 1;
+    // Result value of the command, e.g. the number of affected entities.
+    int32 result = 2;
+    // Feedback messages the command produced.
+    repeated string output = 3;
+}
+
+message BroadcastRequest {
+    Text message = 1;
+    // Show in the action bar instead of the chat.
+    bool overlay = 2;
+}
+
+message SaveRequest {
+    bool flush = 1;
+}

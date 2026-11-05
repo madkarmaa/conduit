@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+package minecraft.grpc.v1;
+
+import "minecraft/grpc/v1/common.proto";
+
+option java_multiple_files = true;
+option java_package = "top.madkarma.minecraft.grpc.proto";
+
+// Live stream of game events from the server side.
+service EventService {
+    rpc Subscribe(SubscribeRequest) returns (stream Event);
+}
+
+enum EventType {
+    EVENT_TYPE_UNSPECIFIED = 0;
+    EVENT_TYPE_CHAT = 1;
+    EVENT_TYPE_PLAYER_JOIN = 2;
+    EVENT_TYPE_PLAYER_LEAVE = 3;
+    EVENT_TYPE_PLAYER_RESPAWN = 4;
+    EVENT_TYPE_BLOCK_BREAK = 5;
+    EVENT_TYPE_BLOCK_PLACE = 6;
+    EVENT_TYPE_BLOCK_USE = 7;
+    EVENT_TYPE_ENTITY_DAMAGE = 8;
+    EVENT_TYPE_ENTITY_DEATH = 9;
+    EVENT_TYPE_ENTITY_ATTACK = 10;
+    EVENT_TYPE_PLAYER_CHANGE_DIMENSION = 11;
+    EVENT_TYPE_COMMAND = 12;
+    EVENT_TYPE_SERVER_TICK = 13;
+    EVENT_TYPE_SERVER_STARTED = 14;
+    EVENT_TYPE_SERVER_STOPPING = 15;
+}
+
+message SubscribeRequest {
+    // Event types to receive. Empty means all except EVENT_TYPE_SERVER_TICK.
+    repeated EventType types = 1;
+    // Only send EVENT_TYPE_SERVER_TICK every N ticks (default 20).
+    int32 tick_interval = 2;
+}
+
+message Event {
+    int64 timestamp_ms = 1;
+    // Server tick count at the time of the event.
+    int32 tick = 2;
+    oneof payload {
+        ChatEvent chat = 10;
+        PlayerEvent player_join = 11;
+        PlayerEvent player_leave = 12;
+        PlayerEvent player_respawn = 13;
+        BlockEvent block_break = 14;
+        BlockEvent block_place = 15;
+        BlockEvent block_use = 16;
+        EntityDamageEvent entity_damage = 17;
+        EntityDeathEvent entity_death = 18;
+        EntityAttackEvent entity_attack = 19;
+        DimensionChangeEvent player_change_dimension = 20;
+        CommandEvent command = 21;
+        TickEvent server_tick = 22;
+        LifecycleEvent server_started = 23;
+        LifecycleEvent server_stopping = 24;
+    }
+}
+
+message ChatEvent {
+    string player = 1;
+    string player_uuid = 2;
+    string message = 3;
+}
+
+message PlayerEvent {
+    string player = 1;
+    string player_uuid = 2;
+    string dimension = 3;
+    Vec3 position = 4;
+}
+
+message BlockEvent {
+    string player = 1;
+    string player_uuid = 2;
+    string dimension = 3;
+    BlockPos pos = 4;
+    BlockState state = 5;
+    // Item in the hand used, for place and use events.
+    optional ItemStack item = 6;
+}
+
+message EntityDamageEvent {
+    EntityInfo entity = 1;
+    string damage_type = 2;
+    float amount = 3;
+    optional string attacker_uuid = 4;
+}
+
+message EntityDeathEvent {
+    EntityInfo entity = 1;
+    string damage_type = 2;
+    string death_message = 3;
+    optional string attacker_uuid = 4;
+}
+
+message EntityAttackEvent {
+    string player = 1;
+    string player_uuid = 2;
+    EntityInfo target = 3;
+}
+
+message DimensionChangeEvent {
+    string player = 1;
+    string player_uuid = 2;
+    string from = 3;
+    string to = 4;
+}
+
+message CommandEvent {
+    string source = 1;
+    string command = 2;
+}
+
+message TickEvent {
+    double mspt = 1;
+    int32 player_count = 2;
+}
+
+message LifecycleEvent {}

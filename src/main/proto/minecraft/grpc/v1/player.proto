@@ -1,0 +1,142 @@
+syntax = "proto3";
+
+package minecraft.grpc.v1;
+
+import "google/protobuf/empty.proto";
+import "minecraft/grpc/v1/common.proto";
+
+option java_multiple_files = true;
+option java_package = "top.madkarma.minecraft.grpc.proto";
+
+// Online players, addressed by name or UUID. Use EntityService for position, effects, NBT, etc.
+service PlayerService {
+    rpc ListPlayers(google.protobuf.Empty) returns (PlayerList);
+    rpc GetPlayer(PlayerRef) returns (PlayerInfo);
+    rpc GetInventory(PlayerRef) returns (Inventory);
+    rpc SetInventorySlot(SetInventorySlotRequest) returns (google.protobuf.Empty);
+    rpc GiveItem(GiveItemRequest) returns (GiveItemResponse);
+    rpc ClearInventory(PlayerRef) returns (google.protobuf.Empty);
+    rpc SetSelectedSlot(SetSelectedSlotRequest) returns (google.protobuf.Empty);
+    rpc GetEnderChest(PlayerRef) returns (Inventory);
+    rpc SetGameMode(SetGameModeRequest) returns (google.protobuf.Empty);
+    rpc SetFood(SetFoodRequest) returns (google.protobuf.Empty);
+    rpc SetExperience(SetExperienceRequest) returns (google.protobuf.Empty);
+    rpc SendMessage(SendMessageRequest) returns (google.protobuf.Empty);
+    rpc SendTitle(SendTitleRequest) returns (google.protobuf.Empty);
+    rpc PlaySound(PlaySoundRequest) returns (google.protobuf.Empty);
+    rpc Kick(KickRequest) returns (google.protobuf.Empty);
+    rpc SetOperator(SetOperatorRequest) returns (google.protobuf.Empty);
+}
+
+message PlayerInfo {
+    string name = 1;
+    EntityInfo entity = 2;
+    string game_mode = 3;
+    int32 food_level = 4;
+    float saturation = 5;
+    int32 experience_level = 6;
+    float experience_progress = 7;
+    int32 total_experience = 8;
+    int32 selected_slot = 9;
+    int32 ping_ms = 10;
+    bool operator = 11;
+    string ip_address = 12;
+    ItemStack main_hand = 13;
+    ItemStack off_hand = 14;
+}
+
+message PlayerList {
+    repeated PlayerInfo players = 1;
+}
+
+message InventorySlot {
+    int32 slot = 1;
+    ItemStack item = 2;
+}
+
+// Player inventory slots: 0-8 hotbar, 9-35 main, 36-39 armor (feet, legs, chest, head), 40 offhand.
+// Only non-empty slots are listed.
+message Inventory {
+    int32 size = 1;
+    repeated InventorySlot slots = 2;
+    int32 selected_slot = 3;
+}
+
+message SetInventorySlotRequest {
+    string player = 1;
+    int32 slot = 2;
+    ItemStack item = 3;
+}
+
+message GiveItemRequest {
+    string player = 1;
+    ItemStack item = 2;
+}
+
+message GiveItemResponse {
+    // Items that did not fit and were dropped at the player's feet.
+    int32 dropped = 1;
+}
+
+message SetSelectedSlotRequest {
+    string player = 1;
+    int32 slot = 2;
+}
+
+message SetGameModeRequest {
+    string player = 1;
+    // survival, creative, adventure or spectator.
+    string game_mode = 2;
+}
+
+message SetFoodRequest {
+    string player = 1;
+    optional int32 food_level = 2;
+    optional float saturation = 3;
+}
+
+message SetExperienceRequest {
+    string player = 1;
+    optional int32 levels = 2;
+    // Points within the current level.
+    optional int32 points = 3;
+}
+
+message SendMessageRequest {
+    string player = 1;
+    Text message = 2;
+    // Show in the action bar instead of the chat.
+    bool overlay = 3;
+}
+
+message SendTitleRequest {
+    string player = 1;
+    optional Text title = 2;
+    optional Text subtitle = 3;
+    // Ticks; defaults 10, 70, 20.
+    optional int32 fade_in = 4;
+    optional int32 stay = 5;
+    optional int32 fade_out = 6;
+}
+
+message PlaySoundRequest {
+    string player = 1;
+    string sound = 2;
+    // Defaults to the player's position.
+    optional Vec3 position = 3;
+    float volume = 4;
+    float pitch = 5;
+    // master, music, record, weather, block, hostile, neutral, player, ambient, voice or ui.
+    // Default master.
+    string category = 6;
+}
+
+message KickRequest {
+    string player = 1;
+    Text reason = 2;
+}
+
+message SetOperatorRequest {
+    string player = 1;
+    bool operator = 2;
+}
