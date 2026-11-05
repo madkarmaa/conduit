@@ -8,7 +8,10 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.level.storage.LevelResource
 import top.madkarma.minecraft.grpc.MinecraftGRPC
 import top.madkarma.minecraft.grpc.game.GameServer
-import top.madkarma.minecraft.grpc.proto.*
+import top.madkarma.minecraft.grpc.proto.BackupList
+import top.madkarma.minecraft.grpc.proto.BackupRequest
+import top.madkarma.minecraft.grpc.proto.BackupResponse
+import top.madkarma.minecraft.grpc.proto.backupResponse
 import top.madkarma.minecraft.grpc.rpc.aborted
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import java.nio.file.Path

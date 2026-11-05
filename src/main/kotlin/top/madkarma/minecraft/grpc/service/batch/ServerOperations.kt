@@ -2,7 +2,8 @@ package top.madkarma.minecraft.grpc.service.batch
 
 import net.minecraft.server.MinecraftServer
 import top.madkarma.minecraft.grpc.proto.Operation
-import top.madkarma.minecraft.grpc.proto.Operation.OperationCase.*
+import top.madkarma.minecraft.grpc.proto.Operation.OperationCase.BROADCAST
+import top.madkarma.minecraft.grpc.proto.Operation.OperationCase.EXECUTE_COMMAND
 import top.madkarma.minecraft.grpc.proto.OperationResult
 import top.madkarma.minecraft.grpc.service.server.broadcast
 import top.madkarma.minecraft.grpc.service.server.executeCommand
