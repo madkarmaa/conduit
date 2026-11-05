@@ -5,6 +5,7 @@
     "mixins": [
         "BlockItemMixin",
         "CommandsMixin",
+        "PlayerAdvancementsMixin",
         "ServerGamePacketListenerImplMixin",
         "ServerLevelMixin"
     ],

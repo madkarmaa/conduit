@@ -29,6 +29,8 @@ class EventSubscription(request: SubscribeRequest) {
     private val entityTypes: Set<String> =
         request.entityTypesList.map { parseId(it).toString() }.toSet()
 
+    val includeRecipeAdvancements = request.includeRecipeAdvancements
+
     // Slow clients lose the oldest events instead of stalling the game thread.
     val channel = Channel<Event>(capacity = 4096, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 

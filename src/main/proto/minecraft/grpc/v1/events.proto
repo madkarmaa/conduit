@@ -34,6 +34,7 @@ enum EventType {
     EVENT_TYPE_ENTITY_REMOVE = 18;
     EVENT_TYPE_CHUNK_LOAD = 19;
     EVENT_TYPE_CHUNK_UNLOAD = 20;
+    EVENT_TYPE_ADVANCEMENT = 21;
 }
 
 message SubscribeRequest {
@@ -56,13 +57,17 @@ message SubscribeRequest {
     int32 move_heartbeat_ticks = 5;
 
     // Only send events about these players, by name or UUID. Empty means all players.
-    // Applies to EVENT_TYPE_PLAYER_MOVE.
+    // Applies to EVENT_TYPE_PLAYER_MOVE and EVENT_TYPE_ADVANCEMENT.
     repeated string players = 6;
 
     // Only send EVENT_TYPE_ENTITY_SPAWN and EVENT_TYPE_ENTITY_REMOVE for these entity types, e.g.
     // "minecraft:zombie". Empty means all types except item entities, experience orbs and players,
     // which are only sent when listed.
     repeated string entity_types = 7;
+
+    // Also send EVENT_TYPE_ADVANCEMENT for recipe advancements (ids starting with "recipes/"),
+    // which players earn constantly by picking up items.
+    bool include_recipe_advancements = 8;
 }
 
 message Event {
@@ -90,6 +95,7 @@ message Event {
         EntityRemoveEvent entity_remove = 27;
         ChunkEvent chunk_load = 28;
         ChunkEvent chunk_unload = 29;
+        AdvancementEvent advancement = 30;
     }
 }
 
@@ -183,6 +189,25 @@ message ChunkEvent {
     string dimension = 1;
     int32 chunk_x = 2;
     int32 chunk_z = 3;
+}
+
+enum AdvancementFrame {
+    ADVANCEMENT_FRAME_UNSPECIFIED = 0;
+    ADVANCEMENT_FRAME_TASK = 1;
+    ADVANCEMENT_FRAME_GOAL = 2;
+    ADVANCEMENT_FRAME_CHALLENGE = 3;
+}
+
+// A player completed an advancement.
+message AdvancementEvent {
+    string player = 1;
+    string player_uuid = 2;
+    string id = 3;
+    // Title and frame are empty for advancements without a display, such as recipes.
+    string title = 4;
+    AdvancementFrame frame = 5;
+    // The advancement is announced in chat, unless the game rule for advancement messages is off.
+    bool announced = 6;
 }
 
 message CommandEvent {
