@@ -18,7 +18,7 @@
 
 - Target the Minecraft version in `gradle.properties` (unobfuscated Mojang names). Verify game and Fabric API signatures against the actual jars instead of relying on memory.
 
-- Access game state only on the game thread, through `GameServer.run` on the server side or `call` on the client.
+- Access game state only on the server thread, through `GameServer.run`.
 
 - Keep gRPC service implementations thin: they delegate to topical files in the same service package, which hold the game logic.
 

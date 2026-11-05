@@ -1,7 +1,8 @@
 # Minecraft gRPC
 
-A Fabric mod that runs a gRPC server inside Minecraft, so external programs can control the world,
-entities, players and the game client, run any command and stream live events.
+A server-side Fabric mod that runs a gRPC server inside Minecraft, so external programs can control
+the world, entities and players, run any command and stream live events. It runs on dedicated
+servers and in singleplayer worlds; players do not need the mod to join.
 
 ## Requirements
 
@@ -26,7 +27,7 @@ On first start the mod writes `config/minecraft-grpc.json`:
 | ------------- | ---------------------------------- | ------------------------------------------ |
 | `enabled`     | `true`                             | Start the gRPC server                      |
 | `host`        | `127.0.0.1`                        | Bind address                               |
-| `port`        | `25585` (server), `25586` (client) | Listen port                                |
+| `port`        | `25585`                            | Listen port                                |
 | `requireAuth` | `true`                             | Require a bearer token                     |
 | `token`       | random, generated on first start   | Token expected in `authorization` metadata |
 
@@ -52,11 +53,8 @@ enabled, so tools like `grpcurl` can discover them.
 | `PlayerService` | Inventories, items, game mode, hunger, experience, messages, titles,   |
 |                 | sounds, kick, operator status                                          |
 | `EventService`  | Live stream of chat, joins, block, combat, command and tick events     |
-| `ClientService` | Client only: state, looking, key input, chat, screens, slot and widget |
-|                 | clicks, screenshots, connecting to servers                             |
 
-On a dedicated server all services except `ClientService` are available. On a client, the server
-services work while a singleplayer world is open and return `UNAVAILABLE` otherwise.
+In singleplayer the gRPC server runs while a world is open.
 
 Entities can only be spawned or teleported into loaded chunks; use `WorldService.SetChunkForced`
 or keep a player nearby.
@@ -70,24 +68,23 @@ grpcurl -plaintext -H "authorization: Bearer $TOKEN" -d '{"command": "time set d
 
 ## Test environment
 
-[`compose.yaml`](./compose.yaml) runs a Fabric server and a headless client with the mod from
-`build/libs`, using the [HeadlessMC](https://github.com/headlesshq/headlessmc) Docker image. The
-client always uses an offline account, so the test server runs with `online-mode=false`.
+[`compose.yaml`](./compose.yaml) runs a Fabric server with the mod from `build/libs` and a vanilla
+headless client as a real player, using the [HeadlessMC](https://github.com/headlesshq/headlessmc)
+Docker image. The client always uses an offline account, so the test server runs with
+`online-mode=false`.
 
 `MC_VERSION` is required and must match the Minecraft version the mod was built for:
 
 ```sh
 ./gradlew build
 MC_VERSION=<minecraft version> docker compose up -d server   # server, gRPC on localhost:25585
-MC_VERSION=<minecraft version> docker compose up -d          # server and client, client on :25586
+MC_VERSION=<minecraft version> docker compose up -d          # server and a client joining it
 ```
 
-Both use the token `dev-token` unless `MINECRAFT_GRPC_TOKEN` is set. Game data is kept in Docker
-volumes between runs. The client uses the preconfigured
+The gRPC endpoint uses the token `dev-token` unless `MINECRAFT_GRPC_TOKEN` is set. Game data is
+kept in Docker volumes between runs. The client uses the preconfigured
 [`docker/options.txt`](./docker/options.txt), so it skips the first-start onboarding and joins the
 server directly.
-
-The headless client does not render, so `ClientService.Screenshot` fails there.
 
 ## License
 
