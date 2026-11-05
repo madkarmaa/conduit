@@ -26,6 +26,8 @@ fun notFound(message: String): Nothing =
 fun failedPrecondition(message: String): Nothing =
     throw Status.FAILED_PRECONDITION.withDescription(message).asException()
 
+fun aborted(message: String): Nothing = throw Status.ABORTED.withDescription(message).asException()
+
 fun unavailable(message: String): Nothing =
     throw Status.UNAVAILABLE.withDescription(message).asException()
 

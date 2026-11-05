@@ -1,0 +1,106 @@
+package top.madkarma.minecraft.grpc.service.server
+
+import io.grpc.Status
+import kotlinx.coroutines.future.await
+import net.minecraft.server.MinecraftServer
+import net.minecraft.server.packs.repository.Pack
+import net.minecraft.server.packs.repository.PackSource
+import top.madkarma.minecraft.grpc.game.GameServer
+import top.madkarma.minecraft.grpc.proto.*
+import top.madkarma.minecraft.grpc.rpc.aborted
+import top.madkarma.minecraft.grpc.rpc.failedPrecondition
+import top.madkarma.minecraft.grpc.rpc.notFound
+import java.util.concurrent.CancellationException
+import java.util.concurrent.atomic.AtomicBoolean
+
+private val reloadInProgress = AtomicBoolean(false)
+
+internal fun MinecraftServer.listDatapacks(): DatapackList {
+    packRepository.reload()
+    val selected = packRepository.selectedPacks
+
+    return datapackList {
+        for (pack in packRepository.availablePacks) {
+            datapacks += datapack {
+                id = pack.id
+                title = pack.title.string
+                description = pack.description.string
+                enabled = pack in selected
+                required = isRequired(pack)
+                source = sourceOf(pack)
+            }
+        }
+    }
+}
+
+internal suspend fun changeDatapackEnabled(request: SetDatapackEnabledRequest): DatapackList {
+    if (!reloadInProgress.compareAndSet(false, true)) {
+        aborted("A datapack reload is already in progress")
+    }
+
+    try {
+        val selection = GameServer.run { it.selectionWith(request) }
+        if (selection != null) reload(GameServer.require(), selection)
+    } finally {
+        reloadInProgress.set(false)
+    }
+
+    return GameServer.run { it.listDatapacks() }
+}
+
+// Called off the server thread on purpose: on the server thread, reloadResources blocks the tick
+// until the reload is done. Every step of the reload still runs on the server thread or the
+// worker pool.
+private suspend fun reload(server: MinecraftServer, selection: List<String>) {
+    try {
+        server.reloadResources(selection).await()
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        throw Status.INTERNAL.withDescription("Datapack reload failed: $exception")
+            .withCause(exception).asException()
+    }
+}
+
+/** Returns the selected pack ids after the change, or null when nothing changes. */
+private fun MinecraftServer.selectionWith(request: SetDatapackEnabledRequest): List<String>? {
+    packRepository.reload()
+
+    val pack = packRepository.getPack(request.id) ?: notFound("Unknown datapack: ${request.id}")
+    val selected = packRepository.selectedPacks.toMutableList()
+
+    if ((pack in selected) == request.enabled) return null
+
+    if (request.enabled) {
+        if (!pack.requestedFeatures.isSubsetOf(worldData.enabledFeatures())) {
+            failedPrecondition("Datapack ${pack.id} needs features this world does not enable")
+        }
+
+        pack.defaultPosition.insert(selected, pack, Pack::selectionConfig, false)
+    } else {
+        checkCanDisable(pack)
+        selected.remove(pack)
+    }
+
+    return selected.map { it.id }
+}
+
+private fun isRequired(pack: Pack): Boolean =
+    pack.isRequired || pack.packSource == PackSource.BUILT_IN
+
+private fun checkCanDisable(pack: Pack) {
+    if (isRequired(pack)) failedPrecondition("Datapack ${pack.id} is required")
+
+    // The world's feature flags are fixed, so the game keeps the packs that enable them.
+    if (pack.packSource == PackSource.FEATURE && !pack.requestedFeatures.isEmpty) {
+        failedPrecondition("Feature datapack ${pack.id} cannot be disabled once enabled")
+    }
+}
+
+private fun sourceOf(pack: Pack): Datapack.Source = when (pack.packSource) {
+    PackSource.BUILT_IN -> Datapack.Source.SOURCE_BUILT_IN
+    PackSource.FEATURE -> Datapack.Source.SOURCE_FEATURE
+    PackSource.WORLD -> Datapack.Source.SOURCE_WORLD
+    PackSource.SERVER -> Datapack.Source.SOURCE_SERVER
+    else -> Datapack.Source.SOURCE_OTHER
+}

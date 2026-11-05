@@ -49,7 +49,8 @@ enabled, so tools like `grpcurl` can discover them.
 
 | Service           | Scope                                                                  |
 | ----------------- | ---------------------------------------------------------------------- |
-| `ServerService`   | Server info, performance, any command with captured output, save, stop |
+| `ServerService`   | Server info, performance, any command with captured output, save,      |
+|                   | stop, datapacks                                                        |
 | `WorldService`    | Blocks and regions, block entities, biomes, heightmaps, chunks, time,  |
 |                   | weather, game rules, spawn, explosions, world border                   |
 | `EntityService`   | Query (filters or selectors), spawn, remove, teleport, NBT, effects,   |

@@ -33,4 +33,10 @@ class ServerServiceImpl : ServerServiceGrpcKt.ServerServiceCoroutineImplBase() {
         server.execute { server.halt(false) }
         return EMPTY
     }
+
+    override suspend fun listDatapacks(request: Empty): DatapackList =
+        GameServer.run { it.listDatapacks() }
+
+    override suspend fun setDatapackEnabled(request: SetDatapackEnabledRequest): DatapackList =
+        changeDatapackEnabled(request)
 }

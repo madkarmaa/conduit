@@ -17,6 +17,12 @@ service ServerService {
     rpc Broadcast(BroadcastRequest) returns (google.protobuf.Empty);
     rpc Save(SaveRequest) returns (google.protobuf.Empty);
     rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty);
+    // Lists the available datapacks, including new ones in the world's datapacks folder.
+    rpc ListDatapacks(google.protobuf.Empty) returns (DatapackList);
+    // Enables or disables a datapack and reloads the server's data, like /datapack, then returns
+    // the new list. Fails with NOT_FOUND for an unknown pack, FAILED_PRECONDITION for a pack that
+    // cannot be changed and ABORTED while another reload from this API is running.
+    rpc SetDatapackEnabled(SetDatapackEnabledRequest) returns (DatapackList);
 }
 
 message ServerInfo {
@@ -72,4 +78,35 @@ message BroadcastRequest {
 
 message SaveRequest {
     bool flush = 1;
+}
+
+message DatapackList {
+    repeated Datapack datapacks = 1;
+}
+
+message Datapack {
+    enum Source {
+        SOURCE_UNSPECIFIED = 0;
+        // Shipped with the game, such as "vanilla".
+        SOURCE_BUILT_IN = 1;
+        // Optional built-in packs for experimental features.
+        SOURCE_FEATURE = 2;
+        // From the world's datapacks folder.
+        SOURCE_WORLD = 3;
+        SOURCE_SERVER = 4;
+        // Any other source, such as mods.
+        SOURCE_OTHER = 5;
+    }
+    string id = 1;
+    string title = 2;
+    string description = 3;
+    bool enabled = 4;
+    // Built-in or needed by a mod, so it cannot be disabled.
+    bool required = 5;
+    Source source = 6;
+}
+
+message SetDatapackEnabledRequest {
+    string id = 1;
+    bool enabled = 2;
 }
