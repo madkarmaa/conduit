@@ -21,19 +21,8 @@ public abstract class PlayerAdvancementsMixin {
     @Shadow
     private ServerPlayer player;
 
-    @Inject(
-            method = "award",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/advancements/AdvancementRewards;"
-                            + "grant(Lnet/minecraft/server/level/ServerPlayer;)V"
-            )
-    )
-    private void minecraftGrpc$onAdvancementDone(
-            AdvancementHolder advancement,
-            String criterion,
-            CallbackInfoReturnable<Boolean> info
-    ) {
-        Advancements.onAdvancementDone(player, advancement);
+    @Inject(method = "award", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/AdvancementRewards;" + "grant(Lnet/minecraft/server/level/ServerPlayer;)V"))
+    private void minecraftGrpc$onAdvancementDone(AdvancementHolder holder, String criterion, CallbackInfoReturnable<Boolean> info) {
+        Advancements.onAdvancementDone(player, holder);
     }
 }

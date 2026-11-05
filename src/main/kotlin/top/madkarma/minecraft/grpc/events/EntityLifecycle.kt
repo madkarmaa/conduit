@@ -4,12 +4,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.entity.Entity
 import top.madkarma.minecraft.grpc.game.toProto
-import top.madkarma.minecraft.grpc.proto.EntityRemoveEvent
-import top.madkarma.minecraft.grpc.proto.EntitySpawnEvent
-import top.madkarma.minecraft.grpc.proto.EventType
-import top.madkarma.minecraft.grpc.proto.RemovalReason
-import top.madkarma.minecraft.grpc.proto.entityRemoveEvent
-import top.madkarma.minecraft.grpc.proto.entitySpawnEvent
+import top.madkarma.minecraft.grpc.proto.*
 
 /** Publishes EVENT_TYPE_ENTITY_SPAWN and EVENT_TYPE_ENTITY_REMOVE. */
 object EntityLifecycle {
@@ -59,10 +54,8 @@ object EntityLifecycle {
     private fun removalReasonOf(entity: Entity): RemovalReason = when (entity.removalReason) {
         Entity.RemovalReason.KILLED -> RemovalReason.REMOVAL_REASON_KILLED
         Entity.RemovalReason.DISCARDED -> RemovalReason.REMOVAL_REASON_DISCARDED
-        Entity.RemovalReason.UNLOADED_TO_CHUNK, null ->
-            RemovalReason.REMOVAL_REASON_UNLOADED_TO_CHUNK
-        Entity.RemovalReason.UNLOADED_WITH_PLAYER ->
-            RemovalReason.REMOVAL_REASON_UNLOADED_WITH_PLAYER
+        Entity.RemovalReason.UNLOADED_TO_CHUNK, null -> RemovalReason.REMOVAL_REASON_UNLOADED_TO_CHUNK
+        Entity.RemovalReason.UNLOADED_WITH_PLAYER -> RemovalReason.REMOVAL_REASON_UNLOADED_WITH_PLAYER
         Entity.RemovalReason.CHANGED_DIMENSION -> RemovalReason.REMOVAL_REASON_CHANGED_DIMENSION
     }
 }

@@ -18,10 +18,7 @@ import top.madkarma.minecraft.grpc.events.EntityLifecycle;
 @Mixin(ServerLevel.class)
 public abstract class ServerLevelMixin {
     @Inject(method = "addFreshEntity", at = @At("RETURN"))
-    private void minecraftGrpc$onAddFreshEntity(
-            Entity entity,
-            CallbackInfoReturnable<Boolean> info
-    ) {
+    private void minecraftGrpc$onAddFreshEntity(Entity entity, CallbackInfoReturnable<Boolean> info) {
         if (!info.getReturnValue()) {
             return;
         }
