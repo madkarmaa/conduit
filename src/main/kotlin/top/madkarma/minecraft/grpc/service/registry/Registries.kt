@@ -28,8 +28,8 @@ internal fun <T> List<T>.page(offset: Int, limit: Int): List<T> {
 }
 
 internal fun MinecraftServer.describeRegistries(): RegistryList {
-    val lookups = registryAccess().listRegistries().toList() +
-        reloadableRegistries().lookup().listRegistries().toList()
+    val lookups = registryAccess().listRegistries().toList() + reloadableRegistries().lookup()
+        .listRegistries().toList()
 
     val infos = lookups.map { lookup ->
         registryInfo {
@@ -44,8 +44,11 @@ internal fun MinecraftServer.describeRegistries(): RegistryList {
 internal fun MinecraftServer.readRegistryEntries(
     request: ListRegistryEntriesRequest,
 ): RegistryEntryList {
-    val ids = memberIds(request.registry, request.tag)
-        .filter { it.contains(request.filter, ignoreCase = true) }
+    val ids = memberIds(request.registry, request.tag).filter {
+        it.contains(
+            request.filter, ignoreCase = true
+        )
+    }
 
     return registryEntryList {
         total = ids.size
@@ -83,9 +86,8 @@ private fun registryKey(id: String): ResourceKey<Registry<Any>> =
 // Loot tables, predicates and item modifiers are only in the reloadable registries.
 private fun MinecraftServer.anyRegistry(id: String): HolderLookup.RegistryLookup<Any> {
     val key = registryKey(id)
-    return registryAccess().lookup(key).getOrNull()
-        ?: reloadableRegistries().lookup().lookup(key).getOrNull()
-        ?: notFound("Unknown registry: $id")
+    return registryAccess().lookup(key).getOrNull() ?: reloadableRegistries().lookup().lookup(key)
+        .getOrNull() ?: notFound("Unknown registry: $id")
 }
 
 // The reloadable registries are loaded without tags.
