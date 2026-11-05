@@ -56,7 +56,8 @@ enabled, so tools like `grpcurl` can discover them.
 |                   | attributes, damage, riding                                             |
 | `PlayerService`   | Inventories, items, game mode, hunger, experience, messages, titles,   |
 |                   | sounds, kick, operator status                                          |
-| `EventService`    | Live stream of chat, joins, block, combat, command and tick events     |
+| `EventService`    | Live stream of chat, joins, movement, block, combat, command and tick  |
+|                   | events                                                                 |
 | `RegistryService` | Registries and their entries, tags, recipes, loot tables               |
 
 In singleplayer the gRPC server runs while a world is open.

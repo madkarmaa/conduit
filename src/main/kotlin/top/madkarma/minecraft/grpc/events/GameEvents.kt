@@ -25,6 +25,7 @@ object GameEvents {
         registerInteractionEvents()
         registerEntityEvents()
         registerServerEvents()
+        PlayerMoves.register()
     }
 
     // Called from the block placement mixin.

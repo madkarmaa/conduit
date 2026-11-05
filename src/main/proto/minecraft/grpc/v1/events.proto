@@ -29,13 +29,30 @@ enum EventType {
     EVENT_TYPE_SERVER_TICK = 13;
     EVENT_TYPE_SERVER_STARTED = 14;
     EVENT_TYPE_SERVER_STOPPING = 15;
+    EVENT_TYPE_PLAYER_MOVE = 16;
 }
 
 message SubscribeRequest {
-    // Event types to receive. Empty means all except EVENT_TYPE_SERVER_TICK.
+    // Event types to receive. Empty means all except the high-volume types EVENT_TYPE_SERVER_TICK
+    // and EVENT_TYPE_PLAYER_MOVE, which are only sent when listed.
     repeated EventType types = 1;
     // Only send EVENT_TYPE_SERVER_TICK every N ticks (default 20).
     int32 tick_interval = 2;
+
+    // EVENT_TYPE_PLAYER_MOVE is sent at most once per tick for each player: the first time, then
+    // whenever one of the thresholds below is reached since the last event sent for that player,
+    // or the player changed dimension.
+
+    // Blocks moved (default 1.0).
+    double move_min_distance = 3;
+    // Degrees of yaw or pitch turned. 0 means rotation alone does not send an event.
+    float move_min_rotation = 4;
+    // Ticks passed, so that players standing still are reported too. 0 means no heartbeat.
+    int32 move_heartbeat_ticks = 5;
+
+    // Only send events about these players, by name or UUID. Empty means all players.
+    // Applies to EVENT_TYPE_PLAYER_MOVE.
+    repeated string players = 6;
 }
 
 message Event {
@@ -58,6 +75,7 @@ message Event {
         TickEvent server_tick = 22;
         LifecycleEvent server_started = 23;
         LifecycleEvent server_stopping = 24;
+        PlayerMoveEvent player_move = 25;
     }
 }
 
@@ -72,6 +90,20 @@ message PlayerEvent {
     string player_uuid = 2;
     string dimension = 3;
     Vec3 position = 4;
+}
+
+message PlayerMoveEvent {
+    string player = 1;
+    string player_uuid = 2;
+    string dimension = 3;
+    Vec3 position = 4;
+    Rotation rotation = 5;
+    // Blocks per tick, as last reported by the client.
+    Vec3 velocity = 6;
+    bool on_ground = 7;
+    // The server moved the player during this tick (teleport, respawn, dimension change, joining)
+    // instead of the player walking, flying or riding there.
+    bool teleported = 8;
 }
 
 message BlockEvent {

@@ -11,6 +11,7 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
+import top.madkarma.minecraft.grpc.game.rotationOf
 import top.madkarma.minecraft.grpc.game.toProto
 import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.service.server.performance
@@ -28,6 +29,20 @@ internal fun playerPayload(player: ServerPlayer): PlayerEvent = playerEvent {
     dimension = player.level().dimension().identifier().toString()
     position = player.position().toProto()
 }
+
+internal fun movePayload(player: ServerPlayer, teleported: Boolean): PlayerMoveEvent =
+    playerMoveEvent {
+        this.player = player.gameProfile.name
+        playerUuid = player.stringUUID
+
+        dimension = player.level().dimension().identifier().toString()
+        position = player.position().toProto()
+        rotation = rotationOf(player.yRot, player.xRot)
+        velocity = player.knownMovement.toProto()
+        onGround = player.onGround()
+
+        this.teleported = teleported
+    }
 
 internal fun dimensionChangePayload(
     player: ServerPlayer,

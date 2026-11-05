@@ -2,10 +2,12 @@ package top.madkarma.minecraft.grpc.events
 
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
+import net.minecraft.world.entity.player.Player
 import top.madkarma.minecraft.grpc.game.GameServer
 import top.madkarma.minecraft.grpc.proto.Event
 import top.madkarma.minecraft.grpc.proto.EventType
 import top.madkarma.minecraft.grpc.proto.SubscribeRequest
+import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 
 class EventSubscription(request: SubscribeRequest) {
@@ -14,8 +16,21 @@ class EventSubscription(request: SubscribeRequest) {
 
     val tickInterval = if (request.tickInterval > 0) request.tickInterval else 20
 
+    val moveMinDistance = if (request.moveMinDistance > 0) request.moveMinDistance else 1.0
+    val moveMinRotation = request.moveMinRotation
+    val moveHeartbeatTicks = request.moveHeartbeatTicks
+
+    // Last move event sent for each player; only touched on the server thread.
+    val sentMoves = HashMap<UUID, PlayerMove>()
+
+    private val players: Set<String> = request.playersList.map { it.lowercase() }.toSet()
+
     // Slow clients lose the oldest events instead of stalling the game thread.
     val channel = Channel<Event>(capacity = 4096, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    fun wantsPlayer(player: Player): Boolean {
+        return players.isEmpty() || player.stringUUID in players || player.gameProfile.name.lowercase() in players
+    }
 
     fun send(event: Event) {
         channel.trySend(event)
@@ -25,8 +40,9 @@ class EventSubscription(request: SubscribeRequest) {
 private val SUBSCRIBABLE: Set<EventType> =
     EventType.entries.toSet() - EventType.EVENT_TYPE_UNSPECIFIED - EventType.UNRECOGNIZED
 
-// The server tick fires 20 times per second, so it has to be requested explicitly.
-private val DEFAULT_TYPES: Set<EventType> = SUBSCRIBABLE - EventType.EVENT_TYPE_SERVER_TICK
+// High-volume types have to be requested explicitly.
+private val DEFAULT_TYPES: Set<EventType> =
+    SUBSCRIBABLE - EventType.EVENT_TYPE_SERVER_TICK - EventType.EVENT_TYPE_PLAYER_MOVE
 
 object EventBus {
     private val subscriptions = CopyOnWriteArrayList<EventSubscription>()
