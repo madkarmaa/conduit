@@ -10,7 +10,7 @@
 
 - Prefer early guards in the code to reduce indentation.
 
-- Always respect the .editorconfig configuration. Format Kotlin with ktlint using the `intellij_idea` code style.
+- Always respect the .editorconfig configuration.
 
 - Run Entanglement against a baseline from time to time and refactor afterwards: every edited file must stay green (maintainability index of at least 20).
 
