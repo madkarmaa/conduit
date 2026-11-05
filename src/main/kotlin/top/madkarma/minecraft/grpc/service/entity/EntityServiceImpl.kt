@@ -4,31 +4,7 @@ import com.google.protobuf.Empty
 import top.madkarma.minecraft.grpc.game.GameServer
 import top.madkarma.minecraft.grpc.game.entity
 import top.madkarma.minecraft.grpc.game.toProto
-import top.madkarma.minecraft.grpc.proto.AddEffectRequest
-import top.madkarma.minecraft.grpc.proto.AttributeList
-import top.madkarma.minecraft.grpc.proto.DamageRequest
-import top.madkarma.minecraft.grpc.proto.EffectList
-import top.madkarma.minecraft.grpc.proto.EntityInfo
-import top.madkarma.minecraft.grpc.proto.EntityList
-import top.madkarma.minecraft.grpc.proto.EntityRef
-import top.madkarma.minecraft.grpc.proto.EntityServiceGrpcKt
-import top.madkarma.minecraft.grpc.proto.ListEntitiesRequest
-import top.madkarma.minecraft.grpc.proto.MergeNbtRequest
-import top.madkarma.minecraft.grpc.proto.MountRequest
-import top.madkarma.minecraft.grpc.proto.Nbt
-import top.madkarma.minecraft.grpc.proto.RemoveEffectRequest
-import top.madkarma.minecraft.grpc.proto.RemoveEntityRequest
-import top.madkarma.minecraft.grpc.proto.SetAttributeBaseRequest
-import top.madkarma.minecraft.grpc.proto.SetCustomNameRequest
-import top.madkarma.minecraft.grpc.proto.SetHealthRequest
-import top.madkarma.minecraft.grpc.proto.SetRotationRequest
-import top.madkarma.minecraft.grpc.proto.SetTagsRequest
-import top.madkarma.minecraft.grpc.proto.SetVelocityRequest
-import top.madkarma.minecraft.grpc.proto.SpawnEntityRequest
-import top.madkarma.minecraft.grpc.proto.TeleportRequest
-import top.madkarma.minecraft.grpc.proto.effectList
-import top.madkarma.minecraft.grpc.proto.entityList
-import top.madkarma.minecraft.grpc.proto.nbt
+import top.madkarma.minecraft.grpc.proto.*
 
 private val EMPTY: Empty = Empty.getDefaultInstance()
 
@@ -36,8 +12,7 @@ class EntityServiceImpl : EntityServiceGrpcKt.EntityServiceCoroutineImplBase() {
     override suspend fun listEntities(request: ListEntitiesRequest): EntityList =
         GameServer.run { server ->
             entityList {
-                entities +=
-                    server.findEntities(request).map { it.toProto() }
+                entities += server.findEntities(request).map { it.toProto() }
             }
         }
 
@@ -99,8 +74,7 @@ class EntityServiceImpl : EntityServiceGrpcKt.EntityServiceCoroutineImplBase() {
 
     override suspend fun getEffects(request: EntityRef): EffectList = GameServer.run { server ->
         effectList {
-            effects +=
-                server.living(request.uuid).activeEffects.map { it.toProto() }
+            effects += server.living(request.uuid).activeEffects.map { it.toProto() }
         }
     }
 

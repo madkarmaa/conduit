@@ -34,10 +34,13 @@ internal fun MinecraftServer.findEntities(request: ListEntitiesRequest): List<En
 
 internal fun MinecraftServer.spawnEntity(request: SpawnEntityRequest): Entity {
     val key = ResourceKey.create(Registries.ENTITY_TYPE, parseId(request.type))
+
     val type = registryAccess().lookupOrThrow(Registries.ENTITY_TYPE).get(key)
         .orElseGet { invalidArgument("Unknown entity type: ${request.type}") }
+
     val level = level(request.dimension)
     requireEntityTicking(level, request.position.toMc())
+
     val snbt = request.snbt
     val tag = if (snbt.isBlank()) CompoundTag() else TagParser.parseCompoundFully(snbt)
     val source = createCommandSourceStack().withLevel(level).withSuppressedOutput()
@@ -48,6 +51,7 @@ internal fun MinecraftServer.spawnEntity(request: SpawnEntityRequest): Entity {
         tag,
         request.initialize,
     )
+
     if (request.hasRotation()) rotate(entity, request.rotation.yaw, request.rotation.pitch)
     return entity
 }
@@ -60,8 +64,10 @@ internal fun requireEntityTicking(level: ServerLevel, position: Vec3) {
 
 private fun MinecraftServer.select(request: ListEntitiesRequest): List<Entity> {
     var source = createCommandSourceStack()
+
     if (request.dimension.isNotBlank()) source = source.withLevel(level(request.dimension))
     if (request.hasCenter()) source = source.withPosition(request.center.toMc())
+
     return EntityArgument.entities().parse(
         StringReader(request.selector),
     ).findEntities(source).toList()
@@ -76,9 +82,12 @@ private class EntityFilter(
             invalidArgument("Unknown entity type: $id")
         }
     }.toSet()
+
     private val box: AABB? =
         if (request.hasBox()) AABB(request.box.min.toMc(), request.box.max.toMc()) else null
+
     private val center: Vec3? = if (request.hasCenter()) request.center.toMc() else null
+
     private val radiusSq = if (request.hasRadius()) request.radius * request.radius else null
 
     init {
@@ -88,11 +97,8 @@ private class EntityFilter(
     fun collect(limit: Int): List<Entity> {
         val dimension = request.dimension
         val levels = if (dimension.isBlank()) server.allLevels else listOf(server.level(dimension))
-        return levels.asSequence()
-            .flatMap { it.allEntities }
-            .filter(::matches)
-            .take(limit)
-            .toList()
+
+        return levels.asSequence().flatMap { it.allEntities }.filter(::matches).take(limit).toList()
     }
 
     private fun matches(entity: Entity): Boolean = when {

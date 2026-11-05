@@ -32,16 +32,14 @@ fun ProtoVec3.toMc(): McVec3 = McVec3(x, y, z)
 fun McBlockPos.toProto(): ProtoBlockPos = blockPos {
     x = this@toProto.x
     y = this@toProto.y
-    z =
-        this@toProto.z
+    z = this@toProto.z
 }
 
 fun ProtoBlockPos.toMc(): McBlockPos = McBlockPos(x, y, z)
 
 fun rotationOf(yaw: Float, pitch: Float): ProtoRotation = rotation {
     this.yaw = yaw
-    this.pitch =
-        pitch
+    this.pitch = pitch
 }
 
 /** Minecraft stores rotations as (pitch, yaw) vectors. */
@@ -54,13 +52,10 @@ fun dimensionKey(id: String): ResourceKey<Level> =
     ResourceKey.create(Registries.DIMENSION, parseId(id.ifBlank { "minecraft:overworld" }))
 
 fun Text.toComponent(registries: HolderLookup.Provider): Component = when (contentCase) {
-    Text.ContentCase.JSON ->
-        ComponentSerialization.CODEC
-            .parse(
-                registries.createSerializationContext(JsonOps.INSTANCE),
-                JsonParser.parseString(json),
-            )
-            .getOrThrow { invalidArgument("Invalid text component: $it") }
+    Text.ContentCase.JSON -> ComponentSerialization.CODEC.parse(
+        registries.createSerializationContext(JsonOps.INSTANCE),
+        JsonParser.parseString(json),
+    ).getOrThrow { invalidArgument("Invalid text component: $it") }
 
     Text.ContentCase.PLAIN -> Component.literal(plain)
 
@@ -69,6 +64,7 @@ fun Text.toComponent(registries: HolderLookup.Provider): Component = when (conte
 
 inline fun <reified E : Enum<E>> enumByName(name: String, default: E, kind: String): E {
     if (name.isBlank()) return default
+
     return enumValues<E>().firstOrNull { it.name == name.uppercase() }
         ?: invalidArgument("Unknown $kind: $name")
 }

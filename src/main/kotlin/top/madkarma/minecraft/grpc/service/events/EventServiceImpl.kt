@@ -12,7 +12,9 @@ class EventServiceImpl : EventServiceGrpcKt.EventServiceCoroutineImplBase() {
     override fun subscribe(request: SubscribeRequest): Flow<Event> = flow {
         val interval = if (request.tickInterval > 0) request.tickInterval else 20
         val subscription = EventSubscription(request.typesList, interval)
+
         EventBus.subscribe(subscription)
+
         try {
             for (event in subscription.channel) emit(event)
         } finally {

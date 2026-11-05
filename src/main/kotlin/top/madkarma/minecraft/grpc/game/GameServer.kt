@@ -1,6 +1,5 @@
 package top.madkarma.minecraft.grpc.game
 
-import net.minecraft.commands.CommandResultCallback
 import net.minecraft.commands.CommandSource
 import net.minecraft.commands.CommandSourceStack
 import net.minecraft.network.chat.Component
@@ -14,7 +13,7 @@ import top.madkarma.minecraft.grpc.rpc.call
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import top.madkarma.minecraft.grpc.rpc.notFound
 import top.madkarma.minecraft.grpc.rpc.unavailable
-import java.util.UUID
+import java.util.*
 
 object GameServer {
     @Volatile
@@ -34,6 +33,7 @@ fun MinecraftServer.level(dimension: String): ServerLevel =
 
 fun MinecraftServer.player(ref: String): ServerPlayer {
     if (ref.isBlank()) invalidArgument("A player name or UUID is required")
+
     val byUuid = runCatching { UUID.fromString(ref) }.getOrNull()?.let { playerList.getPlayer(it) }
     return byUuid ?: playerList.getPlayerByName(ref) ?: notFound("Player not online: $ref")
 }
@@ -41,9 +41,11 @@ fun MinecraftServer.player(ref: String): ServerPlayer {
 fun MinecraftServer.entity(uuid: String): Entity {
     val id =
         runCatching { UUID.fromString(uuid) }.getOrNull() ?: invalidArgument("Invalid UUID: $uuid")
+
     for (level in allLevels) {
         level.getEntity(id)?.let { return it }
     }
+
     notFound("Entity not found: $uuid")
 }
 
@@ -80,22 +82,23 @@ fun MinecraftServer.runCommand(
     val capture = CapturingSource()
     var success = false
     var result = 0
-    val source = base.withSource(capture).withCallback(
-        CommandResultCallback { ok, value ->
-            success = ok
-            result = value
-        },
-    )
+    val source = base.withSource(capture).withCallback { ok, value ->
+        success = ok
+        result = value
+    }
+
     commands.performPrefixedCommand(source, command)
     return CommandResult(success, result, capture.output.toList())
 }
 
 fun MinecraftServer.runCommandOrFail(command: String): CommandResult {
     val result = runCommand(command, createCommandSourceStack().withSuppressedOutput())
+
     if (!result.success) {
         invalidArgument(
             "Command failed: /$command: ${result.output.joinToString("; ")}",
         )
     }
+
     return result
 }

@@ -37,6 +37,7 @@ object GameEvents {
         item: ItemStack,
     ) {
         if (level.isClientSide) return
+
         EventBus.publish(EventType.EVENT_TYPE_BLOCK_PLACE) {
             blockPlace = blockPayload(level, player, position, state, item)
         }
@@ -55,17 +56,29 @@ object GameEvents {
 
     private fun registerPlayerEvents() {
         ServerMessageEvents.CHAT_MESSAGE.register { message, sender, _ ->
-            EventBus.publish(EventType.EVENT_TYPE_CHAT) { chat = chatPayload(sender, message.signedContent()) }
+            EventBus.publish(EventType.EVENT_TYPE_CHAT) {
+                chat = chatPayload(sender, message.signedContent())
+            }
         }
+
         ServerPlayerEvents.JOIN.register { player ->
-            EventBus.publish(EventType.EVENT_TYPE_PLAYER_JOIN) { playerJoin = playerPayload(player) }
+            EventBus.publish(EventType.EVENT_TYPE_PLAYER_JOIN) {
+                playerJoin = playerPayload(player)
+            }
         }
+
         ServerPlayerEvents.LEAVE.register { player ->
-            EventBus.publish(EventType.EVENT_TYPE_PLAYER_LEAVE) { playerLeave = playerPayload(player) }
+            EventBus.publish(EventType.EVENT_TYPE_PLAYER_LEAVE) {
+                playerLeave = playerPayload(player)
+            }
         }
+
         ServerPlayerEvents.AFTER_RESPAWN.register { _, player, _ ->
-            EventBus.publish(EventType.EVENT_TYPE_PLAYER_RESPAWN) { playerRespawn = playerPayload(player) }
+            EventBus.publish(EventType.EVENT_TYPE_PLAYER_RESPAWN) {
+                playerRespawn = playerPayload(player)
+            }
         }
+
         ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register { player, from, to ->
             EventBus.publish(EventType.EVENT_TYPE_PLAYER_CHANGE_DIMENSION) {
                 playerChangeDimension = dimensionChangePayload(player, from, to)
@@ -79,20 +92,26 @@ object GameEvents {
                 blockBreak = blockPayload(level, player, position, state, null)
             }
         }
+
         UseBlockCallback.EVENT.register { player, level, hand, hit ->
             if (level.isClientSide) return@register InteractionResult.PASS
+
             EventBus.publish(EventType.EVENT_TYPE_BLOCK_USE) {
                 val state = level.getBlockState(hit.blockPos)
                 val item = player.getItemInHand(hand)
                 blockUse = blockPayload(level, player, hit.blockPos, state, item)
             }
+
             InteractionResult.PASS
         }
+
         AttackEntityCallback.EVENT.register { player, level, _, target, _ ->
             if (level.isClientSide) return@register InteractionResult.PASS
+
             EventBus.publish(EventType.EVENT_TYPE_ENTITY_ATTACK) {
                 entityAttack = attackPayload(player, target)
             }
+
             InteractionResult.PASS
         }
     }
@@ -103,19 +122,25 @@ object GameEvents {
                 entityDamage = damagePayload(entity, source, damageTaken)
             }
         }
+
         ServerLivingEntityEvents.AFTER_DEATH.register { entity, source ->
-            EventBus.publish(EventType.EVENT_TYPE_ENTITY_DEATH) { entityDeath = deathPayload(entity, source) }
+            EventBus.publish(EventType.EVENT_TYPE_ENTITY_DEATH) {
+                entityDeath = deathPayload(entity, source)
+            }
         }
     }
 
     private fun registerServerEvents() {
         val lifecycle = LifecycleEvent.getDefaultInstance()
+
         ServerTickEvents.END_SERVER_TICK.register { server ->
             EventBus.publish(EventType.EVENT_TYPE_SERVER_TICK) { serverTick = tickPayload(server) }
         }
+
         ServerLifecycleEvents.SERVER_STARTED.register {
             EventBus.publish(EventType.EVENT_TYPE_SERVER_STARTED) { serverStarted = lifecycle }
         }
+
         ServerLifecycleEvents.SERVER_STOPPING.register {
             EventBus.publish(EventType.EVENT_TYPE_SERVER_STOPPING) { serverStopping = lifecycle }
         }

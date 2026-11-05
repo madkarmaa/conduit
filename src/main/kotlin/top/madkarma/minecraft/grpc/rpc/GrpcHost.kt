@@ -23,10 +23,12 @@ object GrpcHost {
     @Synchronized
     fun start(config: GrpcConfig) {
         if (server != null) return
+
         if (!config.enabled) {
             LOGGER.info("gRPC server disabled in config")
             return
         }
+
         if (!config.requireAuth) {
             LOGGER.warn(
                 "gRPC authentication is disabled: anyone who can reach {}:{} controls the game",
@@ -34,13 +36,16 @@ object GrpcHost {
                 config.port,
             )
         }
+
         val health = HealthStatusManager()
+
         val builder = NettyServerBuilder.forAddress(InetSocketAddress(config.host, config.port))
-            .intercept(AuthInterceptor(config))
-            .addService(health.healthService)
+            .intercept(AuthInterceptor(config)).addService(health.healthService)
             .addService(ProtoReflectionServiceV1.newInstance())
+
         services.forEach { builder.addService(it) }
         server = builder.build().start()
+
         LOGGER.info(
             "gRPC server listening on {}:{} ({} services)",
             config.host,
@@ -52,11 +57,14 @@ object GrpcHost {
     @Synchronized
     fun stop() {
         val current = server ?: return
+
         server = null
         current.shutdown()
+
         if (!current.awaitTermination(3, TimeUnit.SECONDS)) {
             current.shutdownNow()
         }
+
         LOGGER.info("gRPC server stopped")
     }
 }

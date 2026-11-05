@@ -33,11 +33,15 @@ fun MinecraftServer.performance(): Performance {
     val mspt = averageTickTimeNanos / 1_000_000.0
     val rate = tickRateManager()
     val target = rate.tickrate().toDouble()
+
     return performance {
         this.mspt = mspt
+
         tps = if (mspt <= 0.0) target else minOf(target, 1000.0 / mspt)
         targetTps = target
+
         frozen = rate.isFrozen
+
         memoryUsedBytes = runtime.totalMemory() - runtime.freeMemory()
         memoryMaxBytes = runtime.maxMemory()
     }

@@ -14,6 +14,7 @@ import top.madkarma.minecraft.grpc.service.events.EventServiceImpl
 import top.madkarma.minecraft.grpc.service.player.PlayerServiceImpl
 import top.madkarma.minecraft.grpc.service.server.ServerServiceImpl
 import top.madkarma.minecraft.grpc.service.world.WorldServiceImpl
+import kotlin.jvm.optionals.getOrNull
 
 object MinecraftGRPC : ModInitializer {
     const val MOD_ID: String = "minecraft_grpc"
@@ -21,7 +22,8 @@ object MinecraftGRPC : ModInitializer {
     private val LOGGER = LoggerFactory.getLogger(MOD_ID)
 
     val version: String by lazy {
-        FabricLoader.getInstance().getModContainer(MOD_ID).map { it.metadata.version.friendlyString }.orElse("unknown")
+        FabricLoader.getInstance().getModContainer(MOD_ID)
+            .getOrNull()?.metadata?.version?.friendlyString ?: "unknown"
     }
 
     val config: GrpcConfig by lazy { GrpcConfig.load() }

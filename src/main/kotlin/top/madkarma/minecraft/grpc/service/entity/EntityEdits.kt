@@ -16,17 +16,12 @@ import top.madkarma.minecraft.grpc.game.entity
 import top.madkarma.minecraft.grpc.game.level
 import top.madkarma.minecraft.grpc.game.toComponent
 import top.madkarma.minecraft.grpc.game.toMc
-import top.madkarma.minecraft.grpc.proto.MergeNbtRequest
-import top.madkarma.minecraft.grpc.proto.MountRequest
-import top.madkarma.minecraft.grpc.proto.RemoveEntityRequest
-import top.madkarma.minecraft.grpc.proto.SetCustomNameRequest
-import top.madkarma.minecraft.grpc.proto.SetTagsRequest
-import top.madkarma.minecraft.grpc.proto.SetVelocityRequest
-import top.madkarma.minecraft.grpc.proto.TeleportRequest
+import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.failedPrecondition
 
 internal fun MinecraftServer.removeEntity(request: RemoveEntityRequest) {
     val entity = entity(request.uuid)
+
     when {
         request.kill -> entity.kill(entity.level() as ServerLevel)
 
@@ -45,7 +40,9 @@ internal fun MinecraftServer.teleportEntity(request: TeleportRequest): Entity {
     val yaw = if (request.hasRotation()) request.rotation.yaw else entity.yRot
     val pitch = if (request.hasRotation()) request.rotation.pitch else entity.xRot
     val position = request.position
+
     if (entity !is ServerPlayer) requireEntityTicking(level, position.toMc())
+
     if (!entity.teleportTo(
             level,
             position.x,
@@ -59,6 +56,7 @@ internal fun MinecraftServer.teleportEntity(request: TeleportRequest): Entity {
     ) {
         failedPrecondition("Teleport was rejected")
     }
+
     // Entities other than players are recreated when they change dimension.
     return entity(request.uuid)
 }
@@ -66,6 +64,7 @@ internal fun MinecraftServer.teleportEntity(request: TeleportRequest): Entity {
 internal fun MinecraftServer.changeVelocity(request: SetVelocityRequest) {
     val entity = entity(request.uuid)
     val velocity = request.velocity.toMc()
+
     entity.deltaMovement = if (request.add) entity.deltaMovement.add(velocity) else velocity
     entity.syncVelocity = true
 }
@@ -84,11 +83,14 @@ internal fun rotate(entity: Entity, yaw: Float, pitch: Float) {
             pitch,
             true,
         )
+
         return
     }
+
     entity.yRot = yaw
     entity.xRot = pitch
     entity.yHeadRot = yaw
+
     if (entity is LivingEntity) entity.yBodyRot = yaw
 }
 
@@ -101,25 +103,30 @@ internal fun MinecraftServer.saveEntity(entity: Entity): CompoundTag {
 internal fun MinecraftServer.mergeEntityNbt(request: MergeNbtRequest) {
     val entity = entity(request.uuid)
     if (entity is ServerPlayer) failedPrecondition("Player data is read-only; use PlayerService")
+
     val merged = saveEntity(entity).merge(TagParser.parseCompoundFully(request.snbt))
     merged.store("UUID", UUIDUtil.CODEC, entity.uuid)
+
     entity.load(TagValueInput.create(ProblemReporter.DISCARDING, registryAccess(), merged))
 }
 
 internal fun MinecraftServer.changeCustomName(request: SetCustomNameRequest) {
     val entity = entity(request.uuid)
+
     entity.customName = if (request.hasName()) request.name.toComponent(registryAccess()) else null
     entity.isCustomNameVisible = request.visible
 }
 
 internal fun MinecraftServer.changeTags(request: SetTagsRequest) {
     val entity = entity(request.uuid)
+
     request.removeList.forEach { entity.removeTag(it) }
     request.addList.forEach { entity.addTag(it) }
 }
 
 internal fun MinecraftServer.mount(request: MountRequest) {
     val passenger = entity(request.passenger)
+
     if (!passenger.startRiding(entity(request.vehicle), true, true)) {
         failedPrecondition("Entity cannot ride ${request.vehicle}")
     }

@@ -20,15 +20,19 @@ import top.madkarma.minecraft.grpc.rpc.invalidArgument
 internal fun MinecraftServer.sendTitle(request: SendTitleRequest) {
     val connection = player(request.player).connection
     val registries = registryAccess()
+
     val fadeIn = if (request.hasFadeIn()) request.fadeIn else 10
     val stay = if (request.hasStay()) request.stay else 70
     val fadeOut = if (request.hasFadeOut()) request.fadeOut else 20
+
     connection.send(ClientboundSetTitlesAnimationPacket(fadeIn, stay, fadeOut))
+
     if (request.hasSubtitle()) {
         connection.send(
             ClientboundSetSubtitleTextPacket(request.subtitle.toComponent(registries)),
         )
     }
+
     if (request.hasTitle()) {
         connection.send(
             ClientboundSetTitleTextPacket(request.title.toComponent(registries)),
@@ -38,9 +42,11 @@ internal fun MinecraftServer.sendTitle(request: SendTitleRequest) {
 
 internal fun MinecraftServer.playSound(request: PlaySoundRequest) {
     val player = player(request.player)
+
     val position = if (request.hasPosition()) request.position.toMc() else player.position()
     val volume = if (request.volume > 0) request.volume else 1f
     val pitch = if (request.pitch > 0) request.pitch else 1f
+
     val packet = ClientboundSoundPacket(
         soundEvent(request.sound),
         soundCategory(request.category),
@@ -51,6 +57,7 @@ internal fun MinecraftServer.playSound(request: PlaySoundRequest) {
         pitch,
         player.random.nextLong(),
     )
+
     player.connection.send(packet)
 }
 

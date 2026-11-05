@@ -10,13 +10,7 @@ import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.LivingEntity
 import top.madkarma.minecraft.grpc.game.entity
 import top.madkarma.minecraft.grpc.game.parseId
-import top.madkarma.minecraft.grpc.proto.AddEffectRequest
-import top.madkarma.minecraft.grpc.proto.AttributeList
-import top.madkarma.minecraft.grpc.proto.DamageRequest
-import top.madkarma.minecraft.grpc.proto.RemoveEffectRequest
-import top.madkarma.minecraft.grpc.proto.SetAttributeBaseRequest
-import top.madkarma.minecraft.grpc.proto.attribute
-import top.madkarma.minecraft.grpc.proto.attributeList
+import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.failedPrecondition
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 
@@ -32,6 +26,7 @@ internal fun MinecraftServer.damage(request: DamageRequest) {
         .get(ResourceKey.create(Registries.DAMAGE_TYPE, parseId(typeId)))
         .orElseGet { invalidArgument("Unknown damage type: $typeId") }
     val attacker = if (request.hasAttacker()) entity(request.attacker) else null
+
     entity.hurtServer(entity.level() as ServerLevel, DamageSource(type, attacker), request.amount)
 }
 
@@ -49,25 +44,31 @@ internal fun MinecraftServer.addEffect(request: AddEffectRequest) {
         effect.visible,
         effect.showIcon,
     )
+
     living(request.uuid).addEffect(instance)
 }
 
 internal fun MinecraftServer.removeEffect(request: RemoveEffectRequest) {
     val entity = living(request.uuid)
+
     if (request.effect.isBlank()) {
         entity.removeAllEffects()
         return
     }
+
     val holder = BuiltInRegistries.MOB_EFFECT.get(parseId(request.effect))
         .orElseGet { invalidArgument("Unknown effect: ${request.effect}") }
+
     entity.removeEffect(holder)
 }
 
 internal fun MinecraftServer.attributesOf(uuid: String): AttributeList {
     val entity = living(uuid)
+
     return attributeList {
         BuiltInRegistries.ATTRIBUTE.listElements().forEach { holder ->
             val instance = entity.getAttribute(holder) ?: return@forEach
+
             attributes += attribute {
                 id = holder.key().identifier().toString()
                 base = instance.baseValue
@@ -80,8 +81,9 @@ internal fun MinecraftServer.attributesOf(uuid: String): AttributeList {
 internal fun MinecraftServer.changeAttributeBase(request: SetAttributeBaseRequest) {
     val holder = BuiltInRegistries.ATTRIBUTE.get(parseId(request.attribute))
         .orElseGet { invalidArgument("Unknown attribute: ${request.attribute}") }
-    val instance =
-        living(request.uuid).getAttribute(holder)
-            ?: failedPrecondition("Entity has no attribute ${request.attribute}")
+
+    val instance = living(request.uuid).getAttribute(holder)
+        ?: failedPrecondition("Entity has no attribute ${request.attribute}")
+
     instance.baseValue = request.base
 }

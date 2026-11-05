@@ -4,33 +4,14 @@ import com.google.protobuf.Empty
 import top.madkarma.minecraft.grpc.game.GameServer
 import top.madkarma.minecraft.grpc.game.player
 import top.madkarma.minecraft.grpc.game.toComponent
-import top.madkarma.minecraft.grpc.proto.GiveItemRequest
-import top.madkarma.minecraft.grpc.proto.GiveItemResponse
-import top.madkarma.minecraft.grpc.proto.Inventory
-import top.madkarma.minecraft.grpc.proto.KickRequest
-import top.madkarma.minecraft.grpc.proto.PlaySoundRequest
-import top.madkarma.minecraft.grpc.proto.PlayerInfo
-import top.madkarma.minecraft.grpc.proto.PlayerList
-import top.madkarma.minecraft.grpc.proto.PlayerRef
-import top.madkarma.minecraft.grpc.proto.PlayerServiceGrpcKt
-import top.madkarma.minecraft.grpc.proto.SendMessageRequest
-import top.madkarma.minecraft.grpc.proto.SendTitleRequest
-import top.madkarma.minecraft.grpc.proto.SetExperienceRequest
-import top.madkarma.minecraft.grpc.proto.SetFoodRequest
-import top.madkarma.minecraft.grpc.proto.SetGameModeRequest
-import top.madkarma.minecraft.grpc.proto.SetInventorySlotRequest
-import top.madkarma.minecraft.grpc.proto.SetOperatorRequest
-import top.madkarma.minecraft.grpc.proto.SetSelectedSlotRequest
-import top.madkarma.minecraft.grpc.proto.giveItemResponse
-import top.madkarma.minecraft.grpc.proto.playerList
+import top.madkarma.minecraft.grpc.proto.*
 
 private val EMPTY: Empty = Empty.getDefaultInstance()
 
 class PlayerServiceImpl : PlayerServiceGrpcKt.PlayerServiceCoroutineImplBase() {
     override suspend fun listPlayers(request: Empty): PlayerList = GameServer.run { server ->
         playerList {
-            players +=
-                server.playerList.players.map { server.describePlayer(it) }
+            players += server.playerList.players.map { server.describePlayer(it) }
         }
     }
 

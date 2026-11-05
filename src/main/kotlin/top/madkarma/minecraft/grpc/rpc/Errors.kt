@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
+import kotlin.time.Duration.Companion.milliseconds
 
 private val LOGGER = LoggerFactory.getLogger("minecraft_grpc")
 
@@ -31,18 +32,21 @@ fun unavailable(message: String): Nothing =
 fun Throwable.toStatusException(): StatusException {
     val cause = (this as? CompletionException)?.cause ?: this
     if (cause is StatusException) return cause
+
     // Checked before IllegalStateException, which it extends.
     if (cause is TimeoutCancellationException) {
-        return Status.DEADLINE_EXCEEDED
-            .withDescription("Game thread did not respond in time")
+        return Status.DEADLINE_EXCEEDED.withDescription("Game thread did not respond in time")
             .asException()
     }
+
     val status = when (cause) {
         is CommandSyntaxException, is IllegalArgumentException -> Status.INVALID_ARGUMENT
         is IllegalStateException -> Status.FAILED_PRECONDITION
         else -> null
     }
+
     if (status != null) return status.withDescription(cause.message).withCause(cause).asException()
+
     LOGGER.error("Unexpected error while handling gRPC call", cause)
     return Status.INTERNAL.withDescription(cause.toString()).withCause(cause).asException()
 }
@@ -50,15 +54,15 @@ fun Throwable.toStatusException(): StatusException {
 suspend fun <T> BlockableEventLoop<*>.call(block: () -> T): T {
     try {
         if (isSameThread) return block()
-        return withTimeout(GAME_THREAD_TIMEOUT_MS) {
+
+        return withTimeout(GAME_THREAD_TIMEOUT_MS.milliseconds) {
             CompletableFuture.supplyAsync({ block() }, this@call).await()
         }
     } catch (exception: Throwable) {
-        if (exception is CancellationException &&
-            exception !is TimeoutCancellationException
-        ) {
+        if (exception is CancellationException && exception !is TimeoutCancellationException) {
             throw exception
         }
+
         throw exception.toStatusException()
     }
 }

@@ -9,14 +9,7 @@ import net.minecraft.world.phys.AABB
 import top.madkarma.minecraft.grpc.game.enumByName
 import top.madkarma.minecraft.grpc.game.level
 import top.madkarma.minecraft.grpc.game.toMc
-import top.madkarma.minecraft.grpc.proto.ChunkInfo
-import top.madkarma.minecraft.grpc.proto.ChunkRequest
-import top.madkarma.minecraft.grpc.proto.DimensionList
-import top.madkarma.minecraft.grpc.proto.GetBlockRequest
-import top.madkarma.minecraft.grpc.proto.GetHeightRequest
-import top.madkarma.minecraft.grpc.proto.chunkInfo
-import top.madkarma.minecraft.grpc.proto.dimensionInfo
-import top.madkarma.minecraft.grpc.proto.dimensionList
+import top.madkarma.minecraft.grpc.proto.*
 
 internal fun MinecraftServer.describeDimensions(): DimensionList = dimensionList {
     for (level in allLevels) {
@@ -32,16 +25,16 @@ internal fun MinecraftServer.describeDimensions(): DimensionList = dimensionList
 }
 
 internal fun MinecraftServer.biomeAt(request: GetBlockRequest): String =
-    level(request.dimension).getBiome(request.pos.toMc()).unwrapKey().map {
-        it.identifier().toString()
-    }.orElse("")
+    level(request.dimension).getBiome(request.pos.toMc()).unwrapKey().map { it.identifier().toString() }.orElse("")
 
 internal fun MinecraftServer.heightAt(request: GetHeightRequest): Int {
     val type = enumByName(request.heightmap, Heightmap.Types.MOTION_BLOCKING, "heightmap")
     val level = level(request.dimension)
+
     // Heightmaps of unloaded chunks read as the world bottom, so the chunk is loaded first.
     val chunkX = SectionPos.blockToSectionCoord(request.x)
     val chunkZ = SectionPos.blockToSectionCoord(request.z)
+
     level.getChunk(chunkX, chunkZ)
     return level.getHeight(type, request.x, request.z)
 }
@@ -49,11 +42,14 @@ internal fun MinecraftServer.heightAt(request: GetHeightRequest): Int {
 internal fun MinecraftServer.describeChunk(request: ChunkRequest): ChunkInfo {
     val level = level(request.dimension)
     val forced = level.forceLoadedChunks.contains(ChunkPos.pack(request.chunkX, request.chunkZ))
+
     val chunk = level.chunkSource.getChunkNow(request.chunkX, request.chunkZ)
         ?: return chunkInfo { this.forced = forced }
+
     val minX = request.chunkX * 16.0
     val minZ = request.chunkZ * 16.0
     val box = AABB(minX, level.minY.toDouble(), minZ, minX + 16, level.maxY + 1.0, minZ + 16)
+
     return chunkInfo {
         loaded = true
         this.forced = forced

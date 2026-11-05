@@ -38,9 +38,10 @@ object EventBus {
     // Inline so that events nobody subscribed to are never built.
     inline fun publish(type: EventType, fill: Event.Builder.() -> Unit) {
         if (!wants(type)) return
-        val builder = Event.newBuilder()
-            .setTimestampMs(System.currentTimeMillis())
+
+        val builder = Event.newBuilder().setTimestampMs(System.currentTimeMillis())
             .setTick(GameServer.current?.tickCount ?: 0)
+
         builder.fill()
         deliver(type, builder.build())
     }
@@ -48,8 +49,10 @@ object EventBus {
     fun deliver(type: EventType, event: Event) {
         for (subscription in subscriptions) {
             if (type !in subscription.types) continue
+
             val isTick = type == EventType.EVENT_TYPE_SERVER_TICK
             if (isTick && event.tick % subscription.tickInterval != 0) continue
+
             subscription.channel.trySend(event)
         }
     }

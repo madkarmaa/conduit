@@ -5,16 +5,12 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.GameType
 import top.madkarma.minecraft.grpc.game.player
 import top.madkarma.minecraft.grpc.game.toProto
-import top.madkarma.minecraft.grpc.proto.PlayerInfo
-import top.madkarma.minecraft.grpc.proto.SetExperienceRequest
-import top.madkarma.minecraft.grpc.proto.SetFoodRequest
-import top.madkarma.minecraft.grpc.proto.SetGameModeRequest
-import top.madkarma.minecraft.grpc.proto.SetOperatorRequest
-import top.madkarma.minecraft.grpc.proto.playerInfo
+import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 
 internal fun MinecraftServer.describePlayer(player: ServerPlayer): PlayerInfo {
     val registries = registryAccess()
+
     return playerInfo {
         name = player.gameProfile.name
         entity = player.toProto()
@@ -34,20 +30,22 @@ internal fun MinecraftServer.describePlayer(player: ServerPlayer): PlayerInfo {
 }
 
 internal fun MinecraftServer.changeGameMode(request: SetGameModeRequest) {
-    val mode =
-        GameType.byName(request.gameMode.lowercase(), null)
-            ?: invalidArgument("Unknown game mode: ${request.gameMode}")
+    val mode = GameType.byName(request.gameMode.lowercase(), null)
+        ?: invalidArgument("Unknown game mode: ${request.gameMode}")
+
     player(request.player).setGameMode(mode)
 }
 
 internal fun MinecraftServer.changeFood(request: SetFoodRequest) {
     val food = player(request.player).foodData
+
     if (request.hasFoodLevel()) food.foodLevel = request.foodLevel
     if (request.hasSaturation()) food.setSaturation(request.saturation)
 }
 
 internal fun MinecraftServer.changeExperience(request: SetExperienceRequest) {
     val player = player(request.player)
+
     if (request.hasLevels()) player.setExperienceLevels(request.levels)
     if (request.hasPoints()) player.setExperiencePoints(request.points)
 }

@@ -25,16 +25,20 @@ internal fun MinecraftServer.readRegion(request: GetBlocksRequest): BlockRegion 
     val indices = ArrayList<Int>()
     val voidAir = Blocks.VOID_AIR.defaultBlockState()
     val cursor = BlockPos.MutableBlockPos()
+
     for (y in min.y..max.y) {
         for (z in min.z..max.z) {
             for (x in min.x..max.x) {
                 cursor.set(x, y, z)
+
                 val unloaded = request.loadedOnly && !level.isLoaded(cursor)
                 val state = if (unloaded) voidAir else level.getBlockState(cursor)
+
                 indices += palette.getOrPut(state) { palette.size }
             }
         }
     }
+
     return blockRegion {
         this.min = min.toProto()
         size = BlockPos(max.x - min.x + 1, max.y - min.y + 1, max.z - min.z + 1).toProto()
@@ -49,10 +53,12 @@ internal fun MinecraftServer.fillRegion(request: FillRequest): Int {
     val block = parseBlock(registryAccess(), request.state)
     val replaces = if (request.hasReplace()) replaceFilter(request.replace) else null
     var changed = 0
+
     for (position in BlockPos.betweenClosed(min, max)) {
         if (replaces != null && !replaces(level.getBlockState(position))) continue
         if (place(level, position.immutable(), block, updateFlags(request.noUpdates))) changed++
     }
+
     return changed
 }
 
@@ -66,8 +72,10 @@ private fun bounds(from: ProtoBlockPos, to: ProtoBlockPos): Pair<BlockPos, Block
     val min = BlockPos(min(from.x, to.x), min(from.y, to.y), min(from.z, to.z))
     val max = BlockPos(max(from.x, to.x), max(from.y, to.y), max(from.z, to.z))
     val volume = (max.x - min.x + 1L) * (max.y - min.y + 1L) * (max.z - min.z + 1L)
+
     if (volume > MAX_REGION_VOLUME) {
         invalidArgument("Region of $volume blocks exceeds the limit of $MAX_REGION_VOLUME")
     }
+
     return min to max
 }

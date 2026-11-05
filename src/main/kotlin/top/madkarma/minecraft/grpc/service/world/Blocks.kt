@@ -9,17 +9,8 @@ import net.minecraft.util.ProblemReporter
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.storage.TagValueInput
-import top.madkarma.minecraft.grpc.game.ParsedBlock
-import top.madkarma.minecraft.grpc.game.level
-import top.madkarma.minecraft.grpc.game.parseBlock
-import top.madkarma.minecraft.grpc.game.toMc
-import top.madkarma.minecraft.grpc.game.toProto
-import top.madkarma.minecraft.grpc.proto.BlockInfo
-import top.madkarma.minecraft.grpc.proto.GetBlockRequest
-import top.madkarma.minecraft.grpc.proto.SetBlockEntityRequest
-import top.madkarma.minecraft.grpc.proto.SetBlockRequest
-import top.madkarma.minecraft.grpc.proto.SetBlocksRequest
-import top.madkarma.minecraft.grpc.proto.blockInfo
+import top.madkarma.minecraft.grpc.game.*
+import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import top.madkarma.minecraft.grpc.rpc.notFound
 import top.madkarma.minecraft.grpc.proto.BlockPos as ProtoBlockPos
@@ -27,6 +18,7 @@ import top.madkarma.minecraft.grpc.proto.BlockPos as ProtoBlockPos
 internal fun MinecraftServer.readBlock(request: GetBlockRequest): BlockInfo {
     val level = level(request.dimension)
     val position = request.pos.toMc()
+
     return blockInfo {
         this.pos = request.pos
         state = level.getBlockState(position).toProto()
@@ -43,6 +35,7 @@ internal fun MinecraftServer.writeBlock(request: SetBlockRequest) {
 internal fun MinecraftServer.writeBlocks(request: SetBlocksRequest): Int {
     val level = level(request.dimension)
     val parsed = HashMap<String, ParsedBlock>()
+
     return request.changesList.count { change ->
         val block = parsed.getOrPut(change.state) { parseBlock(registryAccess(), change.state) }
         place(level, change.pos.toMc(), block, updateFlags(request.noUpdates))
@@ -57,9 +50,11 @@ internal fun MinecraftServer.readBlockEntity(request: GetBlockRequest): String =
 internal fun MinecraftServer.mergeBlockEntity(request: SetBlockEntityRequest) {
     val level = level(request.dimension)
     val blockEntity = blockEntityAt(level, request.pos)
+
     val merged = blockEntity.saveWithoutMetadata(
         registryAccess(),
     ).merge(TagParser.parseCompoundFully(request.snbt))
+
     loadBlockEntity(level, blockEntity, merged)
 }
 
@@ -75,11 +70,13 @@ internal fun MinecraftServer.place(
     ) {
         invalidArgument("Position ${position.x} ${position.y} ${position.z} is outside the world")
     }
+
     val changed = level.setBlock(position, block.state, flags)
     val nbt = block.nbt ?: return changed
-    val blockEntity =
-        level.getBlockEntity(position)
-            ?: invalidArgument("${block.state.block} has no block entity data")
+
+    val blockEntity = level.getBlockEntity(position)
+        ?: invalidArgument("${block.state.block} has no block entity data")
+
     loadBlockEntity(level, blockEntity, nbt)
     return true
 }
@@ -92,7 +89,9 @@ private fun MinecraftServer.loadBlockEntity(
     blockEntity.loadWithComponents(
         TagValueInput.create(ProblemReporter.DISCARDING, registryAccess(), nbt),
     )
+
     blockEntity.setChanged()
+
     val state = level.getBlockState(blockEntity.blockPos)
     level.sendBlockUpdated(blockEntity.blockPos, state, state, Block.UPDATE_ALL)
 }

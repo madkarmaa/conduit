@@ -1,10 +1,6 @@
 package top.madkarma.minecraft.grpc.rpc
 
-import io.grpc.Metadata
-import io.grpc.ServerCall
-import io.grpc.ServerCallHandler
-import io.grpc.ServerInterceptor
-import io.grpc.Status
+import io.grpc.*
 import top.madkarma.minecraft.grpc.config.GrpcConfig
 import java.security.MessageDigest
 
@@ -18,8 +14,10 @@ class AuthInterceptor(private val config: GrpcConfig) : ServerInterceptor {
         next: ServerCallHandler<ReqT, RespT>,
     ): ServerCall.Listener<ReqT> {
         if (!requiresToken(call) || isAuthorized(headers)) return next.startCall(call, headers)
+
         val status = Status.UNAUTHENTICATED.withDescription("Missing or invalid bearer token")
         call.close(status, Metadata())
+
         return object : ServerCall.Listener<ReqT>() {}
     }
 

@@ -31,6 +31,7 @@ fun parseBlock(registries: HolderLookup.Provider, input: String): ParsedBlock {
         input,
         true,
     )
+
     return ParsedBlock(result.blockState(), result.nbt())
 }
 
@@ -46,6 +47,7 @@ fun BlockState.toProto(): ProtoBlockState {
 fun ItemStack.toProto(registries: HolderLookup.Provider): ProtoItemStack {
     if (isEmpty) return itemStack { id = "minecraft:air" }
     val stack = this
+
     return itemStack {
         id = BuiltInRegistries.ITEM.getKey(stack.item).toString()
         count = stack.count
@@ -55,24 +57,27 @@ fun ItemStack.toProto(registries: HolderLookup.Provider): ProtoItemStack {
 
 fun ProtoItemStack.toMc(registries: HolderLookup.Provider): ItemStack {
     if (id.isBlank() || id == "minecraft:air" || count < 0) return ItemStack.EMPTY
+
     val item = BuiltInRegistries.ITEM.get(parseId(id)).orElseGet {
         invalidArgument("Unknown item: $id")
     }
     val patch = decodeComponents(components, registries)
+
     return ItemStack(item, if (count == 0) 1 else count, patch)
 }
 
 private fun encodeComponents(patch: DataComponentPatch, registries: HolderLookup.Provider): String {
     if (patch.isEmpty) return ""
+
     val context = registries.createSerializationContext(NbtOps.INSTANCE)
     return DataComponentPatch.CODEC.encodeStart(context, patch).getOrThrow().toString()
 }
 
 private fun decodeComponents(snbt: String, registries: HolderLookup.Provider): DataComponentPatch {
     if (snbt.isBlank()) return DataComponentPatch.EMPTY
+
     val context = registries.createSerializationContext(NbtOps.INSTANCE)
-    return DataComponentPatch.CODEC
-        .parse(context, TagParser.parseCompoundFully(snbt))
+    return DataComponentPatch.CODEC.parse(context, TagParser.parseCompoundFully(snbt))
         .getOrThrow { invalidArgument("Invalid item components: $it") }
 }
 
@@ -91,10 +96,12 @@ fun Entity.toProto(): ProtoEntityInfo {
         onGround = entity.onGround()
         alive = entity.isAlive
         tags += entity.entityTags()
+
         if (entity is LivingEntity) {
             health = entity.health
             maxHealth = entity.maxHealth
         }
+
         passengers += entity.passengers.map { it.stringUUID }
         entity.vehicle?.let { vehicle = it.stringUUID }
     }

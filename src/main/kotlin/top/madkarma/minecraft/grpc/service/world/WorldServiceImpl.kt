@@ -4,38 +4,7 @@ import com.google.protobuf.Empty
 import top.madkarma.minecraft.grpc.game.GameServer
 import top.madkarma.minecraft.grpc.game.level
 import top.madkarma.minecraft.grpc.game.toMc
-import top.madkarma.minecraft.grpc.proto.Biome
-import top.madkarma.minecraft.grpc.proto.BlockInfo
-import top.madkarma.minecraft.grpc.proto.BlockRegion
-import top.madkarma.minecraft.grpc.proto.BreakBlockRequest
-import top.madkarma.minecraft.grpc.proto.ChunkInfo
-import top.madkarma.minecraft.grpc.proto.ChunkRequest
-import top.madkarma.minecraft.grpc.proto.DimensionList
-import top.madkarma.minecraft.grpc.proto.DimensionRef
-import top.madkarma.minecraft.grpc.proto.ExplodeRequest
-import top.madkarma.minecraft.grpc.proto.FillRequest
-import top.madkarma.minecraft.grpc.proto.GameRules
-import top.madkarma.minecraft.grpc.proto.GetBlockRequest
-import top.madkarma.minecraft.grpc.proto.GetBlocksRequest
-import top.madkarma.minecraft.grpc.proto.GetHeightRequest
-import top.madkarma.minecraft.grpc.proto.GetHeightResponse
-import top.madkarma.minecraft.grpc.proto.Nbt
-import top.madkarma.minecraft.grpc.proto.SetBlockEntityRequest
-import top.madkarma.minecraft.grpc.proto.SetBlockRequest
-import top.madkarma.minecraft.grpc.proto.SetBlocksRequest
-import top.madkarma.minecraft.grpc.proto.SetBlocksResponse
-import top.madkarma.minecraft.grpc.proto.SetChunkForcedRequest
-import top.madkarma.minecraft.grpc.proto.SetGameRuleRequest
-import top.madkarma.minecraft.grpc.proto.SetTimeRequest
-import top.madkarma.minecraft.grpc.proto.SetWeatherRequest
-import top.madkarma.minecraft.grpc.proto.SpawnPoint
-import top.madkarma.minecraft.grpc.proto.TimeInfo
-import top.madkarma.minecraft.grpc.proto.WeatherInfo
-import top.madkarma.minecraft.grpc.proto.WorldServiceGrpcKt
-import top.madkarma.minecraft.grpc.proto.biome
-import top.madkarma.minecraft.grpc.proto.getHeightResponse
-import top.madkarma.minecraft.grpc.proto.nbt
-import top.madkarma.minecraft.grpc.proto.setBlocksResponse
+import top.madkarma.minecraft.grpc.proto.*
 
 private val EMPTY: Empty = Empty.getDefaultInstance()
 
@@ -77,8 +46,7 @@ class WorldServiceImpl : WorldServiceGrpcKt.WorldServiceCoroutineImplBase() {
 
     override suspend fun getBiome(request: GetBlockRequest): Biome = GameServer.run { server ->
         biome {
-            id =
-                server.biomeAt(request)
+            id = server.biomeAt(request)
         }
     }
 
