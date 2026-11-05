@@ -1,24 +1,19 @@
-# Gameplay test environment: a Fabric server and a headless client (offline account), both
-# running the mod from build/libs through HeadlessMC. Build the mod first with ./gradlew build.
-# MC_VERSION must be the Minecraft version the mod was built for:
+# Gameplay test environment through HeadlessMC: a Fabric server running the mod from build/libs,
+# and a vanilla headless client (offline account) as a real player. Build the mod first with
+# ./gradlew build. MC_VERSION must be the Minecraft version the mod was built for:
 #
 #   MC_VERSION=<version> docker compose up -d server   # server only, gRPC on localhost:25585
-#   MC_VERSION=<version> docker compose up -d          # server + client, client gRPC on :25586
+#   MC_VERSION=<version> docker compose up -d          # server + vanilla client joining it
 #
-# Both gRPC servers use the bearer token from MINECRAFT_GRPC_TOKEN (default: dev-token).
+# The gRPC endpoint uses the bearer token from MINECRAFT_GRPC_TOKEN (default: dev-token).
 
 x-headlessmc: &headlessmc
     image: 3arthqu4ke/headlessmc:latest
     entrypoint: ["/bin/bash"]
-    volumes:
-        - ./build/libs:/mod:ro
-        - ./docker:/scripts:ro
     environment: &environment
         MC_VERSION: ${MC_VERSION:?set MC_VERSION to the Minecraft version the mod was built for}
         HMC_UPDATER_ENABLED: "false"
         HMC_JLINE_ENABLED: "false"
-        MINECRAFT_GRPC_HOST: 0.0.0.0
-        MINECRAFT_GRPC_TOKEN: ${MINECRAFT_GRPC_TOKEN:-dev-token}
 
 services:
     server:
@@ -28,6 +23,10 @@ services:
             - ./build/libs:/mod:ro
             - ./docker:/scripts:ro
             - server-data:/home/default
+        environment:
+            <<: *environment
+            MINECRAFT_GRPC_HOST: 0.0.0.0
+            MINECRAFT_GRPC_TOKEN: ${MINECRAFT_GRPC_TOKEN:-dev-token}
         ports:
             - 127.0.0.1:25565:25565
             - 127.0.0.1:25585:25585
@@ -38,15 +37,13 @@ services:
             start_period: 10m
             retries: 6
 
-    # Docker creates the parent directories of the options.txt bind mount as root, which would keep
-    # HeadlessMC from writing to its own game directory.
+    # Docker creates the parent directory of the options.txt bind mount as root, which would keep
+    # HeadlessMC from writing to the game directory.
     client-init:
         image: 3arthqu4ke/headlessmc:latest
         user: root
         entrypoint: ["/bin/bash", "-c"]
-        command: ["mkdir -p $$GAME_DIR && chown 185:0 /home/default/.minecraft $$GAME_DIR"]
-        environment:
-            GAME_DIR: /home/default/.minecraft/fabric-${MC_VERSION:?}
+        command: ["mkdir -p /home/default/game && chown 185:0 /home/default/game"]
         volumes:
             - client-data:/home/default
 
@@ -54,16 +51,14 @@ services:
         <<: *headlessmc
         command: ["/scripts/run-client.sh"]
         volumes:
-            - ./build/libs:/mod:ro
             - ./docker:/scripts:ro
             - client-data:/home/default
             # Preconfigured so the first start skips the onboarding screens.
-            - ./docker/options.txt:/home/default/.minecraft/fabric-${MC_VERSION:?}/options.txt:ro
+            - ./docker/options.txt:/home/default/game/options.txt:ro
         environment:
             <<: *environment
+            HMC_FILES_GAME: /home/default/game
             MC_SERVER: server:25565
-        ports:
-            - 127.0.0.1:25586:25586
         depends_on:
             client-init:
                 condition: service_completed_successfully
