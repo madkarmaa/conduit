@@ -8,6 +8,7 @@ import io.grpc.ForwardingServerCallListener.SimpleForwardingServerCallListener
 import io.grpc.health.v1.HealthGrpc
 import io.grpc.reflection.v1.ServerReflectionGrpc
 import org.slf4j.LoggerFactory
+import top.madkarma.minecraft.grpc.proto.BatchRequest
 import top.madkarma.minecraft.grpc.proto.EventServiceGrpc
 import java.util.concurrent.TimeUnit
 
@@ -84,9 +85,13 @@ private class AuditedCall<ReqT, RespT>(call: ServerCall<ReqT, RespT>) :
 
 private fun describe(request: Any?): String {
     val message = request as? MessageOrBuilder ?: return ""
+    val body = truncate(REQUEST_PRINTER.printToString(message))
 
-    val text = REQUEST_PRINTER.printToString(message)
+    if (message is BatchRequest) return "${message.operationsCount} operations: $body"
+    return body
+}
+
+private fun truncate(text: String): String {
     if (text.length <= MAX_REQUEST_LENGTH) return text
-
     return text.take(MAX_REQUEST_LENGTH) + "…"
 }
