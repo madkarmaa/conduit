@@ -55,6 +55,8 @@ private val DEFAULT_TYPES: Set<EventType> = SUBSCRIBABLE - setOf(
     EventType.EVENT_TYPE_PLAYER_MOVE,
     EventType.EVENT_TYPE_ENTITY_SPAWN,
     EventType.EVENT_TYPE_ENTITY_REMOVE,
+    EventType.EVENT_TYPE_CHUNK_LOAD,
+    EventType.EVENT_TYPE_CHUNK_UNLOAD,
 )
 
 // Item entities and experience orbs come and go constantly, and player events already cover

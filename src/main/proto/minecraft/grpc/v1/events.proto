@@ -32,12 +32,14 @@ enum EventType {
     EVENT_TYPE_PLAYER_MOVE = 16;
     EVENT_TYPE_ENTITY_SPAWN = 17;
     EVENT_TYPE_ENTITY_REMOVE = 18;
+    EVENT_TYPE_CHUNK_LOAD = 19;
+    EVENT_TYPE_CHUNK_UNLOAD = 20;
 }
 
 message SubscribeRequest {
     // Event types to receive. Empty means all except the high-volume types EVENT_TYPE_SERVER_TICK,
-    // EVENT_TYPE_PLAYER_MOVE, EVENT_TYPE_ENTITY_SPAWN and EVENT_TYPE_ENTITY_REMOVE, which are only
-    // sent when listed.
+    // EVENT_TYPE_PLAYER_MOVE, EVENT_TYPE_ENTITY_SPAWN, EVENT_TYPE_ENTITY_REMOVE,
+    // EVENT_TYPE_CHUNK_LOAD and EVENT_TYPE_CHUNK_UNLOAD, which are only sent when listed.
     repeated EventType types = 1;
     // Only send EVENT_TYPE_SERVER_TICK every N ticks (default 20).
     int32 tick_interval = 2;
@@ -86,6 +88,8 @@ message Event {
         PlayerMoveEvent player_move = 25;
         EntitySpawnEvent entity_spawn = 26;
         EntityRemoveEvent entity_remove = 27;
+        ChunkEvent chunk_load = 28;
+        ChunkEvent chunk_unload = 29;
     }
 }
 
@@ -173,6 +177,12 @@ enum RemovalReason {
 message EntityRemoveEvent {
     EntityInfo entity = 1;
     RemovalReason reason = 2;
+}
+
+message ChunkEvent {
+    string dimension = 1;
+    int32 chunk_x = 2;
+    int32 chunk_z = 3;
 }
 
 message CommandEvent {
