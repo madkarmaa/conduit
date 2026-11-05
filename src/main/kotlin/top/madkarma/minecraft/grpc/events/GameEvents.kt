@@ -26,6 +26,7 @@ object GameEvents {
         registerEntityEvents()
         registerServerEvents()
         PlayerMoves.register()
+        EntityLifecycle.register()
     }
 
     // Called from the block placement mixin.

@@ -4,6 +4,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import net.minecraft.world.entity.player.Player
 import top.madkarma.minecraft.grpc.game.GameServer
+import top.madkarma.minecraft.grpc.game.parseId
 import top.madkarma.minecraft.grpc.proto.Event
 import top.madkarma.minecraft.grpc.proto.EventType
 import top.madkarma.minecraft.grpc.proto.SubscribeRequest
@@ -25,11 +26,19 @@ class EventSubscription(request: SubscribeRequest) {
 
     private val players: Set<String> = request.playersList.map { it.lowercase() }.toSet()
 
+    private val entityTypes: Set<String> =
+        request.entityTypesList.map { parseId(it).toString() }.toSet()
+
     // Slow clients lose the oldest events instead of stalling the game thread.
     val channel = Channel<Event>(capacity = 4096, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
     fun wantsPlayer(player: Player): Boolean {
         return players.isEmpty() || player.stringUUID in players || player.gameProfile.name.lowercase() in players
+    }
+
+    fun wantsEntityType(type: String): Boolean {
+        if (entityTypes.isEmpty()) return type !in EXPLICIT_ENTITY_TYPES
+        return type in entityTypes
     }
 
     fun send(event: Event) {
@@ -41,8 +50,17 @@ private val SUBSCRIBABLE: Set<EventType> =
     EventType.entries.toSet() - EventType.EVENT_TYPE_UNSPECIFIED - EventType.UNRECOGNIZED
 
 // High-volume types have to be requested explicitly.
-private val DEFAULT_TYPES: Set<EventType> =
-    SUBSCRIBABLE - EventType.EVENT_TYPE_SERVER_TICK - EventType.EVENT_TYPE_PLAYER_MOVE
+private val DEFAULT_TYPES: Set<EventType> = SUBSCRIBABLE - setOf(
+    EventType.EVENT_TYPE_SERVER_TICK,
+    EventType.EVENT_TYPE_PLAYER_MOVE,
+    EventType.EVENT_TYPE_ENTITY_SPAWN,
+    EventType.EVENT_TYPE_ENTITY_REMOVE,
+)
+
+// Item entities and experience orbs come and go constantly, and player events already cover
+// players, so these only show up in entity events when a subscription lists them.
+private val EXPLICIT_ENTITY_TYPES =
+    setOf("minecraft:item", "minecraft:experience_orb", "minecraft:player")
 
 object EventBus {
     private val subscriptions = CopyOnWriteArrayList<EventSubscription>()

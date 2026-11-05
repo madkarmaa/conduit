@@ -30,11 +30,14 @@ enum EventType {
     EVENT_TYPE_SERVER_STARTED = 14;
     EVENT_TYPE_SERVER_STOPPING = 15;
     EVENT_TYPE_PLAYER_MOVE = 16;
+    EVENT_TYPE_ENTITY_SPAWN = 17;
+    EVENT_TYPE_ENTITY_REMOVE = 18;
 }
 
 message SubscribeRequest {
-    // Event types to receive. Empty means all except the high-volume types EVENT_TYPE_SERVER_TICK
-    // and EVENT_TYPE_PLAYER_MOVE, which are only sent when listed.
+    // Event types to receive. Empty means all except the high-volume types EVENT_TYPE_SERVER_TICK,
+    // EVENT_TYPE_PLAYER_MOVE, EVENT_TYPE_ENTITY_SPAWN and EVENT_TYPE_ENTITY_REMOVE, which are only
+    // sent when listed.
     repeated EventType types = 1;
     // Only send EVENT_TYPE_SERVER_TICK every N ticks (default 20).
     int32 tick_interval = 2;
@@ -53,6 +56,11 @@ message SubscribeRequest {
     // Only send events about these players, by name or UUID. Empty means all players.
     // Applies to EVENT_TYPE_PLAYER_MOVE.
     repeated string players = 6;
+
+    // Only send EVENT_TYPE_ENTITY_SPAWN and EVENT_TYPE_ENTITY_REMOVE for these entity types, e.g.
+    // "minecraft:zombie". Empty means all types except item entities, experience orbs and players,
+    // which are only sent when listed.
+    repeated string entity_types = 7;
 }
 
 message Event {
@@ -76,6 +84,8 @@ message Event {
         LifecycleEvent server_started = 23;
         LifecycleEvent server_stopping = 24;
         PlayerMoveEvent player_move = 25;
+        EntitySpawnEvent entity_spawn = 26;
+        EntityRemoveEvent entity_remove = 27;
     }
 }
 
@@ -141,6 +151,28 @@ message DimensionChangeEvent {
     string player_uuid = 2;
     string from = 3;
     string to = 4;
+}
+
+// A new entity was added to the world. Entities loaded with their chunk are not reported.
+message EntitySpawnEvent {
+    EntityInfo entity = 1;
+    // How a mob or other entity type was created, e.g. "natural", "breeding" or "command". Not set
+    // for entities the game creates directly, such as projectiles and dropped items.
+    optional string spawn_reason = 2;
+}
+
+enum RemovalReason {
+    REMOVAL_REASON_UNSPECIFIED = 0;
+    REMOVAL_REASON_KILLED = 1;
+    REMOVAL_REASON_DISCARDED = 2;
+    REMOVAL_REASON_UNLOADED_TO_CHUNK = 3;
+    REMOVAL_REASON_UNLOADED_WITH_PLAYER = 4;
+    REMOVAL_REASON_CHANGED_DIMENSION = 5;
+}
+
+message EntityRemoveEvent {
+    EntityInfo entity = 1;
+    RemovalReason reason = 2;
 }
 
 message CommandEvent {
