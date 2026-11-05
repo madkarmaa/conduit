@@ -34,6 +34,8 @@ internal fun MinecraftServer.applyWorldOperation(
         GET_SPAWN -> result.spawn = spawnPoint()
         SET_SPAWN -> changeSpawnPoint(operation.setSpawn)
         EXPLODE -> explode(operation.explode)
+        GET_WORLD_BORDER -> result.worldBorder = worldBorderOf(operation.getWorldBorder)
+        SET_WORLD_BORDER -> changeWorldBorder(operation.setWorldBorder)
         else -> return false
     }
 

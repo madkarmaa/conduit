@@ -96,4 +96,12 @@ class WorldServiceImpl : WorldServiceGrpcKt.WorldServiceCoroutineImplBase() {
         it.explode(request)
         EMPTY
     }
+
+    override suspend fun getWorldBorder(request: DimensionRef): WorldBorderInfo =
+        GameServer.run { it.worldBorderOf(request) }
+
+    override suspend fun setWorldBorder(request: SetWorldBorderRequest): Empty = GameServer.run {
+        it.changeWorldBorder(request)
+        EMPTY
+    }
 }

@@ -58,6 +58,8 @@ message Operation {
         google.protobuf.Empty get_spawn = 20;
         SpawnPoint set_spawn = 21;
         ExplodeRequest explode = 22;
+        DimensionRef get_world_border = 23;
+        SetWorldBorderRequest set_world_border = 24;
 
         ListEntitiesRequest list_entities = 100;
         EntityRef get_entity = 101;
@@ -139,5 +141,6 @@ message OperationResult {
         Inventory inventory = 22;
         GiveItemResponse give_item = 23;
         ExecuteCommandResponse execute_command = 24;
+        WorldBorderInfo world_border = 25;
     }
 }

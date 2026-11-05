@@ -51,7 +51,7 @@ enabled, so tools like `grpcurl` can discover them.
 | ----------------- | ---------------------------------------------------------------------- |
 | `ServerService`   | Server info, performance, any command with captured output, save, stop |
 | `WorldService`    | Blocks and regions, block entities, biomes, heightmaps, chunks, time,  |
-|                   | weather, game rules, spawn, explosions                                 |
+|                   | weather, game rules, spawn, explosions, world border                   |
 | `EntityService`   | Query (filters or selectors), spawn, remove, teleport, NBT, effects,   |
 |                   | attributes, damage, riding                                             |
 | `PlayerService`   | Inventories, items, game mode, hunger, experience, messages, titles,   |

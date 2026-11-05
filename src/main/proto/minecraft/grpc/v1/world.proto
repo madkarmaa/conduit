@@ -35,6 +35,10 @@ service WorldService {
     rpc GetSpawn(google.protobuf.Empty) returns (SpawnPoint);
     rpc SetSpawn(SpawnPoint) returns (google.protobuf.Empty);
     rpc Explode(ExplodeRequest) returns (google.protobuf.Empty);
+    // Each dimension has its own world border.
+    rpc GetWorldBorder(DimensionRef) returns (WorldBorderInfo);
+    // Fails with INVALID_ARGUMENT for values outside the ranges the game allows.
+    rpc SetWorldBorder(SetWorldBorderRequest) returns (google.protobuf.Empty);
 }
 
 message DimensionRef {
@@ -224,4 +228,38 @@ message ExplodeRequest {
     bool fire = 4;
     // NONE, BLOCK, MOB, TNT or TRIGGER. Default TNT.
     string interaction = 5;
+}
+
+message WorldBorderInfo {
+    double center_x = 1;
+    double center_z = 2;
+    // Current side length in blocks.
+    double size = 3;
+    // Size the border is moving towards; the current size when it is not moving.
+    double target_size = 4;
+    // Time until the border reaches the target size, at the current tick rate.
+    int64 remaining_transition_ms = 5;
+    double damage_per_block = 6;
+    // Distance outside the border, in blocks, before players take damage.
+    double damage_safe_zone = 7;
+    int32 warning_blocks = 8;
+    int32 warning_time_ticks = 9;
+}
+
+// Unset fields stay unchanged.
+message SetWorldBorderRequest {
+    string dimension = 1;
+    // Between -29,999,984 and 29,999,984.
+    optional double center_x = 2;
+    optional double center_z = 3;
+    // Between 1 and 59,999,968.
+    optional double size = 4;
+    // Moves the border from its current size to size over this time, converted to ticks at the
+    // current tick rate; 0 changes it instantly. Requires size.
+    int64 transition_ms = 5;
+    // At least 0.
+    optional double damage_per_block = 6;
+    optional double damage_safe_zone = 7;
+    optional int32 warning_blocks = 8;
+    optional int32 warning_time_ticks = 9;
 }
