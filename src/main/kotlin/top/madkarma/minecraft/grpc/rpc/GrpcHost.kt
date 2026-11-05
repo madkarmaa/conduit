@@ -43,6 +43,9 @@ object GrpcHost {
             .intercept(AuthInterceptor(config)).addService(health.healthService)
             .addService(ProtoReflectionServiceV1.newInstance())
 
+        // Interceptors run in reverse order, so the audit log also sees calls rejected by auth.
+        if (config.auditLog) builder.intercept(AuditInterceptor())
+
         services.forEach { builder.addService(it) }
         server = builder.build().start()
 

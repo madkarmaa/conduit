@@ -30,10 +30,14 @@ On first start the mod writes `config/minecraft-grpc.json`:
 | `port`        | `25585`                            | Listen port                                |
 | `requireAuth` | `true`                             | Require a bearer token                     |
 | `token`       | random, generated on first start   | Token expected in `authorization` metadata |
+| `auditLog`    | `true`                             | Log calls that change the game             |
 
 Each setting can be overridden with an environment variable: `MINECRAFT_GRPC_ENABLED`,
-`MINECRAFT_GRPC_HOST`, `MINECRAFT_GRPC_PORT`, `MINECRAFT_GRPC_REQUIRE_AUTH` and
-`MINECRAFT_GRPC_TOKEN`.
+`MINECRAFT_GRPC_HOST`, `MINECRAFT_GRPC_PORT`, `MINECRAFT_GRPC_REQUIRE_AUTH`,
+`MINECRAFT_GRPC_TOKEN` and `MINECRAFT_GRPC_AUDIT_LOG`.
+
+The audit log records every call that is not read-only, and every call rejected for a missing or
+wrong token, through the `minecraft_grpc/audit` logger, so it can be routed to its own file.
 
 Every call except the standard health check needs `authorization: Bearer <token>`.
 
