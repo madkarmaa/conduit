@@ -16,6 +16,7 @@ data class GrpcConfig(
     var requireAuth: Boolean = true,
     var token: String = "",
     var auditLog: Boolean = true,
+    var backupDirectory: String = "backups",
 ) {
     companion object {
         private val LOGGER = LoggerFactory.getLogger("minecraft_grpc")
@@ -56,6 +57,7 @@ data class GrpcConfig(
             env("TOKEN")?.let { config.token = it }
             env("REQUIRE_AUTH")?.let { config.requireAuth = it.toBoolean() }
             env("AUDIT_LOG")?.let { config.auditLog = it.toBoolean() }
+            env("BACKUP_DIRECTORY")?.let { config.backupDirectory = it }
         }
 
         private fun env(name: String): String? =

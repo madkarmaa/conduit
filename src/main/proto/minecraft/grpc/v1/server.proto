@@ -23,6 +23,10 @@ service ServerService {
     // the new list. Fails with NOT_FOUND for an unknown pack, FAILED_PRECONDITION for a pack that
     // cannot be changed and ABORTED while another reload from this API is running.
     rpc SetDatapackEnabled(SetDatapackEnabledRequest) returns (DatapackList);
+    // Saves the world and zips it into the backup directory while the server keeps running.
+    // Autosave is paused during the backup. Fails with ABORTED while another backup is running.
+    rpc Backup(BackupRequest) returns (BackupResponse);
+    rpc ListBackups(google.protobuf.Empty) returns (BackupList);
 }
 
 message ServerInfo {
@@ -109,4 +113,28 @@ message Datapack {
 message SetDatapackEnabledRequest {
     string id = 1;
     bool enabled = 2;
+}
+
+message BackupRequest {
+    // Appended to the file name, at most 64 characters; characters other than A-Z, a-z, 0-9, _
+    // and - become _.
+    optional string name = 1;
+}
+
+message BackupResponse {
+    // Absolute path of the zip file.
+    string path = 1;
+    int64 size_bytes = 2;
+    int64 duration_ms = 3;
+}
+
+message BackupList {
+    repeated BackupFile backups = 1;
+}
+
+message BackupFile {
+    string name = 1;
+    int64 size_bytes = 2;
+    // Unix time in milliseconds.
+    int64 created_timestamp_ms = 3;
 }

@@ -39,4 +39,8 @@ class ServerServiceImpl : ServerServiceGrpcKt.ServerServiceCoroutineImplBase() {
 
     override suspend fun setDatapackEnabled(request: SetDatapackEnabledRequest): DatapackList =
         changeDatapackEnabled(request)
+
+    override suspend fun backup(request: BackupRequest): BackupResponse = createBackup(request)
+
+    override suspend fun listBackups(request: Empty): BackupList = describeBackups()
 }
