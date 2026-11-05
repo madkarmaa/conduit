@@ -17,12 +17,6 @@
                 "value": "top.madkarma.minecraft.grpc.MinecraftGRPC",
                 "adapter": "kotlin"
             }
-        ],
-        "client": [
-            {
-                "value": "top.madkarma.minecraft.grpc.client.MinecraftGRPCClient",
-                "adapter": "kotlin"
-            }
         ]
     },
     "mixins": [

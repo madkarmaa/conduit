@@ -17,17 +17,6 @@ repositories {
     // for more information about repositories.
 }
 
-loom {
-    splitEnvironmentSourceSets()
-
-    mods {
-        register("minecraft_grpc") {
-            sourceSet(sourceSets.main.get())
-            sourceSet(sourceSets.getByName("client"))
-        }
-    }
-}
-
 // Libraries bundled into the mod jar via jar-in-jar, together with their transitive dependencies.
 val bundled: Configuration = configurations.create("bundled")
 
@@ -55,14 +44,18 @@ dependencies {
 
     // Fabric API. This is technically optional, but you probably want it anyway.
     implementation(
-        "net.fabricmc.fabric-api:fabric-api:${providers.gradleProperty(
-            "fabric_api_version",
-        ).get()}",
+        "net.fabricmc.fabric-api:fabric-api:${
+            providers.gradleProperty(
+                "fabric_api_version",
+            ).get()
+        }",
     )
     implementation(
-        "net.fabricmc:fabric-language-kotlin:${providers.gradleProperty(
-            "fabric_kotlin_version",
-        ).get()}",
+        "net.fabricmc:fabric-language-kotlin:${
+            providers.gradleProperty(
+                "fabric_kotlin_version",
+            ).get()
+        }",
     )
 
     bundled("io.grpc:grpc-netty-shaded:$grpcVersion")
@@ -76,8 +69,7 @@ dependencies {
 
     // Loom's include configuration is not transitive, so every resolved module is listed
     // explicitly.
-    bundled.resolvedConfiguration.resolvedArtifacts
-        .map { it.moduleVersion.id }
+    bundled.resolvedConfiguration.resolvedArtifacts.map { it.moduleVersion.id }
         .filter { it.group !in providedGroups }
         .forEach { include("${it.group}:${it.name}:${it.version}") }
 }

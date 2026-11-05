@@ -1,6 +1,5 @@
 package top.madkarma.minecraft.grpc
 
-import net.fabricmc.api.EnvType
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.loader.api.FabricLoader
@@ -22,18 +21,12 @@ object MinecraftGRPC : ModInitializer {
     private val LOGGER = LoggerFactory.getLogger(MOD_ID)
 
     val version: String by lazy {
-        FabricLoader.getInstance().getModContainer(MOD_ID).map {
-            it.metadata.version.friendlyString
-        }.orElse("unknown")
+        FabricLoader.getInstance().getModContainer(MOD_ID).map { it.metadata.version.friendlyString }.orElse("unknown")
     }
 
     val config: GrpcConfig by lazy { GrpcConfig.load() }
 
     override fun onInitialize() {
-        ServerLifecycleEvents.SERVER_STARTING.register { GameServer.current = it }
-        ServerLifecycleEvents.SERVER_STOPPED.register { server ->
-            if (GameServer.current === server) GameServer.current = null
-        }
         GameEvents.register()
 
         GrpcHost.register(
@@ -44,13 +37,19 @@ object MinecraftGRPC : ModInitializer {
             EventServiceImpl(),
         )
 
-        // On a client the client entrypoint adds its services and starts the server.
-        if (FabricLoader.getInstance().environmentType != EnvType.SERVER) return
-        startGrpc()
-        ServerLifecycleEvents.SERVER_STOPPED.register { GrpcHost.stop() }
+        // Singleplayer worlds start and stop an integrated server each time they are opened.
+        ServerLifecycleEvents.SERVER_STARTING.register { server ->
+            GameServer.current = server
+            startGrpc()
+        }
+
+        ServerLifecycleEvents.SERVER_STOPPED.register { server ->
+            GrpcHost.stop()
+            if (GameServer.current === server) GameServer.current = null
+        }
     }
 
-    fun startGrpc() {
+    private fun startGrpc() {
         try {
             GrpcHost.start(config)
         } catch (exception: Exception) {
