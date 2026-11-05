@@ -12,11 +12,7 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.Relative
 import net.minecraft.world.level.storage.TagValueInput
 import net.minecraft.world.level.storage.TagValueOutput
-import top.madkarma.minecraft.grpc.game.entity
-import top.madkarma.minecraft.grpc.game.level
-import top.madkarma.minecraft.grpc.game.toComponent
-import top.madkarma.minecraft.grpc.game.toMc
-import top.madkarma.minecraft.grpc.game.toProto
+import top.madkarma.minecraft.grpc.game.*
 import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.failedPrecondition
 

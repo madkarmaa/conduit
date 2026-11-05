@@ -15,17 +15,8 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import top.madkarma.minecraft.grpc.game.entity
-import top.madkarma.minecraft.grpc.game.level
-import top.madkarma.minecraft.grpc.game.parseId
-import top.madkarma.minecraft.grpc.game.toMc
-import top.madkarma.minecraft.grpc.game.toProto
-import top.madkarma.minecraft.grpc.proto.EntityInfo
-import top.madkarma.minecraft.grpc.proto.EntityList
-import top.madkarma.minecraft.grpc.proto.EntityRef
-import top.madkarma.minecraft.grpc.proto.ListEntitiesRequest
-import top.madkarma.minecraft.grpc.proto.SpawnEntityRequest
-import top.madkarma.minecraft.grpc.proto.entityList
+import top.madkarma.minecraft.grpc.game.*
+import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.failedPrecondition
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 
