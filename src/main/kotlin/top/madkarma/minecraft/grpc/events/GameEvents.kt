@@ -134,7 +134,12 @@ object GameEvents {
         val lifecycle = LifecycleEvent.getDefaultInstance()
 
         ServerTickEvents.END_SERVER_TICK.register { server ->
-            EventBus.publish(EventType.EVENT_TYPE_SERVER_TICK) { serverTick = tickPayload(server) }
+            EventBus.publish(
+                EventType.EVENT_TYPE_SERVER_TICK,
+                accepts = { server.tickCount % it.tickInterval == 0 },
+            ) {
+                serverTick = tickPayload(server)
+            }
         }
 
         ServerLifecycleEvents.SERVER_STARTED.register {
