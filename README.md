@@ -47,16 +47,17 @@ The service definitions live in
 [`src/main/proto/minecraft/grpc/v1`](src/main/proto/minecraft/grpc/v1). Server reflection is
 enabled, so tools like `grpcurl` can discover them.
 
-| Service         | Scope                                                                  |
-| --------------- | ---------------------------------------------------------------------- |
-| `ServerService` | Server info, performance, any command with captured output, save, stop |
-| `WorldService`  | Blocks and regions, block entities, biomes, heightmaps, chunks, time,  |
-|                 | weather, game rules, spawn, explosions                                 |
-| `EntityService` | Query (filters or selectors), spawn, remove, teleport, NBT, effects,   |
-|                 | attributes, damage, riding                                             |
-| `PlayerService` | Inventories, items, game mode, hunger, experience, messages, titles,   |
-|                 | sounds, kick, operator status                                          |
-| `EventService`  | Live stream of chat, joins, block, combat, command and tick events     |
+| Service           | Scope                                                                  |
+| ----------------- | ---------------------------------------------------------------------- |
+| `ServerService`   | Server info, performance, any command with captured output, save, stop |
+| `WorldService`    | Blocks and regions, block entities, biomes, heightmaps, chunks, time,  |
+|                   | weather, game rules, spawn, explosions                                 |
+| `EntityService`   | Query (filters or selectors), spawn, remove, teleport, NBT, effects,   |
+|                   | attributes, damage, riding                                             |
+| `PlayerService`   | Inventories, items, game mode, hunger, experience, messages, titles,   |
+|                   | sounds, kick, operator status                                          |
+| `EventService`    | Live stream of chat, joins, block, combat, command and tick events     |
+| `RegistryService` | Registries and their entries, tags, recipes, loot tables               |
 
 In singleplayer the gRPC server runs while a world is open.
 

@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package minecraft.grpc.v1;
+
+import "google/protobuf/empty.proto";
+import "minecraft/grpc/v1/common.proto";
+
+option java_multiple_files = true;
+option java_package = "top.madkarma.minecraft.grpc.proto";
+
+// Read-only game data: registries, tags, recipes and loot tables, including datapack content.
+// Lists are sorted by id, so paging with offset and limit is stable.
+service RegistryService {
+    rpc ListRegistries(google.protobuf.Empty) returns (RegistryList);
+    rpc ListRegistryEntries(ListRegistryEntriesRequest) returns (RegistryEntryList);
+    rpc ListTags(ListTagsRequest) returns (TagList);
+    rpc ListRecipes(ListRecipesRequest) returns (RecipeList);
+    rpc GetRecipe(GetRecipeRequest) returns (Recipe);
+    rpc GetLootTable(GetLootTableRequest) returns (LootTable);
+}
+
+message RegistryInfo {
+    // Registry id, e.g. "minecraft:block" or "minecraft:worldgen/biome".
+    string id = 1;
+    int32 entry_count = 2;
+}
+
+message RegistryList {
+    repeated RegistryInfo registries = 1;
+}
+
+message ListRegistryEntriesRequest {
+    // Registry id, e.g. "minecraft:item". Required.
+    string registry = 1;
+    // Case-insensitive substring of the entry id.
+    string filter = 2;
+    // Only members of this tag, e.g. "#minecraft:logs"; the "#" is optional.
+    string tag = 3;
+    int32 offset = 4;
+    // 0 means 1000; at most 10000.
+    int32 limit = 5;
+}
+
+message RegistryEntry {
+    string id = 1;
+}
+
+message RegistryEntryList {
+    repeated RegistryEntry entries = 1;
+    // Number of matching entries before offset and limit.
+    int32 total = 2;
+}
+
+message ListTagsRequest {
+    // Registry id, e.g. "minecraft:block". Required.
+    string registry = 1;
+}
+
+message Tag {
+    // Tag id without "#", e.g. "minecraft:logs".
+    string id = 1;
+    repeated string entries = 2;
+}
+
+message TagList {
+    repeated Tag tags = 1;
+}
+
+message ListRecipesRequest {
+    // Recipe type as in the recipe JSON, e.g. "minecraft:crafting_shaped" or "minecraft:smelting".
+    string type = 1;
+    // Only recipes producing this item, e.g. "minecraft:crafting_table".
+    string result_item = 2;
+    int32 offset = 3;
+    // 0 means 1000; at most 10000.
+    int32 limit = 4;
+}
+
+message Recipe {
+    string id = 1;
+    string type = 2;
+    string group = 3;
+    // Set when the result does not depend on the crafting input.
+    optional ItemStack result = 4;
+    // The full recipe in the datapack JSON format.
+    string json = 5;
+}
+
+message RecipeList {
+    repeated Recipe recipes = 1;
+    // Number of matching recipes before offset and limit.
+    int32 total = 2;
+}
+
+message GetRecipeRequest {
+    // Recipe id, e.g. "minecraft:crafting_table".
+    string id = 1;
+}
+
+message GetLootTableRequest {
+    // Loot table id, e.g. "minecraft:blocks/diamond_ore".
+    string id = 1;
+}
+
+message LootTable {
+    string id = 1;
+    // The full loot table in the datapack JSON format.
+    string json = 2;
+}

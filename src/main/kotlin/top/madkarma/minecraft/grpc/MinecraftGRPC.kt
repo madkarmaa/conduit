@@ -12,6 +12,7 @@ import top.madkarma.minecraft.grpc.rpc.GrpcHost
 import top.madkarma.minecraft.grpc.service.entity.EntityServiceImpl
 import top.madkarma.minecraft.grpc.service.events.EventServiceImpl
 import top.madkarma.minecraft.grpc.service.player.PlayerServiceImpl
+import top.madkarma.minecraft.grpc.service.registry.RegistryServiceImpl
 import top.madkarma.minecraft.grpc.service.server.ServerServiceImpl
 import top.madkarma.minecraft.grpc.service.world.WorldServiceImpl
 import kotlin.jvm.optionals.getOrNull
@@ -37,6 +38,7 @@ object MinecraftGRPC : ModInitializer {
             EntityServiceImpl(),
             PlayerServiceImpl(),
             EventServiceImpl(),
+            RegistryServiceImpl(),
         )
 
         // Singleplayer worlds start and stop an integrated server each time they are opened.
