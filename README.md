@@ -59,6 +59,8 @@ enabled, so tools like `grpcurl` can discover them.
 | `EventService`    | Live stream of chat, joins, movement, block, combat, command and tick  |
 |                   | events                                                                 |
 | `RegistryService` | Registries and their entries, tags, recipes, loot tables               |
+| `BatchService`    | Many world, entity, player and command operations in one call and one  |
+|                   | server tick                                                            |
 
 In singleplayer the gRPC server runs while a world is open.
 

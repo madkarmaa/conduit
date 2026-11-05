@@ -9,6 +9,7 @@ import top.madkarma.minecraft.grpc.config.GrpcConfig
 import top.madkarma.minecraft.grpc.events.GameEvents
 import top.madkarma.minecraft.grpc.game.GameServer
 import top.madkarma.minecraft.grpc.rpc.GrpcHost
+import top.madkarma.minecraft.grpc.service.batch.BatchServiceImpl
 import top.madkarma.minecraft.grpc.service.entity.EntityServiceImpl
 import top.madkarma.minecraft.grpc.service.events.EventServiceImpl
 import top.madkarma.minecraft.grpc.service.player.PlayerServiceImpl
@@ -39,6 +40,7 @@ object MinecraftGRPC : ModInitializer {
             PlayerServiceImpl(),
             EventServiceImpl(),
             RegistryServiceImpl(),
+            BatchServiceImpl(),
         )
 
         // Singleplayer worlds start and stop an integrated server each time they are opened.
