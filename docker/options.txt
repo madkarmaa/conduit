@@ -1,0 +1,9 @@
+version:5023
+onboardAccessibility:false
+joinedFirstServer:true
+skipMultiplayerWarning:true
+tutorialStep:none
+pauseOnLostFocus:false
+narrator:0
+realmsNotifications:false
+soundCategory_master:0.0
