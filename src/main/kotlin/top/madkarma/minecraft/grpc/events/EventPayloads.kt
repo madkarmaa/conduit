@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.state.BlockState
 import top.madkarma.minecraft.grpc.game.toProto
 import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.service.server.performance
+import kotlin.jvm.optionals.getOrNull
 
 internal fun chatPayload(sender: ServerPlayer, message: String): ChatEvent = chatEvent {
     player = sender.gameProfile.name
@@ -95,4 +96,4 @@ internal fun tickPayload(server: MinecraftServer): TickEvent = tickEvent {
 }
 
 private fun damageTypeOf(source: DamageSource): String =
-    source.typeHolder().unwrapKey().map { it.identifier().toString() }.orElse("")
+    source.typeHolder().unwrapKey().getOrNull()?.identifier()?.toString() ?: ""

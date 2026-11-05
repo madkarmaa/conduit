@@ -10,6 +10,7 @@ import top.madkarma.minecraft.grpc.game.enumByName
 import top.madkarma.minecraft.grpc.game.level
 import top.madkarma.minecraft.grpc.game.toMc
 import top.madkarma.minecraft.grpc.proto.*
+import kotlin.jvm.optionals.getOrNull
 
 internal fun MinecraftServer.describeDimensions(): DimensionList = dimensionList {
     for (level in allLevels) {
@@ -25,7 +26,8 @@ internal fun MinecraftServer.describeDimensions(): DimensionList = dimensionList
 }
 
 internal fun MinecraftServer.biomeAt(request: GetBlockRequest): String =
-    level(request.dimension).getBiome(request.pos.toMc()).unwrapKey().map { it.identifier().toString() }.orElse("")
+    level(request.dimension).getBiome(request.pos.toMc()).unwrapKey().getOrNull()?.identifier()
+        ?.toString() ?: ""
 
 internal fun MinecraftServer.heightAt(request: GetHeightRequest): Int {
     val type = enumByName(request.heightmap, Heightmap.Types.MOTION_BLOCKING, "heightmap")
