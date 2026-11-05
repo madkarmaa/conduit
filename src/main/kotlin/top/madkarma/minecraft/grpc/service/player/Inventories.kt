@@ -28,8 +28,7 @@ internal fun MinecraftServer.changeInventorySlot(request: SetInventorySlotReques
     inventory.setItem(request.slot, request.item.toMc(registryAccess()))
 }
 
-/** Returns how many items did not fit and were dropped at the player's feet. */
-internal fun MinecraftServer.giveItem(request: GiveItemRequest): Int {
+internal fun MinecraftServer.giveItem(request: GiveItemRequest): GiveItemResponse {
     val player = player(request.player)
     val stack = request.item.toMc(registryAccess())
 
@@ -38,7 +37,11 @@ internal fun MinecraftServer.giveItem(request: GiveItemRequest): Int {
     val dropped = stack.count
     if (!stack.isEmpty) player.drop(stack, false, Prediction.SERVER_ONLY)
 
-    return dropped
+    return giveItemResponse { this.dropped = dropped }
+}
+
+internal fun MinecraftServer.clearInventory(request: PlayerRef) {
+    player(request.player).inventory.clearContent()
 }
 
 internal fun MinecraftServer.selectHotbarSlot(request: SetSelectedSlotRequest) {

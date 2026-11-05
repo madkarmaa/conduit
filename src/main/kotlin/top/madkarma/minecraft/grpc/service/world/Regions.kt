@@ -7,10 +7,7 @@ import net.minecraft.world.level.block.state.BlockState
 import top.madkarma.minecraft.grpc.game.level
 import top.madkarma.minecraft.grpc.game.parseBlock
 import top.madkarma.minecraft.grpc.game.toProto
-import top.madkarma.minecraft.grpc.proto.BlockRegion
-import top.madkarma.minecraft.grpc.proto.FillRequest
-import top.madkarma.minecraft.grpc.proto.GetBlocksRequest
-import top.madkarma.minecraft.grpc.proto.blockRegion
+import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import kotlin.math.max
 import kotlin.math.min
@@ -47,7 +44,7 @@ internal fun MinecraftServer.readRegion(request: GetBlocksRequest): BlockRegion 
     }
 }
 
-internal fun MinecraftServer.fillRegion(request: FillRequest): Int {
+internal fun MinecraftServer.fillRegion(request: FillRequest): SetBlocksResponse {
     val level = level(request.dimension)
     val (min, max) = bounds(request.from, request.to)
     val block = parseBlock(registryAccess(), request.state)
@@ -59,7 +56,7 @@ internal fun MinecraftServer.fillRegion(request: FillRequest): Int {
         if (place(level, position.immutable(), block, updateFlags(request.noUpdates))) changed++
     }
 
-    return changed
+    return setBlocksResponse { this.changed = changed }
 }
 
 // A bare block id ("minecraft:furnace") is meant to match all of its states.

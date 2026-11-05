@@ -14,8 +14,14 @@ import top.madkarma.minecraft.grpc.game.player
 import top.madkarma.minecraft.grpc.game.toComponent
 import top.madkarma.minecraft.grpc.game.toMc
 import top.madkarma.minecraft.grpc.proto.PlaySoundRequest
+import top.madkarma.minecraft.grpc.proto.SendMessageRequest
 import top.madkarma.minecraft.grpc.proto.SendTitleRequest
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
+
+internal fun MinecraftServer.sendMessage(request: SendMessageRequest) {
+    val message = request.message.toComponent(registryAccess())
+    player(request.player).sendSystemMessage(message, request.overlay)
+}
 
 internal fun MinecraftServer.sendTitle(request: SendTitleRequest) {
     val connection = player(request.player).connection

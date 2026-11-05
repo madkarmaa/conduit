@@ -16,6 +16,7 @@ import top.madkarma.minecraft.grpc.game.entity
 import top.madkarma.minecraft.grpc.game.level
 import top.madkarma.minecraft.grpc.game.toComponent
 import top.madkarma.minecraft.grpc.game.toMc
+import top.madkarma.minecraft.grpc.game.toProto
 import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.failedPrecondition
 
@@ -33,7 +34,7 @@ internal fun MinecraftServer.removeEntity(request: RemoveEntityRequest) {
     }
 }
 
-internal fun MinecraftServer.teleportEntity(request: TeleportRequest): Entity {
+internal fun MinecraftServer.teleportEntity(request: TeleportRequest): EntityInfo {
     val entity = entity(request.uuid)
     val current = entity.level() as ServerLevel
     val level = if (request.dimension.isBlank()) current else level(request.dimension)
@@ -58,7 +59,7 @@ internal fun MinecraftServer.teleportEntity(request: TeleportRequest): Entity {
     }
 
     // Entities other than players are recreated when they change dimension.
-    return entity(request.uuid)
+    return entity(request.uuid).toProto()
 }
 
 internal fun MinecraftServer.changeVelocity(request: SetVelocityRequest) {
@@ -67,6 +68,10 @@ internal fun MinecraftServer.changeVelocity(request: SetVelocityRequest) {
 
     entity.deltaMovement = if (request.add) entity.deltaMovement.add(velocity) else velocity
     entity.syncVelocity = true
+}
+
+internal fun MinecraftServer.changeRotation(request: SetRotationRequest) {
+    rotate(entity(request.uuid), request.rotation.yaw, request.rotation.pitch)
 }
 
 internal fun rotate(entity: Entity, yaw: Float, pitch: Float) {
@@ -100,6 +105,9 @@ internal fun MinecraftServer.saveEntity(entity: Entity): CompoundTag {
     return output.buildResult()
 }
 
+internal fun MinecraftServer.entityNbt(request: EntityRef): Nbt =
+    nbt { snbt = saveEntity(entity(request.uuid)).toString() }
+
 internal fun MinecraftServer.mergeEntityNbt(request: MergeNbtRequest) {
     val entity = entity(request.uuid)
     if (entity is ServerPlayer) failedPrecondition("Player data is read-only; use PlayerService")
@@ -130,4 +138,8 @@ internal fun MinecraftServer.mount(request: MountRequest) {
     if (!passenger.startRiding(entity(request.vehicle), true, true)) {
         failedPrecondition("Entity cannot ride ${request.vehicle}")
     }
+}
+
+internal fun MinecraftServer.dismount(request: EntityRef) {
+    entity(request.uuid).stopRiding()
 }

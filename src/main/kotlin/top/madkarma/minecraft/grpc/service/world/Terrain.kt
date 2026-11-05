@@ -25,11 +25,12 @@ internal fun MinecraftServer.describeDimensions(): DimensionList = dimensionList
     }
 }
 
-internal fun MinecraftServer.biomeAt(request: GetBlockRequest): String =
-    level(request.dimension).getBiome(request.pos.toMc()).unwrapKey().getOrNull()?.identifier()
+internal fun MinecraftServer.biomeAt(request: GetBlockRequest): Biome = biome {
+    id = level(request.dimension).getBiome(request.pos.toMc()).unwrapKey().getOrNull()?.identifier()
         ?.toString() ?: ""
+}
 
-internal fun MinecraftServer.heightAt(request: GetHeightRequest): Int {
+internal fun MinecraftServer.heightAt(request: GetHeightRequest): GetHeightResponse {
     val type = enumByName(request.heightmap, Heightmap.Types.MOTION_BLOCKING, "heightmap")
     val level = level(request.dimension)
 
@@ -38,7 +39,7 @@ internal fun MinecraftServer.heightAt(request: GetHeightRequest): Int {
     val chunkZ = SectionPos.blockToSectionCoord(request.z)
 
     level.getChunk(chunkX, chunkZ)
-    return level.getHeight(type, request.x, request.z)
+    return getHeightResponse { y = level.getHeight(type, request.x, request.z) }
 }
 
 internal fun MinecraftServer.describeChunk(request: ChunkRequest): ChunkInfo {
@@ -58,4 +59,8 @@ internal fun MinecraftServer.describeChunk(request: ChunkRequest): ChunkInfo {
         entityCount = level.getEntities(null as Entity?, box) { true }.size
         blockEntityCount = chunk.blockEntities.size
     }
+}
+
+internal fun MinecraftServer.changeChunkForced(request: SetChunkForcedRequest) {
+    level(request.dimension).setChunkForced(request.chunkX, request.chunkZ, request.forced)
 }

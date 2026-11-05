@@ -2,21 +2,17 @@ package top.madkarma.minecraft.grpc.service.player
 
 import com.google.protobuf.Empty
 import top.madkarma.minecraft.grpc.game.GameServer
-import top.madkarma.minecraft.grpc.game.player
-import top.madkarma.minecraft.grpc.game.toComponent
 import top.madkarma.minecraft.grpc.proto.*
 
 private val EMPTY: Empty = Empty.getDefaultInstance()
 
 class PlayerServiceImpl : PlayerServiceGrpcKt.PlayerServiceCoroutineImplBase() {
-    override suspend fun listPlayers(request: Empty): PlayerList = GameServer.run { server ->
-        playerList {
-            players += server.playerList.players.map { server.describePlayer(it) }
-        }
+    override suspend fun listPlayers(request: Empty): PlayerList = GameServer.run {
+        it.listPlayers()
     }
 
     override suspend fun getPlayer(request: PlayerRef): PlayerInfo =
-        GameServer.run { it.describePlayer(it.player(request.player)) }
+        GameServer.run { it.describePlayer(request) }
 
     override suspend fun getInventory(request: PlayerRef): Inventory = GameServer.run {
         it.inventoryOf(request.player)
@@ -33,10 +29,10 @@ class PlayerServiceImpl : PlayerServiceGrpcKt.PlayerServiceCoroutineImplBase() {
         }
 
     override suspend fun giveItem(request: GiveItemRequest): GiveItemResponse =
-        GameServer.run { server -> giveItemResponse { dropped = server.giveItem(request) } }
+        GameServer.run { it.giveItem(request) }
 
     override suspend fun clearInventory(request: PlayerRef): Empty = GameServer.run {
-        it.player(request.player).inventory.clearContent()
+        it.clearInventory(request)
         EMPTY
     }
 
@@ -60,12 +56,10 @@ class PlayerServiceImpl : PlayerServiceGrpcKt.PlayerServiceCoroutineImplBase() {
         EMPTY
     }
 
-    override suspend fun sendMessage(request: SendMessageRequest): Empty =
-        GameServer.run { server ->
-            val message = request.message.toComponent(server.registryAccess())
-            server.player(request.player).sendSystemMessage(message, request.overlay)
-            EMPTY
-        }
+    override suspend fun sendMessage(request: SendMessageRequest): Empty = GameServer.run {
+        it.sendMessage(request)
+        EMPTY
+    }
 
     override suspend fun sendTitle(request: SendTitleRequest): Empty = GameServer.run {
         it.sendTitle(request)
@@ -77,10 +71,8 @@ class PlayerServiceImpl : PlayerServiceGrpcKt.PlayerServiceCoroutineImplBase() {
         EMPTY
     }
 
-    override suspend fun kick(request: KickRequest): Empty = GameServer.run { server ->
-        server.player(
-            request.player,
-        ).connection.disconnect(request.reason.toComponent(server.registryAccess()))
+    override suspend fun kick(request: KickRequest): Empty = GameServer.run {
+        it.kick(request)
         EMPTY
     }
 

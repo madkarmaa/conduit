@@ -15,24 +15,39 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import top.madkarma.minecraft.grpc.game.entity
 import top.madkarma.minecraft.grpc.game.level
 import top.madkarma.minecraft.grpc.game.parseId
 import top.madkarma.minecraft.grpc.game.toMc
+import top.madkarma.minecraft.grpc.game.toProto
+import top.madkarma.minecraft.grpc.proto.EntityInfo
+import top.madkarma.minecraft.grpc.proto.EntityList
+import top.madkarma.minecraft.grpc.proto.EntityRef
 import top.madkarma.minecraft.grpc.proto.ListEntitiesRequest
 import top.madkarma.minecraft.grpc.proto.SpawnEntityRequest
+import top.madkarma.minecraft.grpc.proto.entityList
 import top.madkarma.minecraft.grpc.rpc.failedPrecondition
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 
 private const val UNLOADED_CHUNK_MESSAGE =
     "Chunk is not loaded; force-load it with WorldService.SetChunkForced or move a player nearby"
 
-internal fun MinecraftServer.findEntities(request: ListEntitiesRequest): List<Entity> {
+internal fun MinecraftServer.findEntities(request: ListEntitiesRequest): EntityList {
     val limit = if (request.limit > 0) request.limit else Int.MAX_VALUE
-    if (request.hasSelector()) return select(request).take(limit)
-    return EntityFilter(this, request).collect(limit)
+
+    val found = if (request.hasSelector()) {
+        select(request).take(limit)
+    } else {
+        EntityFilter(this, request).collect(limit)
+    }
+
+    return entityList { entities += found.map { it.toProto() } }
 }
 
-internal fun MinecraftServer.spawnEntity(request: SpawnEntityRequest): Entity {
+internal fun MinecraftServer.describeEntity(request: EntityRef): EntityInfo =
+    entity(request.uuid).toProto()
+
+internal fun MinecraftServer.spawnEntity(request: SpawnEntityRequest): EntityInfo {
     val key = ResourceKey.create(Registries.ENTITY_TYPE, parseId(request.type))
 
     val type = registryAccess().lookupOrThrow(Registries.ENTITY_TYPE).get(key)
@@ -53,7 +68,7 @@ internal fun MinecraftServer.spawnEntity(request: SpawnEntityRequest): Entity {
     )
 
     if (request.hasRotation()) rotate(entity, request.rotation.yaw, request.rotation.pitch)
-    return entity
+    return entity.toProto()
 }
 
 // Entities added to chunks that are not loaded are saved to disk and unloaded immediately.

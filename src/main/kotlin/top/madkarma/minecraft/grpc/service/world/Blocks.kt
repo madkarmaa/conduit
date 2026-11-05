@@ -32,20 +32,26 @@ internal fun MinecraftServer.writeBlock(request: SetBlockRequest) {
     place(level(request.dimension), request.pos.toMc(), block, updateFlags(request.noUpdates))
 }
 
-internal fun MinecraftServer.writeBlocks(request: SetBlocksRequest): Int {
+internal fun MinecraftServer.writeBlocks(request: SetBlocksRequest): SetBlocksResponse {
     val level = level(request.dimension)
     val parsed = HashMap<String, ParsedBlock>()
 
-    return request.changesList.count { change ->
+    val changed = request.changesList.count { change ->
         val block = parsed.getOrPut(change.state) { parseBlock(registryAccess(), change.state) }
         place(level, change.pos.toMc(), block, updateFlags(request.noUpdates))
     }
+
+    return setBlocksResponse { this.changed = changed }
 }
 
-internal fun MinecraftServer.readBlockEntity(request: GetBlockRequest): String = blockEntityAt(
-    level(request.dimension),
-    request.pos,
-).saveWithFullMetadata(registryAccess()).toString()
+internal fun MinecraftServer.breakBlock(request: BreakBlockRequest) {
+    level(request.dimension).destroyBlock(request.pos.toMc(), request.dropItems)
+}
+
+internal fun MinecraftServer.readBlockEntity(request: GetBlockRequest): Nbt {
+    val blockEntity = blockEntityAt(level(request.dimension), request.pos)
+    return nbt { snbt = blockEntity.saveWithFullMetadata(registryAccess()).toString() }
+}
 
 internal fun MinecraftServer.mergeBlockEntity(request: SetBlockEntityRequest) {
     val level = level(request.dimension)

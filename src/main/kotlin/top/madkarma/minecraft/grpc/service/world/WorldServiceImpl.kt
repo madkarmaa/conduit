@@ -2,8 +2,6 @@ package top.madkarma.minecraft.grpc.service.world
 
 import com.google.protobuf.Empty
 import top.madkarma.minecraft.grpc.game.GameServer
-import top.madkarma.minecraft.grpc.game.level
-import top.madkarma.minecraft.grpc.game.toMc
 import top.madkarma.minecraft.grpc.proto.*
 
 private val EMPTY: Empty = Empty.getDefaultInstance()
@@ -26,39 +24,37 @@ class WorldServiceImpl : WorldServiceGrpcKt.WorldServiceCoroutineImplBase() {
     }
 
     override suspend fun setBlocks(request: SetBlocksRequest): SetBlocksResponse =
-        GameServer.run { server -> setBlocksResponse { changed = server.writeBlocks(request) } }
+        GameServer.run { it.writeBlocks(request) }
 
     override suspend fun fill(request: FillRequest): SetBlocksResponse =
-        GameServer.run { server -> setBlocksResponse { changed = server.fillRegion(request) } }
+        GameServer.run { it.fillRegion(request) }
 
     override suspend fun breakBlock(request: BreakBlockRequest): Empty = GameServer.run {
-        it.level(request.dimension).destroyBlock(request.pos.toMc(), request.dropItems)
+        it.breakBlock(request)
         EMPTY
     }
 
     override suspend fun getBlockEntity(request: GetBlockRequest): Nbt =
-        GameServer.run { server -> nbt { snbt = server.readBlockEntity(request) } }
+        GameServer.run { it.readBlockEntity(request) }
 
     override suspend fun setBlockEntity(request: SetBlockEntityRequest): Empty = GameServer.run {
         it.mergeBlockEntity(request)
         EMPTY
     }
 
-    override suspend fun getBiome(request: GetBlockRequest): Biome = GameServer.run { server ->
-        biome {
-            id = server.biomeAt(request)
-        }
+    override suspend fun getBiome(request: GetBlockRequest): Biome = GameServer.run {
+        it.biomeAt(request)
     }
 
     override suspend fun getHeight(request: GetHeightRequest): GetHeightResponse =
-        GameServer.run { server -> getHeightResponse { y = server.heightAt(request) } }
+        GameServer.run { it.heightAt(request) }
 
     override suspend fun getChunk(request: ChunkRequest): ChunkInfo = GameServer.run {
         it.describeChunk(request)
     }
 
     override suspend fun setChunkForced(request: SetChunkForcedRequest): Empty = GameServer.run {
-        it.level(request.dimension).setChunkForced(request.chunkX, request.chunkZ, request.forced)
+        it.changeChunkForced(request)
         EMPTY
     }
 

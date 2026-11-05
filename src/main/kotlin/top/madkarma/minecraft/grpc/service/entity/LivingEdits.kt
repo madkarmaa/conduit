@@ -10,6 +10,7 @@ import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.LivingEntity
 import top.madkarma.minecraft.grpc.game.entity
 import top.madkarma.minecraft.grpc.game.parseId
+import top.madkarma.minecraft.grpc.game.toProto
 import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.failedPrecondition
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
@@ -18,6 +19,10 @@ private const val DEFAULT_EFFECT_TICKS = 600
 
 internal fun MinecraftServer.living(uuid: String): LivingEntity =
     entity(uuid) as? LivingEntity ?: failedPrecondition("Entity $uuid is not a living entity")
+
+internal fun MinecraftServer.changeHealth(request: SetHealthRequest) {
+    living(request.uuid).health = request.health
+}
 
 internal fun MinecraftServer.damage(request: DamageRequest) {
     val entity = entity(request.uuid)
@@ -28,6 +33,10 @@ internal fun MinecraftServer.damage(request: DamageRequest) {
     val attacker = if (request.hasAttacker()) entity(request.attacker) else null
 
     entity.hurtServer(entity.level() as ServerLevel, DamageSource(type, attacker), request.amount)
+}
+
+internal fun MinecraftServer.effectsOf(request: EntityRef): EffectList = effectList {
+    effects += living(request.uuid).activeEffects.map { it.toProto() }
 }
 
 internal fun MinecraftServer.addEffect(request: AddEffectRequest) {

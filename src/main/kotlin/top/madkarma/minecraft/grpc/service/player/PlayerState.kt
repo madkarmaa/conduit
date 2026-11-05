@@ -4,9 +4,18 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.GameType
 import top.madkarma.minecraft.grpc.game.player
+import top.madkarma.minecraft.grpc.game.toComponent
 import top.madkarma.minecraft.grpc.game.toProto
 import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
+
+internal fun MinecraftServer.listPlayers(): PlayerList {
+    val online = playerList.players
+    return playerList { players += online.map { describePlayer(it) } }
+}
+
+internal fun MinecraftServer.describePlayer(request: PlayerRef): PlayerInfo =
+    describePlayer(player(request.player))
 
 internal fun MinecraftServer.describePlayer(player: ServerPlayer): PlayerInfo {
     val registries = registryAccess()
@@ -53,4 +62,8 @@ internal fun MinecraftServer.changeExperience(request: SetExperienceRequest) {
 internal fun MinecraftServer.changeOperator(request: SetOperatorRequest) {
     val id = player(request.player).nameAndId()
     if (request.operator) playerList.op(id) else playerList.deop(id)
+}
+
+internal fun MinecraftServer.kick(request: KickRequest) {
+    player(request.player).connection.disconnect(request.reason.toComponent(registryAccess()))
 }
