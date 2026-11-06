@@ -117,6 +117,39 @@ clients.server.executeCommand({ command: "time set day" }, (error, response) => 
 });
 ```
 
+## MCP server
+
+[`mcp`](./mcp) is an [MCP](https://modelcontextprotocol.io) server over stdio that lets AI agents
+control the game through the mod: blocks and regions, entities, players, inventories, registries,
+structures, commands and live events. It is built together with the mod, or on its own:
+
+```sh
+bun install
+cd mcp
+bun run build
+```
+
+| Variable                | Default           | Description                      |
+| ----------------------- | ----------------- | -------------------------------- |
+| `CONDUIT_ADDRESS`       | `localhost:25585` | gRPC address of the mod          |
+| `CONDUIT_TOKEN`         |                   | Bearer token of the mod          |
+| `CONDUIT_MCP_READ_ONLY` | `false`           | Only offer tools that read state |
+
+Tools that cannot be undone or that grant privileges are marked as destructive, so MCP hosts ask
+before running them. To add the server to an MCP host such as Claude Code:
+
+```json
+{
+    "mcpServers": {
+        "conduit": {
+            "command": "node",
+            "args": ["/path/to/conduit/mcp/dist/index.mjs"],
+            "env": { "CONDUIT_TOKEN": "<token>" }
+        }
+    }
+}
+```
+
 ## Test environment
 
 [`compose.yaml`](./compose.yaml) runs a Fabric server with the mod from `build/libs` and a vanilla
