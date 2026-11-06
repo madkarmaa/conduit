@@ -1,9 +1,12 @@
 import com.google.protobuf.gradle.id
+import org.gradle.plugins.ide.eclipse.model.Classpath
+import org.gradle.plugins.ide.eclipse.model.Library
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("net.fabricmc.fabric-loom")
     `maven-publish`
+    eclipse
     id("org.jetbrains.kotlin.jvm") version "2.4.21"
     id("com.google.protobuf") version "0.10.1"
     id("com.diffplug.spotless") version "8.11.0"
@@ -106,6 +109,18 @@ kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_25
     }
+}
+
+// Eclipse-based Java tooling (Buildship, jdtls) compiles only Java, so the mixins see the Kotlin
+// classes they call only through the Kotlin compiler output.
+eclipse {
+    synchronizationTasks(tasks.compileKotlin)
+    classpath.file.whenMerged(
+        Action<Classpath> {
+            val kotlinClasses = tasks.compileKotlin.get().destinationDirectory.get().asFile
+            entries.add(Library(fileReference(kotlinClasses)))
+        },
+    )
 }
 
 java {
