@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { McpServer } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
-import { close, connect } from "conduit-client";
+import { close, connect } from "@conduit/client";
 import { EventFeed } from "./events.ts";
 import { batchTools } from "./tools/batch.ts";
 import { blockTools } from "./tools/blocks.ts";

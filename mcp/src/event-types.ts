@@ -1,5 +1,5 @@
 import type * as grpc from "@grpc/grpc-js";
-import type { ConduitClients } from "conduit-client";
+import type { ConduitClients } from "@conduit/client";
 
 export type EventStream = ReturnType<ConduitClients["events"]["subscribe"]>;
 export type GameEvent = EventStream extends grpc.ClientReadableStream<infer Event> ? Event : never;

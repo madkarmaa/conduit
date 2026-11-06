@@ -1,4 +1,4 @@
-import type { ConduitClients } from "conduit-client";
+import type { ConduitClients } from "@conduit/client";
 import { z } from "zod";
 import { compact, done, json, lines, position, round } from "../format.ts";
 import { call } from "../grpc.ts";

@@ -1,5 +1,5 @@
 import type * as grpc from "@grpc/grpc-js";
-import type { ConduitClients } from "conduit-client";
+import type { ConduitClients } from "@conduit/client";
 import { Err, Ok, type AsyncResult, type Result } from "results-ts";
 import {
     matches,

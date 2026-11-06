@@ -20,7 +20,7 @@
     "dependencies": {
         "@grpc/grpc-js": "^1.14.7",
         "@modelcontextprotocol/server": "^2.4.0",
-        "conduit-client": "workspace:*",
+        "@conduit/client": "workspace:*",
         "results-ts": "^4.4.0",
         "zod": "^4.6.7"
     }

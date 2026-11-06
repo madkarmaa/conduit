@@ -1,4 +1,4 @@
-import type { ConduitClients } from "conduit-client";
+import type { ConduitClients } from "@conduit/client";
 import { Err, Ok } from "results-ts";
 import { z } from "zod";
 import { call, invalidInput } from "../grpc.ts";

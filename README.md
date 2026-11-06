@@ -113,7 +113,7 @@ bun run build
 ```
 
 ```ts
-import { close, connect } from "conduit-client";
+import { close, connect } from "@conduit/client";
 
 const clients = connect({ address: "localhost:25585", token: process.env.TOKEN });
 clients.server.executeCommand({ command: "time set day" }, (error, response) => {
