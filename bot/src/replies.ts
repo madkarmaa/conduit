@@ -1,5 +1,6 @@
 import { call, type CallError, type ConduitClients } from "@conduit/client";
 import type { AsyncResult } from "results-ts";
+import { toComponents } from "./formatting.ts";
 
 // A player's UUID, or everyone on the server.
 export type Audience = string | "everyone";
@@ -9,7 +10,7 @@ export interface Speaker {
     readonly name: string;
 }
 
-// Posts a chat message under the bot's name. A message can span several lines.
+// Posts a chat message under the bot's name. A message can span several lines and use § codes.
 export function say(
     speaker: Speaker,
     audience: Audience,
@@ -18,7 +19,7 @@ export function say(
     const message = {
         json: JSON.stringify({
             text: "",
-            extra: [{ text: `[${speaker.name}] `, color: "aqua" }, text],
+            extra: [{ text: `[${speaker.name}] `, color: "aqua" }, ...toComponents(text)],
         }),
     };
 

@@ -1,6 +1,7 @@
 import type { Mode } from "./access.ts";
 import type { ChatMessage } from "./chat.ts";
 import type { Config } from "./config.ts";
+import { CODE_LIST } from "./formatting.ts";
 
 // Agent CLIs have no common way to set a system prompt, so the context goes in front of the request.
 export function buildPrompt(
@@ -21,8 +22,9 @@ export function buildPrompt(
               "about those with them. Politely decline changes to the game and questions about " +
               "other players."
             : "",
-        "Your final answer is posted in the chat as plain text, so keep it to a few short",
-        "sentences and do not use Markdown.",
+        "The bot posts your final answer in the chat, so keep it to a few short sentences and do",
+        `not use Markdown. You can color and style words with Minecraft's codes: ${CODE_LIST}.`,
+        "A color code also ends the styles before it, so put styles after the color.",
         config.instructions,
     ];
 
