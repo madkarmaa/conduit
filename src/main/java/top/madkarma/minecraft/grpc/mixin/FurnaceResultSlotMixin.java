@@ -1,0 +1,42 @@
+package top.madkarma.minecraft.grpc.mixin;
+
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.FurnaceResultSlot;
+import net.minecraft.world.item.ItemStack;
+
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import top.madkarma.minecraft.grpc.events.CraftedItems;
+
+/**
+ * Covers furnaces, blast furnaces and smokers. Shift-click reports through onQuickCraft and then
+ * calls onTake with nothing left to count, other takes only call onTake.
+ */
+@Mixin(FurnaceResultSlot.class)
+public abstract class FurnaceResultSlotMixin {
+    @Shadow
+    @Final
+    private Player player;
+
+    @Shadow
+    private int removeCount;
+
+    @Inject(method = "onQuickCraft(Lnet/minecraft/world/item/ItemStack;I)V", at = @At("HEAD"))
+    private void minecraftGrpc$onQuickCraft(ItemStack result, int amount, CallbackInfo info) {
+        CraftedItems.onSmelted(player, result, amount);
+    }
+
+    @Inject(method = "onTake", at = @At("HEAD"))
+    private void minecraftGrpc$onTake(Player taker, ItemStack taken, CallbackInfo info) {
+        if (removeCount == 0) {
+            return;
+        }
+
+        CraftedItems.onSmelted(taker, taken, taken.getCount());
+    }
+}

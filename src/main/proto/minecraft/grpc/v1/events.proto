@@ -38,6 +38,9 @@ enum EventType {
     EVENT_TYPE_INVENTORY_CHANGE = 22;
     EVENT_TYPE_ITEM_PICKUP = 23;
     EVENT_TYPE_ITEM_DROP = 24;
+    EVENT_TYPE_ITEM_CRAFT = 25;
+    EVENT_TYPE_ITEM_SMELT = 26;
+    EVENT_TYPE_TRADE = 27;
 }
 
 message SubscribeRequest {
@@ -62,7 +65,8 @@ message SubscribeRequest {
 
     // Only send events about these players, by name or UUID. Empty means all players.
     // Applies to EVENT_TYPE_PLAYER_MOVE, EVENT_TYPE_ADVANCEMENT, EVENT_TYPE_INVENTORY_CHANGE,
-    // EVENT_TYPE_ITEM_PICKUP and EVENT_TYPE_ITEM_DROP.
+    // EVENT_TYPE_ITEM_PICKUP, EVENT_TYPE_ITEM_DROP, EVENT_TYPE_ITEM_CRAFT, EVENT_TYPE_ITEM_SMELT and
+    // EVENT_TYPE_TRADE.
     repeated string players = 6;
 
     // Only send EVENT_TYPE_ENTITY_SPAWN and EVENT_TYPE_ENTITY_REMOVE for these entity types, e.g.
@@ -104,6 +108,9 @@ message Event {
         InventoryChangeEvent inventory_change = 31;
         ItemEntityEvent item_pickup = 32;
         ItemEntityEvent item_drop = 33;
+        ItemCraftEvent item_craft = 34;
+        ItemCraftEvent item_smelt = 35;
+        TradeEvent trade = 36;
     }
 }
 
@@ -237,6 +244,31 @@ message ItemEntityEvent {
     // For pickups, only the part that fit into the inventory.
     ItemStack item = 3;
     string item_entity_uuid = 4;
+}
+
+// A player took the result out of a crafting grid or a furnace, blast furnace or smoker. Taking
+// several batches with one shift-click is reported as one event with the total.
+message ItemCraftEvent {
+    string player = 1;
+    string player_uuid = 2;
+    // The item taken, with the total count.
+    ItemStack result = 3;
+    // Recipe used, e.g. "minecraft:crafting_table". Not set for smelting.
+    optional string recipe_id = 4;
+    // Number of items taken.
+    int32 count = 5;
+}
+
+// A player traded with a villager or another merchant. Every trade is reported on its own, also
+// when one shift-click trades several times.
+message TradeEvent {
+    string player = 1;
+    string player_uuid = 2;
+    // Not set when the merchant is not an entity.
+    optional string merchant_uuid = 3;
+    ItemStack cost_a = 4;
+    optional ItemStack cost_b = 5;
+    ItemStack result = 6;
 }
 
 message CommandEvent {
