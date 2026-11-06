@@ -1,6 +1,6 @@
 import type { CallError, ConduitClients } from "@conduit/client";
 import { accessMode, toolPolicy, type Mode } from "./access.ts";
-import { fill, type AgentCommand } from "./agents.ts";
+import type { Agent } from "./agents.ts";
 import { findRequest, type ChatMessage } from "./chat.ts";
 import type { Config } from "./config.ts";
 import type { Conversation, Conversations, StateError } from "./conversations.ts";
@@ -17,7 +17,7 @@ import { copyLogins, returnLogins } from "./sandbox/logins.ts";
 export interface Bot {
     readonly clients: ConduitClients;
     readonly config: Config;
-    readonly agents: Readonly<Record<Mode, AgentCommand>>;
+    readonly agents: Readonly<Record<Mode, Agent>>;
     readonly conversations: Conversations;
     // Every container setting except the home, which depends on the conversation.
     readonly container: Omit<Container, "home">;
@@ -87,15 +87,13 @@ function answer(bot: Bot, request: Request): PromiseLike<void> {
 }
 
 function ask(bot: Bot, conversation: Conversation, request: Request) {
-    const agent = bot.agents[request.mode];
-    const template = (conversation.started && agent.resume) || agent.start;
     const prompt = buildPrompt(bot.config, request.sender, request.text, request.mode);
-    const command = template.map((part) => fill(part, { prompt }));
+    const command = bot.agents[request.mode].command(prompt, conversation.started);
     const container = { ...bot.container, home: conversation.directory };
     const policy = toolPolicy(bot.config, request.mode, request.sender);
     const mcp = { ...bot.mcp, env: { ...bot.mcp.env, ...policy } };
 
-    // Logins go into the agent's home for the run, and refreshed tokens come back even if it failed.
+    // Logins and configs go into the agent's home for the run, and refreshed tokens come back even if it failed.
     return copyLogins(conversation.directory, bot.logins).andThenAsync(async (copies) => {
         const answer = await runInContainer(container, mcp, command);
         await returnLogins(copies).match({

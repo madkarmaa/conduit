@@ -3,10 +3,8 @@
 import { spawn } from "node:child_process";
 import { createServer, type Socket } from "node:net";
 import { createInterface } from "node:readline";
-import type { FromContainer, ToContainer } from "./protocol.ts";
+import { SOCKET_PATH, type FromContainer, type ToContainer } from "./protocol.ts";
 
-// Must match the path in relay.ts. Both scripts run standalone, so they cannot share a module.
-const SOCKET_PATH = "/tmp/conduit-mcp.sock";
 // Only the end of stderr is kept for error reports, since agents can log a lot.
 const STDERR_LIMIT = 4000;
 
@@ -33,6 +31,7 @@ server.listen(SOCKET_PATH, () => {
     createInterface({ input: process.stdin }).on("line", (line) => {
         receive(JSON.parse(line) as ToContainer);
     });
+
     // The bot is gone, so nobody would read the answer.
     process.stdin.on("end", () => process.exit(1));
 });

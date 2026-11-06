@@ -2,43 +2,18 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { catchUnwind, Err, Ok, type Result } from "results-ts";
 import { z } from "zod";
-import { PRESET_NAMES } from "./agents.ts";
-
-const presetName = z.enum(PRESET_NAMES);
+import { AGENT_NAMES } from "./agents.ts";
 
 // Passed on as given, since every CLI has its own model names and effort levels.
-const modelChoice = {
-    model: z.string().min(1).optional(),
-    effort: z.string().min(1).optional(),
-};
-
-const agentSchema = z.union(
-    [
-        presetName.transform((preset) => ({
-            preset,
-            args: [] as string[],
-            model: undefined,
-            effort: undefined,
-        })),
-        z.strictObject({
-            preset: presetName,
-            args: z.array(z.string()).default([]),
-            ...modelChoice,
-        }),
-        z.strictObject({
-            command: z.array(z.string()).min(1),
-            resume: z.array(z.string()).min(1).optional(),
-            image: z.string().min(1),
-            ...modelChoice,
-        }),
-    ],
-    {
-        error: `Use a preset (${PRESET_NAMES.join(", ")}), { "preset", "args" } or { "command", "resume", "image" }`,
-    },
-);
+const model = z.string().min(1).optional();
+const effort = z.string().min(1).optional();
 
 const configSchema = z.strictObject({
-    agent: agentSchema,
+    agent: z.enum(AGENT_NAMES, { error: `Use one of ${AGENT_NAMES.join(", ")}` }),
+    model,
+    effort,
+    // Extra arguments for the agent's CLI.
+    args: z.array(z.string()).default([]),
     keyword: z
         .string()
         .regex(/^\w+$/, "Use letters, digits and underscores only")
@@ -53,7 +28,8 @@ const configSchema = z.strictObject({
             allow: z.array(z.string()).optional(),
             deny: z.array(z.string()).default([]),
             // Overrides the agent's model and effort, such as a cheaper model for chat mode.
-            ...modelChoice,
+            model,
+            effort,
         })
         .default({ enabled: false, deny: [] }),
     offline: z.boolean().default(false),
@@ -65,7 +41,6 @@ const configSchema = z.strictObject({
     stateDirectory: z.string().default(".conduit-bot"),
 });
 
-export type AgentConfig = z.infer<typeof agentSchema>;
 export type Memory = z.infer<typeof configSchema>["memory"];
 
 export type Config = z.infer<typeof configSchema>;

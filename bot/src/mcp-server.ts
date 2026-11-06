@@ -4,23 +4,32 @@ import { catchUnwind, Err, Ok, type Result } from "results-ts";
 import { z } from "zod";
 import type { McpServer } from "./agents.ts";
 
-const manifestSchema = z.object({ bin: z.object({ "conduit-mcp": z.string() }) });
+const manifestSchema = z.object({ bin: z.record(z.string(), z.string()) });
 
+// Resolves packages from this file, the way an import here would.
 const require = createRequire(import.meta.url);
 
 // require reports a missing package by throwing.
 const findManifest = catchUnwind(
-    (): string => require.resolve("@conduit/mcp/package.json"),
+    (packageName: string): string => require.resolve(`${packageName}/package.json`),
     (thrown) => (thrown instanceof Error ? thrown.message : String(thrown)),
 );
 
-// The agent starts the MCP server with the runtime that runs the bot, so it needs no npx download.
-export function bundledMcpServer(): Result<McpServer, string> {
-    return findManifest().andThen((path) => {
-        const manifest = manifestSchema.safeParse(require(path));
-        if (!manifest.success) return Err(`${path} names no conduit-mcp binary`);
+// The script behind a binary of an installed package.
+export function installedBinary(packageName: string, binary: string): Result<string, string> {
+    return findManifest(packageName).andThen((path) => {
+        const script = manifestSchema.safeParse(require(path)).data?.bin[binary];
+        if (!script) return Err(`${packageName} has no ${binary} binary`);
 
-        const script = join(dirname(path), manifest.data.bin["conduit-mcp"]);
-        return Ok({ command: process.execPath, script });
+        return Ok(join(dirname(path), script));
     });
+}
+
+// The bot runs its own copy of the MCP server, with the runtime that runs the bot, so both always
+// have the same version.
+export function installedMcpServer(): Result<McpServer, string> {
+    return installedBinary("@conduit/mcp", "conduit-mcp").map((script) => ({
+        command: process.execPath,
+        script,
+    }));
 }

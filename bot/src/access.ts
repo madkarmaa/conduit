@@ -28,11 +28,13 @@ export function accessMode(
     sender: ChatMessage,
 ): AsyncResult<Mode | undefined, CallError> {
     const fallback: Mode | undefined = config.chat.enabled ? "chat" : undefined;
+
     const listed = config.allow.some(
         (entry) =>
             entry.toLowerCase() === sender.playerUuid.toLowerCase() ||
             entry.toLowerCase() === sender.player.toLowerCase(),
     );
+
     if (listed || !config.operators) {
         const mode: Mode | undefined = listed ? "full" : fallback;
         return Ok(mode).mapAsync((value) => Promise.resolve(value));

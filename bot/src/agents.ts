@@ -1,10 +1,9 @@
 import { Err, Ok, type Result } from "results-ts";
-import type { AgentConfig } from "./config.ts";
-import { ASSETS_MOUNT } from "./sandbox/container.ts";
 import { presetImage, type PresetImage } from "./sandbox/images.ts";
+import { RELAY_PATH } from "./sandbox/protocol.ts";
 
-export const PRESET_NAMES = ["claude", "codex", "opencode"] as const;
-type PresetName = (typeof PRESET_NAMES)[number];
+export const AGENT_NAMES = ["claude", "codex", "opencode"] as const;
+export type AgentName = (typeof AGENT_NAMES)[number];
 
 export interface McpServer {
     readonly command: string;
@@ -12,32 +11,31 @@ export interface McpServer {
 }
 
 // Inside the container, the agent reaches the Conduit MCP server through the relay.
-const RELAY: McpServer = { command: "node", script: `${ASSETS_MOUNT}/relay.mjs` };
+const RELAY: McpServer = { command: "node", script: RELAY_PATH };
 
-export interface AgentCommand {
-    readonly start: readonly string[];
-    // Continues the latest conversation in the working directory. Without it, every request starts
-    // a new conversation.
-    readonly resume: readonly string[] | undefined;
+export interface Agent {
+    // The command for one request. resume continues the latest conversation in the working
+    // directory.
+    readonly command: (prompt: string, resume: boolean) => string[];
     readonly env: Readonly<Record<string, string>>;
-    // A custom image is the user's to build.
-    readonly image: PresetImage | string;
-    // Login files in the host's home, copied to the same place in the agent's home for each run.
+    readonly image: PresetImage;
+    // Login and config files in the host's home, copied to the same place in the agent's home for
+    // each run. Missing ones are skipped.
     readonly files: readonly string[];
 }
 
-// Each CLI names its model and reasoning effort its own way, so the presets translate them.
-export interface ModelChoice {
-    readonly model?: string | undefined;
-    readonly effort?: string | undefined;
+// Each CLI names its model and reasoning effort its own way, so the agents translate them.
+export interface AgentOptions {
+    readonly model: string | undefined;
+    readonly effort: string | undefined;
+    // Passed to the CLI as given.
+    readonly args: readonly string[];
 }
-
-const PROMPT = "{prompt}";
 
 // The container is the real boundary. The flags only keep the agent from wasting turns on tools
 // that cannot work there, and keep each answer on stdout.
-const PRESETS: Record<PresetName, (args: string[], choice: ModelChoice) => AgentCommand> = {
-    claude: (args, { model, effort }) => {
+const AGENTS: Record<AgentName, (options: AgentOptions) => Agent> = {
+    claude: ({ model, effort, args }) => {
         const flags = [
             ["--output-format", "text"],
             ["--mcp-config", mcpConfig(RELAY), "--strict-mcp-config"],
@@ -48,14 +46,17 @@ const PRESETS: Record<PresetName, (args: string[], choice: ModelChoice) => Agent
         ].flat();
 
         return {
-            start: ["claude", "-p", PROMPT, ...flags],
-            resume: ["claude", "-p", PROMPT, "--continue", ...flags],
+            command: (prompt, resume) => [
+                ...["claude", "-p", prompt],
+                ...(resume ? ["--continue"] : []),
+                ...flags,
+            ],
             env: {},
             image: presetImage("claude", "@anthropic-ai/claude-code"),
             files: [".claude/.credentials.json"],
         };
     },
-    codex: (args, { model, effort }) => {
+    codex: ({ model, effort, args }) => {
         const disabled = ["shell_tool", "unified_exec", "apps", "plugins", "browser_use"];
         disabled.push("in_app_browser", "computer_use", "image_generation", "view_image");
 
@@ -72,14 +73,17 @@ const PRESETS: Record<PresetName, (args: string[], choice: ModelChoice) => Agent
         ];
 
         return {
-            start: ["codex", "exec", ...flags, PROMPT],
-            resume: ["codex", "exec", "resume", "--last", ...flags, PROMPT],
+            command: (prompt, resume) => [
+                ...(resume ? ["codex", "exec", "resume", "--last"] : ["codex", "exec"]),
+                ...flags,
+                prompt,
+            ],
             env: {},
             image: presetImage("codex", "@openai/codex"),
             files: [".codex/auth.json"],
         };
     },
-    opencode: (args, { model, effort }) => {
+    opencode: ({ model, effort, args }) => {
         // OpenCode picks the effort as a variant of the model, in the form provider/model#variant.
         const models = model ? ["--model", effort ? `${model}#${effort}` : model] : [];
         const config = {
@@ -88,58 +92,33 @@ const PRESETS: Record<PresetName, (args: string[], choice: ModelChoice) => Agent
         };
 
         return {
-            start: ["opencode", "run", "--standalone", ...models, ...args, PROMPT],
-            resume: ["opencode", "run", "--standalone", "--continue", ...models, ...args, PROMPT],
+            command: (prompt, resume) => [
+                ...["opencode", "run", "--standalone"],
+                ...(resume ? ["--continue"] : []),
+                ...models,
+                ...args,
+                prompt,
+            ],
             env: { OPENCODE_CONFIG_CONTENT: JSON.stringify(config) },
             image: presetImage("opencode", "@opencode/cli"),
-            files: [".local/share/opencode/auth.json"],
+            // The config defines custom providers, whose keys it reads from variables.
+            files: [
+                ".local/share/opencode/auth.json",
+                ".config/opencode/opencode.json",
+                ".config/opencode/opencode.jsonc",
+            ],
         };
     },
 };
 
-export function agentCommand(
-    config: AgentConfig,
-    choice: ModelChoice,
-): Result<AgentCommand, string> {
-    if ("preset" in config) {
-        if (config.preset === "opencode" && choice.effort && !choice.model) {
-            return Err(
-                "OpenCode sets the effort as a variant of the model, so it needs a model too",
-            );
-        }
-        return Ok(PRESETS[config.preset](config.args, choice));
+export function createAgent(name: AgentName, options: AgentOptions): Result<Agent, string> {
+    if (name === "opencode" && options.effort && !options.model) {
+        return Err("OpenCode sets the effort as a variant of the model, so it needs a model too");
     }
-
-    const values: Record<string, string> = {
-        mcp_config: mcpConfig(RELAY),
-        mcp_command: RELAY.command,
-        mcp_script: RELAY.script,
-        ...(choice.model && { model: choice.model }),
-        ...(choice.effort && { effort: choice.effort }),
-    };
-    const fillAll = (template: string[]) => template.map((part) => fill(part, values));
-    const start = fillAll(config.command);
-    const resume = config.resume && fillAll(config.resume);
-
-    const unset = ["model", "effort"].filter((name) =>
-        [...start, ...(resume ?? [])].some((part) => part.includes(`{${name}}`)),
-    );
-    if (unset.length > 0)
-        return Err(
-            `The agent command uses {${unset.join("} and {")}}, which the config does not set`,
-        );
-
-    return Ok({ start, resume, env: {}, image: config.image, files: [] });
+    return Ok(AGENTS[name](options));
 }
 
-// Placeholders without a value stay, so templates can be filled in more than one step.
-export function fill(template: string, values: Readonly<Record<string, string>>): string {
-    return template.replace(/\{(\w+)\}/g, (placeholder, name: string) => {
-        return values[name] ?? placeholder;
-    });
-}
-
-// The mcpServers format that most agent CLIs accept.
+// The mcpServers format that Claude Code reads.
 function mcpConfig(mcp: McpServer): string {
     return JSON.stringify({
         mcpServers: { conduit: { command: mcp.command, args: [mcp.script] } },

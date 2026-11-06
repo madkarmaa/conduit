@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { createInterface } from "node:readline";
 import { Err, Ok, type AsyncResult, type Result } from "results-ts";
 import type { McpServer } from "../agents.ts";
-import type { FromContainer, ToContainer } from "./protocol.ts";
+import { ASSETS_MOUNT, SUPERVISOR_PATH, type FromContainer, type ToContainer } from "./protocol.ts";
 
 export type RunError =
     | { readonly kind: "spawn"; readonly message: string }
@@ -13,8 +13,6 @@ export type RunError =
 
 // The agent's home inside the container.
 export const CONTAINER_HOME = "/home/agent";
-// Where the supervisor and relay scripts are mounted.
-export const ASSETS_MOUNT = "/opt/conduit-bot";
 
 export interface Container {
     readonly image: string;
@@ -23,6 +21,7 @@ export interface Container {
     readonly home: string;
     // Variables for the agent. Their values travel through docker's environment, not its arguments.
     readonly env: Readonly<Record<string, string>>;
+    // The bot's built files, which include the supervisor and the relay.
     readonly assets: string;
     readonly timeoutSeconds: number;
 }
@@ -118,7 +117,7 @@ function dockerArguments(container: Container, name: string): string[] {
         ...["-v", `${container.home}:${CONTAINER_HOME}`],
         ...["-v", `${container.assets}:${ASSETS_MOUNT}:ro`],
         ...["-w", CONTAINER_HOME, container.image],
-        ...["node", `${ASSETS_MOUNT}/supervisor.mjs`],
+        ...["node", SUPERVISOR_PATH],
     ];
 }
 

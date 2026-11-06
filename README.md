@@ -210,7 +210,8 @@ The config file defaults to `conduit-bot.json` in the working directory. `CONDUI
 
 ```json
 {
-    "agent": { "preset": "claude", "model": "sonnet" },
+    "agent": "claude",
+    "model": "sonnet",
     "allow": ["Steve"],
     "chat": { "enabled": true, "model": "haiku" }
 }
@@ -277,42 +278,22 @@ meantime.
 
 ### Agents
 
-`agent` is one of the presets `claude` ([Claude Code](https://claude.com/claude-code)), `codex`
-([Codex CLI](https://github.com/openai/codex)) and `opencode` ([OpenCode](https://opencode.ai)).
-The bot builds an image with the latest version of the CLI the first time it runs, and again after
-each bot update. Log in to the CLI on the host first, or pass an API key through `env`. Each preset
-copies the CLI's usual login file and turns off the CLI's own tools, so the agent only uses the
-Conduit tools. An object sets the model, the effort and extra arguments, which go to the CLI as
-given:
+`agent` is `claude` ([Claude Code](https://claude.com/claude-code)), `codex`
+([Codex CLI](https://github.com/openai/codex)) or `opencode` ([OpenCode](https://opencode.ai)). To
+use another agent CLI, open an issue. The bot builds an image with the latest version of the CLI the
+first time it runs, and again after each bot update. Log in to the CLI on the host first, or pass an
+API key through `env`. The bot copies the CLI's login files, and for OpenCode its config file with
+the variables that the config reads through `{env:NAME}`. It also turns off the CLI's own tools, so
+the agent only uses the Conduit tools.
+
+`model` and `effort` go to the CLI as given, in its own names, and `args` adds extra arguments:
 
 ```json
-{ "agent": { "preset": "codex", "model": "gpt-6.1-sol", "effort": "high", "args": [] } }
+{ "agent": "codex", "model": "gpt-6.1-sol", "effort": "high", "args": [] }
 ```
 
 OpenCode takes the model as `provider/model` and the effort as one of the model's variants, so it
 needs a model to set the effort.
-
-Any other agent CLI works through a command that prints the answer on stdout, in an image that has
-the CLI and Node.js. `resume` continues the latest conversation in the working directory, which is
-separate for every conversation. Without it, every request starts a new conversation.
-
-```json
-{
-    "agent": {
-        "command": ["my-agent", "--mcp-config", "{mcp_config}", "{prompt}"],
-        "resume": ["my-agent", "--continue", "--mcp-config", "{mcp_config}", "{prompt}"],
-        "image": "my-agent-image",
-        "model": "my-model"
-    }
-}
-```
-
-| Placeholder     | Value                                                              |
-| --------------- | ------------------------------------------------------------------ |
-| `{prompt}`      | The player's request, with context about the game and the player   |
-| `{mcp_config}`  | JSON in the `mcpServers` format that starts the Conduit MCP server |
-| `{mcp_command}` | Executable that starts the Conduit MCP server                      |
-| `{mcp_script}`  | Script to pass to `{mcp_command}`                                  |
 
 `./gradlew build` also builds the bot from this checkout.
 

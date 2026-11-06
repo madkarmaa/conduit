@@ -36,6 +36,7 @@ export function ensureImage(
 ): AsyncResult<undefined, string> {
     return docker(["image", "inspect", image.name], undefined).orElseAsync(() => {
         onBuild();
+
         const build = [
             "build",
             "--tag",
@@ -44,6 +45,7 @@ export function ensureImage(
             `PACKAGE=${image.npmPackage}`,
             "-",
         ];
+
         return docker(build, DOCKERFILE).mapErr(
             (output) => `Building ${image.name} failed:\n${output}`,
         );
@@ -57,11 +59,14 @@ function docker(args: string[], input: string | undefined): AsyncResult<undefine
                 new Promise<{ code: number | null; output: string }>((resolve) => {
                     const child = spawn("docker", parts, { stdio: ["pipe", "ignore", "pipe"] });
                     let output = "";
+
                     child.stderr
                         .setEncoding("utf8")
                         .on("data", (chunk: string) => (output += chunk));
+
                     child.on("error", (error) => (output += error.message));
                     child.on("close", (code) => resolve({ code, output }));
+
                     child.stdin.end(input);
                 }),
         )

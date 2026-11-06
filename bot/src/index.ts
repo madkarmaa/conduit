@@ -1,17 +1,15 @@
 #!/usr/bin/env node
-import { existsSync } from "node:fs";
-import { homedir } from "node:os";
-import { join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 import { call, close, connect } from "@conduit/client";
 import type { AsyncResult, Result } from "results-ts";
 import type { Mode } from "./access.ts";
-import { agentCommand, type AgentCommand, type McpServer } from "./agents.ts";
+import { createAgent, type Agent, type McpServer } from "./agents.ts";
 import { describeCall, handleChat, log, type Bot } from "./bot.ts";
 import { listenToChat } from "./chat.ts";
 import { loadConfig, type Config } from "./config.ts";
 import { Conversations } from "./conversations.ts";
-import { bundledMcpServer } from "./mcp-server.ts";
+import { installedMcpServer } from "./mcp-server.ts";
+import { builtFiles, homeFiles, passedVariables, referencedVariables } from "./sandbox/host.ts";
 import { checkDocker, ensureImage } from "./sandbox/images.ts";
 
 const configPath = resolve(process.argv[2] ?? "conduit-bot.json");
@@ -19,7 +17,7 @@ const configPath = resolve(process.argv[2] ?? "conduit-bot.json");
 void loadConfig(configPath)
     .mapErr((error) => `Invalid config ${error.path}:\n${error.message}`)
     .andThen((config) =>
-        bundledMcpServer()
+        installedMcpServer()
             .mapErr((message) => `Cannot find the Conduit MCP server: ${message}`)
             .map((mcp) => ({ config, mcp })),
     )
@@ -34,36 +32,28 @@ void loadConfig(configPath)
     });
 
 // Chat mode can use another model or effort, but always the same agent CLI and image.
-function agentsFor(config: Config): Result<Record<Mode, AgentCommand>, string> {
-    const { model, effort } = config.agent;
-    const chat = { model: config.chat.model ?? model, effort: config.chat.effort ?? effort };
+function agentsFor(config: Config): Result<Record<Mode, Agent>, string> {
+    const { agent, model, effort, args } = config;
+    const chat = { model: config.chat.model ?? model, effort: config.chat.effort ?? effort, args };
 
-    return agentCommand(config.agent, { model, effort })
-        .andThen((full) =>
-            agentCommand(config.agent, chat).map((chatAgent) => ({ full, chat: chatAgent })),
-        )
+    return createAgent(agent, { model, effort, args })
+        .andThen((full) => createAgent(agent, chat).map((chatAgent) => ({ full, chat: chatAgent })))
         .mapErr((message) => `Invalid agent: ${message}`);
 }
 
-// A custom image is the user's to build, so only preset images are built here.
-function prepareImage(agent: AgentCommand): AsyncResult<undefined, string> {
-    const { image } = agent;
-    if (typeof image === "string") return checkDocker();
-
+function prepareImage({ image }: Agent): AsyncResult<undefined, string> {
     return checkDocker().andThenAsync(() =>
         ensureImage(image, () => log(`Building the agent image ${image.name}, this takes a while`)),
     );
 }
 
-function start(config: Config, mcp: McpServer, agents: Record<Mode, AgentCommand>) {
+function start(config: Config, mcp: McpServer, agents: Record<Mode, Agent>) {
     const agent = agents.full;
     const address = process.env.CONDUIT_ADDRESS || undefined;
     const token = process.env.CONDUIT_TOKEN || undefined;
     const clients = connect({ address, token });
-
-    if (!agent.resume && config.memory !== "none") {
-        log("The agent command has no resume form, so every request starts a new conversation.");
-    }
+    const files = homeFiles(agent.files, config.files);
+    const variables = [...config.env, ...referencedVariables(files.values())];
 
     const bot: Bot = {
         clients,
@@ -71,13 +61,13 @@ function start(config: Config, mcp: McpServer, agents: Record<Mode, AgentCommand
         agents,
         conversations: new Conversations(config.stateDirectory, config.memory),
         container: {
-            image: typeof agent.image === "string" ? agent.image : agent.image.name,
+            image: agent.image.name,
             offline: config.offline,
-            env: { ...passedVariables(config.env), ...agent.env },
-            assets: sandboxAssets(),
+            env: { ...passedVariables(variables), ...agent.env },
+            assets: builtFiles(),
             timeoutSeconds: config.timeoutSeconds,
         },
-        logins: loginFiles([...agent.files, ...config.files]),
+        logins: files,
         // Only the MCP server outside the container gets the token. Each request adds its mode's
         // tool policy.
         mcp: {
@@ -109,33 +99,4 @@ function start(config: Config, mcp: McpServer, agents: Record<Mode, AgentCommand
             close(clients);
         });
     }
-}
-
-// Files in the host's home, by their path relative to it. Missing ones are left out, since an agent
-// can log in through a variable instead.
-function loginFiles(paths: readonly string[]): Map<string, string> {
-    const files = new Map<string, string>();
-    for (const path of paths) {
-        const source = join(homedir(), path);
-        if (existsSync(source)) files.set(path, source);
-        else log(`Not copying ~/${path}, it does not exist`);
-    }
-    return files;
-}
-
-function passedVariables(names: readonly string[]): Record<string, string> {
-    const variables: Record<string, string> = {};
-    for (const name of names) {
-        const value = process.env[name];
-        if (value === undefined) log(`Not passing ${name}, it is not set`);
-        else variables[name] = value;
-    }
-    return variables;
-}
-
-// The supervisor and relay are built next to the bot, or into dist when the bot runs from source.
-function sandboxAssets(): string {
-    const bundled = fileURLToPath(new URL("./sandbox", import.meta.url));
-    if (existsSync(join(bundled, "supervisor.mjs"))) return bundled;
-    return fileURLToPath(new URL("../dist/sandbox", import.meta.url));
 }
