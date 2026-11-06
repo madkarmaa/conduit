@@ -1,0 +1,3 @@
+[install]
+# Gradle watches the project folder and trips over the symlinks of the isolated linker.
+linker = "hoisted"

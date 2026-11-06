@@ -183,6 +183,41 @@ tasks.jar {
     }
 }
 
+val bun: String =
+    providers
+        .environmentVariable("PATH")
+        .get()
+        .split(File.pathSeparator)
+        .map { File(it, "bun") }
+        .firstOrNull { it.canExecute() }
+        ?.path ?: "${System.getProperty("user.home")}/.bun/bin/bun"
+
+val installClientDependencies by
+    tasks.registering(Exec::class) { commandLine(bun, "install", "--frozen-lockfile") }
+
+// The TypeScript client is generated from the mod's protos, so it is rebuilt together with the mod.
+val buildClient by
+    tasks.registering(Exec::class) {
+        dependsOn(installClientDependencies)
+        workingDir("client")
+        commandLine(bun, "run", "build")
+
+        inputs.dir("src/main/proto")
+        inputs.files("client/package.json", "client/tsconfig.json", "client/tsdown.config.ts")
+        inputs.files(fileTree("client/src") { exclude("generated/**") })
+        outputs.dir("client/dist")
+    }
+
+tasks.build { finalizedBy(buildClient) }
+
+val formatWithBun by tasks.registering(Exec::class) { commandLine(bun, "fmt") }
+
+tasks.spotlessApply { finalizedBy(formatWithBun) }
+
+val checkFormatWithBun by tasks.registering(Exec::class) { commandLine(bun, "fmt", "--check") }
+
+tasks.spotlessCheck { finalizedBy(checkFormatWithBun) }
+
 // configure the maven publication
 publishing {
     publications {

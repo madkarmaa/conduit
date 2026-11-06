@@ -56,25 +56,25 @@ The service definitions live in
 [`src/main/proto/minecraft/grpc/v1`](src/main/proto/minecraft/grpc/v1). Server reflection is
 enabled, so tools like `grpcurl` can discover them.
 
-| Service            | Scope                                                                  |
-| ------------------ | ---------------------------------------------------------------------- |
-| `ServerService`    | Server info, performance, any command with captured output, save,      |
-|                    | stop, datapacks, backups                                               |
-| `WorldService`     | Blocks and regions, block entities, biomes, heightmaps, chunks, time,  |
-|                    | weather, game rules, spawn, explosions, world border                   |
-| `EntityService`    | Query (filters or selectors), spawn, remove, teleport, NBT, effects,   |
-|                    | attributes, damage, riding                                             |
-| `PlayerService`    | Inventories, items, game mode, hunger, experience, messages, titles,   |
-|                    | sounds, kick, operator status, statistics, saved data of offline       |
-|                    | players                                                                |
-| `EventService`     | Live stream of chat, joins, movement, block, combat, command, tick,    |
-|                    | entity spawn and removal, chunk, advancement, inventory, item pickup,  |
-|                    | drop, craft, smelt and trade events                                    |
-| `RegistryService`  | Registries and their entries, tags, recipes, loot tables               |
-| `BatchService`     | Many world, entity, player and command operations in one call and one  |
-|                    | server tick                                                            |
-| `StructureService` | Export, import, save and place regions with their block entities and   |
-|                    | entities, in the vanilla structure file format                         |
+| Service            | Scope                                                                 |
+| ------------------ | --------------------------------------------------------------------- |
+| `ServerService`    | Server info, performance, any command with captured output, save,     |
+|                    | stop, datapacks, backups                                              |
+| `WorldService`     | Blocks and regions, block entities, biomes, heightmaps, chunks, time, |
+|                    | weather, game rules, spawn, explosions, world border                  |
+| `EntityService`    | Query (filters or selectors), spawn, remove, teleport, NBT, effects,  |
+|                    | attributes, damage, riding                                            |
+| `PlayerService`    | Inventories, items, game mode, hunger, experience, messages, titles,  |
+|                    | sounds, kick, operator status, statistics, saved data of offline      |
+|                    | players                                                               |
+| `EventService`     | Live stream of chat, joins, movement, block, combat, command, tick,   |
+|                    | entity spawn and removal, chunk, advancement, inventory, item pickup, |
+|                    | drop, craft, smelt and trade events                                   |
+| `RegistryService`  | Registries and their entries, tags, recipes, loot tables              |
+| `BatchService`     | Many world, entity, player and command operations in one call and one |
+|                    | server tick                                                           |
+| `StructureService` | Export, import, save and place regions with their block entities and  |
+|                    | entities, in the vanilla structure file format                        |
 
 In singleplayer the gRPC server runs while a world is open.
 
@@ -90,6 +90,29 @@ grpcurl -plaintext -H "authorization: Bearer $TOKEN" localhost:25585 \
     minecraft.grpc.v1.ServerService/GetInfo
 grpcurl -plaintext -H "authorization: Bearer $TOKEN" -d '{"command": "time set day"}' \
     localhost:25585 minecraft.grpc.v1.ServerService/ExecuteCommand
+```
+
+## TypeScript client
+
+[`client`](./client) is a typed Node.js client built with the official
+[`@grpc/grpc-js`](https://www.npmjs.com/package/@grpc/grpc-js) and
+[`@grpc/proto-loader`](https://www.npmjs.com/package/@grpc/proto-loader) packages. Its types are
+generated from the mod's protos, so build it again after they change:
+
+```sh
+bun install
+cd client
+bun run build
+```
+
+```ts
+import { close, connect } from "minecraft-grpc-client";
+
+const clients = connect({ address: "localhost:25585", token: process.env.TOKEN });
+clients.server.executeCommand({ command: "time set day" }, (error, response) => {
+    console.log(error ?? response);
+    close(clients);
+});
 ```
 
 ## Test environment

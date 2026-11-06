@@ -4,9 +4,7 @@
     "version": "${version}",
     "name": "Minecraft gRPC",
     "description": "A gRPC server that allows any kind of interaction with Minecraft.",
-    "authors": [
-        "madkarma"
-    ],
+    "authors": ["madkarma"],
     "contact": {},
     "license": "CC0-1.0",
     "icon": "assets/minecraft_grpc/icon.png",
@@ -19,9 +17,7 @@
             }
         ]
     },
-    "mixins": [
-        "minecraft_grpc.mixins.json"
-    ],
+    "mixins": ["minecraft_grpc.mixins.json"],
     "depends": {
         "fabricloader": ">=${loader_version}",
         "minecraft": "~${minecraft_version}",

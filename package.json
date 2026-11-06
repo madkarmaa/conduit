@@ -1,0 +1,8 @@
+{
+    "name": "minecraft-grpc",
+    "license": "CC0-1.0",
+    "private": true,
+    "workspaces": [
+        "client"
+    ]
+}

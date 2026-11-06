@@ -1,0 +1,26 @@
+{
+    "name": "minecraft-grpc-client",
+    "version": "1.0.0",
+    "description": "Typed Node.js client for the Minecraft gRPC mod",
+    "license": "CC0-1.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "prebuild": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --includeComments --grpcLib=@grpc/grpc-js -I ../src/main/proto -O src/generated minecraft/grpc/v1/batch.proto minecraft/grpc/v1/common.proto minecraft/grpc/v1/entity.proto minecraft/grpc/v1/events.proto minecraft/grpc/v1/player.proto minecraft/grpc/v1/registry.proto minecraft/grpc/v1/server.proto minecraft/grpc/v1/structure.proto minecraft/grpc/v1/world.proto",
+        "build": "tsdown",
+        "typecheck": "tsc"
+    },
+    "dependencies": {
+        "@grpc/grpc-js": "^1.14.7",
+        "@grpc/proto-loader": "^0.8.1"
+    },
+    "devDependencies": {
+        "@types/node": "^24.19.2",
+        "tsdown": "^0.23.7",
+        "typescript": "^7.0.2"
+    },
+    "exports": {
+        ".": "./dist/index.mjs",
+        "./package.json": "./package.json"
+    }
+}
