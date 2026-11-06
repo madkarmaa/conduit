@@ -1,4 +1,4 @@
-import type { CallToolResult, McpServer, ToolAnnotations } from "@modelcontextprotocol/server";
+import type { CallToolResult, McpServer } from "@modelcontextprotocol/server";
 import { Err, Ok, type AsyncResult, type Result } from "results-ts";
 import { z } from "zod";
 import { invalidInput, type ToolError } from "./grpc.ts";
@@ -15,7 +15,8 @@ export interface Action<Input> {
     readonly run: (input: Input) => AsyncResult<Reply, ToolError>;
 }
 
-// Tools with several actions declare an `action` enum in their input with the same keys.
+// Tools with several actions declare an `action` enum in their input with the same keys, optionally
+// with a default.
 export interface Tool<Shape extends z.ZodRawShape> {
     readonly name: string;
     readonly title: string;
@@ -35,8 +36,8 @@ export function defineTool<Shape extends z.ZodRawShape>(tool: Tool<Shape>): Regi
 
         const schema = z.object(tool.input);
         const actionNames = allowed.map(([name]) => name);
-        const advertised =
-            "action" in tool.input ? schema.extend({ action: z.enum(actionNames) }) : schema;
+        const restricted = allowed.length < Object.keys(tool.actions).length;
+        const advertised = restricted ? schema.extend({ action: z.enum(actionNames) }) : schema;
 
         server.registerTool(
             tool.name,
@@ -44,12 +45,17 @@ export function defineTool<Shape extends z.ZodRawShape>(tool: Tool<Shape>): Regi
                 title: tool.title,
                 description: tool.description,
                 inputSchema: advertised,
-                annotations: annotations(allowed.map(([, action]) => action.access)),
+                annotations: {
+                    readOnlyHint: allowed.every(([, action]) => action.access === "read"),
+                    openWorldHint: false,
+                },
             },
-            (args: Record<string, unknown>) =>
+            (args: unknown) =>
                 parseInput(schema, args)
                     .andThen((input) =>
-                        selectAction(allowed, args.action).map((action) => ({ action, input })),
+                        selectAction(allowed, "action" in input ? input.action : undefined).map(
+                            (action) => ({ action, input }),
+                        ),
                     )
                     .andThenAsync(({ action, input }) => action.run(input))
                     .match({ Ok: toolResult, Err: errorResult }),
@@ -57,9 +63,20 @@ export function defineTool<Shape extends z.ZodRawShape>(tool: Tool<Shape>): Regi
     };
 }
 
+type WithFields<Input, Field extends keyof Input> = Input & {
+    [Key in Field]-?: Exclude<Input[Key], undefined>;
+};
+
 // Fields only some actions need are optional in the schema, so each action checks its own.
-export function required<T>(value: T | undefined, field: string): Result<T, ToolError> {
-    return value === undefined ? Err(invalidInput(`${field} is required`)) : Ok(value);
+export function required<Input extends object, Field extends keyof Input & string>(
+    input: Input,
+    ...fields: Field[]
+): Result<WithFields<Input, Field>, ToolError> {
+    const missing = fields.filter((field) => input[field] === undefined);
+    if (missing.length > 0) return Err(invalidInput(`Missing ${missing.join(", ")}`));
+
+    // The check above guarantees every listed field is set.
+    return Ok(input as WithFields<Input, Field>);
 }
 
 function parseInput<Shape extends z.ZodRawShape>(
@@ -78,13 +95,6 @@ function selectAction<Input>(
     if (allowed.length === 1 && first) return Ok(first[1]);
     const match = allowed.find(([name]) => name === requested);
     return match ? Ok(match[1]) : Err(invalidInput(`Unknown action ${String(requested)}`));
-}
-
-function annotations(accesses: Access[]): ToolAnnotations {
-    return {
-        readOnlyHint: accesses.every((access) => access === "read"),
-        openWorldHint: false,
-    };
 }
 
 function toolResult(reply: Reply): CallToolResult {

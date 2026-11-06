@@ -6,18 +6,17 @@ import { EventFeed } from "./events.ts";
 import { batchTools } from "./tools/batch.ts";
 import { blockTools } from "./tools/blocks.ts";
 import { entityEditTools } from "./tools/entity-edits.ts";
-import { entityStateTools } from "./tools/entity-state.ts";
+import { entityMovementTools } from "./tools/entity-movement.ts";
 import { entityTools } from "./tools/entities.ts";
 import { environmentTools } from "./tools/environment.ts";
 import { eventTools } from "./tools/events.ts";
-import { offlinePlayerTools } from "./tools/offline-players.ts";
+import { inventoryTools } from "./tools/inventory.ts";
 import { playerActionTools } from "./tools/player-actions.ts";
 import { playerTools } from "./tools/players.ts";
 import { regionTools } from "./tools/regions.ts";
 import { registryTools } from "./tools/registry.ts";
 import { serverTools } from "./tools/server.ts";
 import { structureTools } from "./tools/structures.ts";
-import { terrainTools } from "./tools/terrain.ts";
 import { worldTools } from "./tools/world.ts";
 
 const INSTRUCTIONS = [
@@ -36,17 +35,16 @@ const feed = new EventFeed(clients.events);
 
 const registrations = [
     ...serverTools(clients),
-    ...terrainTools(clients),
     ...blockTools(clients),
     ...regionTools(clients),
-    ...environmentTools(clients),
     ...worldTools(clients),
+    ...environmentTools(clients),
     ...entityTools(clients),
+    ...entityMovementTools(clients),
     ...entityEditTools(clients),
-    ...entityStateTools(clients),
     ...playerTools(clients),
+    ...inventoryTools(clients),
     ...playerActionTools(clients),
-    ...offlinePlayerTools(clients),
     ...registryTools(clients),
     ...structureTools(clients),
     ...batchTools(clients),

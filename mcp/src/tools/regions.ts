@@ -1,10 +1,9 @@
 import type { ConduitClients } from "conduit-client";
 import { Err, Ok } from "results-ts";
 import { z } from "zod";
-import { done } from "../format.ts";
 import { call, invalidInput } from "../grpc.ts";
 import { drawRegion, paletteFits, summarizeRegion } from "../region.ts";
-import { blockPos, blockState, dimension, noUpdates } from "../schemas.ts";
+import { blockPos, dimension } from "../schemas.ts";
 import { defineTool } from "../tool.ts";
 
 // Drawn regions print one character per block, so they stay small enough to read.
@@ -46,32 +45,6 @@ export function regionTools({ world }: ConduitClients) {
                                 return Err(invalidInput("Too many block states to draw"));
                             });
                     },
-                },
-            },
-        }),
-
-        defineTool({
-            name: "fill",
-            title: "Fill region",
-            description: "Fills a cuboid region (corners inclusive) with a block state.",
-            input: {
-                dimension,
-                from: blockPos,
-                to: blockPos,
-                state: blockState,
-                replace: z
-                    .string()
-                    .optional()
-                    .describe("Only replace blocks matching this block id or state."),
-                no_updates: noUpdates,
-            },
-            actions: {
-                fill: {
-                    access: "write",
-                    run: (input) =>
-                        call(world, "fill", { ...input, noUpdates: input.no_updates }).map(
-                            (response) => done(`Changed ${response.changed} blocks`),
-                        ),
                 },
             },
         }),

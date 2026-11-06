@@ -72,42 +72,30 @@ export function structureTools({ structure }: ConduitClients) {
                 save: {
                     access: "write",
                     run: (input) =>
-                        required(input.id, "id")
-                            .andThen((id) =>
-                                required(input.from, "from").map((from) => ({ id, from })),
-                            )
-                            .andThen((request) =>
-                                required(input.to, "to").map((to) => ({ ...request, to })),
-                            )
-                            .andThenAsync((request) =>
-                                call(structure, "save", {
-                                    ...request,
-                                    dimension: input.dimension,
-                                    includeEntities: input.include_entities,
-                                    ignoreBlock: input.ignore_block,
-                                }).map(() => done(`Saved ${request.id}`)),
-                            ),
+                        required(input, "id", "from", "to").andThenAsync((request) =>
+                            call(structure, "save", {
+                                ...request,
+                                includeEntities: input.include_entities,
+                                ignoreBlock: input.ignore_block,
+                            }).map(() => done(`Saved ${request.id}`)),
+                        ),
                 },
                 place: {
                     access: "write",
                     run: (input) =>
-                        required(input.id, "id")
-                            .andThen((id) =>
-                                required(input.origin, "origin").map((origin) => ({ id, origin })),
-                            )
-                            .andThenAsync(({ id, origin }) =>
-                                call(structure, "place", {
-                                    id,
-                                    placement: {
-                                        dimension: input.dimension,
-                                        origin,
-                                        rotation: ROTATIONS[input.rotation],
-                                        mirror: MIRRORS[input.mirror],
-                                        includeEntities: input.include_entities,
-                                        integrity: input.integrity,
-                                    },
-                                }).map(json),
-                            ),
+                        required(input, "id", "origin").andThenAsync(({ id, origin }) =>
+                            call(structure, "place", {
+                                id,
+                                placement: {
+                                    dimension: input.dimension,
+                                    origin,
+                                    rotation: ROTATIONS[input.rotation],
+                                    mirror: MIRRORS[input.mirror],
+                                    includeEntities: input.include_entities,
+                                    integrity: input.integrity,
+                                },
+                            }).map(json),
+                        ),
                 },
             },
         }),

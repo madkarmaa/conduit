@@ -3,7 +3,7 @@ import { z } from "zod";
 import { compact, done, json, lines, position, round } from "../format.ts";
 import { call } from "../grpc.ts";
 import { dimension, limit, rotation, snbt, uuid, vec3 } from "../schemas.ts";
-import { defineTool, required } from "../tool.ts";
+import { defineTool } from "../tool.ts";
 
 interface Entity {
     uuid: string;
@@ -55,15 +55,29 @@ export function entityTools({ entity }: ConduitClients) {
         defineTool({
             name: "get_entity",
             title: "Get entity",
-            description: "Full state of one entity, or its complete NBT data as SNBT.",
-            input: { uuid, detail: z.enum(["info", "nbt"]).default("info") },
+            description:
+                "info: full state of one entity. nbt: its complete data as SNBT. effects: its " +
+                "status effects. attributes: its attributes with base and current values.",
+            input: {
+                action: z.enum(["info", "nbt", "effects", "attributes"]).default("info"),
+                uuid,
+            },
             actions: {
-                get: {
+                info: {
                     access: "read",
-                    run: (input) =>
-                        input.detail === "nbt"
-                            ? call(entity, "getNbt", input).map((nbt) => done(nbt.snbt))
-                            : call(entity, "getEntity", input).map(json),
+                    run: (input) => call(entity, "getEntity", input).map(json),
+                },
+                nbt: {
+                    access: "read",
+                    run: (input) => call(entity, "getNbt", input).map((nbt) => done(nbt.snbt)),
+                },
+                effects: {
+                    access: "read",
+                    run: (input) => call(entity, "getEffects", input).map(json),
+                },
+                attributes: {
+                    access: "read",
+                    run: (input) => call(entity, "getAttributes", input).map(json),
                 },
             },
         }),
@@ -103,56 +117,6 @@ export function entityTools({ entity }: ConduitClients) {
                     access: "write",
                     run: (input) =>
                         call(entity, "removeEntity", input).map(() => done("Entity removed")),
-                },
-            },
-        }),
-        defineTool({
-            name: "move_entity",
-            title: "Move entity",
-            description:
-                "Teleports an entity (players too, also across dimensions), turns it, or pushes it " +
-                "with a velocity in blocks per tick.",
-            input: {
-                action: z.enum(["teleport", "rotate", "push"]),
-                uuid,
-                dimension: z.string().optional().describe("Target dimension for teleport."),
-                position: vec3.optional().describe("Required for teleport."),
-                rotation: rotation
-                    .optional()
-                    .describe("Required for rotate, optional for teleport."),
-                velocity: vec3.optional().describe("Required for push."),
-                add: z
-                    .boolean()
-                    .default(false)
-                    .describe("push adds to the current velocity instead of replacing it."),
-            },
-            actions: {
-                teleport: {
-                    access: "write",
-                    run: (input) =>
-                        required(input.position, "position").andThenAsync((destination) =>
-                            call(entity, "teleport", { ...input, position: destination }).map(
-                                (moved) => done(describeEntity(moved)),
-                            ),
-                        ),
-                },
-                rotate: {
-                    access: "write",
-                    run: (input) =>
-                        required(input.rotation, "rotation").andThenAsync((facing) =>
-                            call(entity, "setRotation", { uuid: input.uuid, rotation: facing }).map(
-                                () => done("Entity rotated"),
-                            ),
-                        ),
-                },
-                push: {
-                    access: "write",
-                    run: (input) =>
-                        required(input.velocity, "velocity").andThenAsync((velocity) =>
-                            call(entity, "setVelocity", { ...input, velocity }).map(() =>
-                                done("Velocity set"),
-                            ),
-                        ),
                 },
             },
         }),
