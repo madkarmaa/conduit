@@ -23,20 +23,27 @@ The mod jar is written to `build/libs/minecraft_grpc-<mod version>+<minecraft ve
 
 On first start the mod writes `config/minecraft-grpc.json`:
 
-| Setting           | Default                        | Description                                |
-| ----------------- | ------------------------------ | ------------------------------------------ |
-| `enabled`         | `true`                         | Start the gRPC server                      |
-| `host`            | `127.0.0.1`                    | Bind address                               |
-| `port`            | `25585`                        | Listen port                                |
-| `requireAuth`     | `true`                         | Require a bearer token                     |
-| `token`           | random, created on first start | Token expected in `authorization` metadata |
-| `auditLog`        | `true`                         | Log calls that change the game             |
-| `backupDirectory` | `backups`                      | Folder for backups, relative to the server |
-|                   |                                | folder (the game folder in singleplayer)   |
+| Setting                   | Default                        | Description                         |
+| ------------------------- | ------------------------------ | ----------------------------------- |
+| `enabled`                 | `true`                         | Start the gRPC server               |
+| `host`                    | `127.0.0.1`                    | Bind address                        |
+| `port`                    | `25585`                        | Listen port                         |
+| `requireAuth`             | `true`                         | Require a bearer token              |
+| `token`                   | random, created on first start | Token expected in `authorization`   |
+|                           |                                | metadata                            |
+| `auditLog`                | `true`                         | Log calls that change the game      |
+| `backupDirectory`         | `backups`                      | Folder for backups, relative to the |
+|                           |                                | server folder (the game folder in   |
+|                           |                                | singleplayer)                       |
+| `maxStructureVolume`      | `8000000`                      | Largest structure, in blocks, that  |
+|                           |                                | can be exported, saved or placed    |
+| `maxStructureUploadBytes` | `67108864` (64 MiB)            | Largest structure file that can be  |
+|                           |                                | imported                            |
 
 Each setting can be overridden with an environment variable: `MINECRAFT_GRPC_ENABLED`,
 `MINECRAFT_GRPC_HOST`, `MINECRAFT_GRPC_PORT`, `MINECRAFT_GRPC_REQUIRE_AUTH`,
-`MINECRAFT_GRPC_TOKEN`, `MINECRAFT_GRPC_AUDIT_LOG` and `MINECRAFT_GRPC_BACKUP_DIRECTORY`.
+`MINECRAFT_GRPC_TOKEN`, `MINECRAFT_GRPC_AUDIT_LOG`, `MINECRAFT_GRPC_BACKUP_DIRECTORY`,
+`MINECRAFT_GRPC_MAX_STRUCTURE_VOLUME` and `MINECRAFT_GRPC_MAX_STRUCTURE_UPLOAD_BYTES`.
 
 The audit log records every call that is not read-only, and every call rejected for a missing or
 wrong token, through the `minecraft_grpc/audit` logger, so it can be routed to its own file.
@@ -49,21 +56,23 @@ The service definitions live in
 [`src/main/proto/minecraft/grpc/v1`](src/main/proto/minecraft/grpc/v1). Server reflection is
 enabled, so tools like `grpcurl` can discover them.
 
-| Service           | Scope                                                                  |
-| ----------------- | ---------------------------------------------------------------------- |
-| `ServerService`   | Server info, performance, any command with captured output, save,      |
-|                   | stop, datapacks, backups                                               |
-| `WorldService`    | Blocks and regions, block entities, biomes, heightmaps, chunks, time,  |
-|                   | weather, game rules, spawn, explosions, world border                   |
-| `EntityService`   | Query (filters or selectors), spawn, remove, teleport, NBT, effects,   |
-|                   | attributes, damage, riding                                             |
-| `PlayerService`   | Inventories, items, game mode, hunger, experience, messages, titles,   |
-|                   | sounds, kick, operator status                                          |
-| `EventService`    | Live stream of chat, joins, movement, block, combat, command, tick,    |
-|                   | entity spawn and removal, chunk and advancement events                 |
-| `RegistryService` | Registries and their entries, tags, recipes, loot tables               |
-| `BatchService`    | Many world, entity, player and command operations in one call and one  |
-|                   | server tick                                                            |
+| Service            | Scope                                                                  |
+| ------------------ | ---------------------------------------------------------------------- |
+| `ServerService`    | Server info, performance, any command with captured output, save,      |
+|                    | stop, datapacks, backups                                               |
+| `WorldService`     | Blocks and regions, block entities, biomes, heightmaps, chunks, time,  |
+|                    | weather, game rules, spawn, explosions, world border                   |
+| `EntityService`    | Query (filters or selectors), spawn, remove, teleport, NBT, effects,   |
+|                    | attributes, damage, riding                                             |
+| `PlayerService`    | Inventories, items, game mode, hunger, experience, messages, titles,   |
+|                    | sounds, kick, operator status                                          |
+| `EventService`     | Live stream of chat, joins, movement, block, combat, command, tick,    |
+|                    | entity spawn and removal, chunk and advancement events                 |
+| `RegistryService`  | Registries and their entries, tags, recipes, loot tables               |
+| `BatchService`     | Many world, entity, player and command operations in one call and one  |
+|                    | server tick                                                            |
+| `StructureService` | Export, import, save and place regions with their block entities and   |
+|                    | entities, in the vanilla structure file format                         |
 
 In singleplayer the gRPC server runs while a world is open.
 
