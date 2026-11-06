@@ -33,24 +33,23 @@ export class EventFeed {
 
     poll(query: EventQuery): AsyncResult<EventPage, ToolError> {
         this.subscribe();
-        return Ok(query).andThenAsync((value) => this.collect(value));
+
+        return this.settle(query, Date.now() + query.timeoutMs).andThen(
+            (): Result<EventPage, ToolError> => {
+                const matching = this.matching(query);
+                if (matching.length === 0 && this.failure) return Err(this.failure);
+
+                return Ok(this.page(query, matching));
+            },
+        );
     }
 
     close() {
         this.stream?.cancel();
     }
 
-    private async collect(query: EventQuery): Promise<Result<EventPage, ToolError>> {
-        const deadline = Date.now() + query.timeoutMs;
-        for (;;) {
-            const matching = this.buffer.filter((buffered) => matches(buffered, query));
-            if (matching.length > 0 || Date.now() >= deadline)
-                return Ok(this.page(query, matching));
-
-            if (this.failure) return Err(this.failure);
-
-            await this.nextChange(deadline - Date.now());
-        }
+    private matching(query: EventQuery): BufferedEvent[] {
+        return this.buffer.filter((buffered) => matches(buffered, query));
     }
 
     private page(query: EventQuery, matching: BufferedEvent[]): EventPage {
@@ -64,18 +63,26 @@ export class EventFeed {
         };
     }
 
-    private nextChange(timeoutMs: number): Promise<void> {
-        return new Promise((resolve) => {
-            const finish = () => {
-                clearTimeout(timer);
-                this.listeners.delete(finish);
-                resolve();
-            };
+    // Completes once a matching event is buffered, the stream failed or the deadline passed.
+    private settle(query: EventQuery, deadline: number): AsyncResult<undefined, never> {
+        return Ok(query).mapAsync(
+            (value) =>
+                new Promise<undefined>((resolve) => {
+                    const finish = () => {
+                        clearTimeout(timer);
+                        this.listeners.delete(check);
+                        resolve(undefined);
+                    };
+                    const check = () => {
+                        if (this.matching(value).length > 0 || this.failure) finish();
+                    };
 
-            const timer = setTimeout(finish, timeoutMs);
+                    const timer = setTimeout(finish, Math.max(0, deadline - Date.now()));
 
-            this.listeners.add(finish);
-        });
+                    this.listeners.add(check);
+                    check();
+                }),
+        );
     }
 
     private subscribe() {

@@ -37,16 +37,26 @@ export function call<Client extends object, Name extends UnaryName<Client>>(
     type Response = ResponseOf<Client[Name]>;
     const method = client[name] as UnaryMethod<RequestOf<Client[Name]>, Response>;
 
-    return Ok(request).andThenAsync(
-        (value) =>
-            new Promise<Result<Response, ToolError>>((resolve) => {
-                method.call(client, value, (error, response) => {
-                    if (error) return resolve(Err(fromServiceError(error)));
-                    if (response === undefined) return resolve(Err(emptyResponse()));
-                    resolve(Ok(response));
-                });
-            }),
-    );
+    return Ok(request)
+        .mapAsync(
+            (value) =>
+                new Promise<UnaryOutcome<Response>>((resolve) => {
+                    method.call(client, value, (error, response) => resolve({ error, response }));
+                }),
+        )
+        .andThen(toResult);
+}
+
+interface UnaryOutcome<Response> {
+    readonly error: grpc.ServiceError | null;
+    readonly response: Response | undefined;
+}
+
+function toResult<Response>(outcome: UnaryOutcome<Response>): Result<Response, ToolError> {
+    if (outcome.error) return Err(fromServiceError(outcome.error));
+    if (outcome.response === undefined) return Err(emptyResponse());
+
+    return Ok(outcome.response);
 }
 
 // grpc-js reports requests it cannot encode as INTERNAL, but they are the caller's mistake.
