@@ -1,13 +1,19 @@
 const { execFileSync } = require("node:child_process");
 const { readFileSync, writeFileSync } = require("node:fs");
 
-const REGISTRY_PAGE = "https://npm.madkarma.top/-/web/detail/@conduit/mcp";
+const REGISTRY = "https://npm.madkarma.top";
+const REGISTRY_PAGE = `${REGISTRY}/-/web/detail/@conduit/mcp`;
 
 // npm version cannot read the workspace: protocol, so the versions are written here and bun
-// publishes the MCP server instead of @semantic-release/npm.
-exports.verifyConditions = (_, { env }) => {
-    if (env.NPM_CONFIG_TOKEN) return;
-    throw new Error("NPM_CONFIG_TOKEN is not set, so bun cannot publish @conduit/mcp.");
+// publishes the MCP server instead of @semantic-release/npm. Checking the login first stops a
+// release without a registry token before it commits and tags anything.
+exports.verifyConditions = (_, { cwd, env }) => {
+    const registryEnv = { ...env, NPM_CONFIG_REGISTRY: REGISTRY };
+    execFileSync("bun", ["pm", "whoami"], {
+        cwd: `${cwd}/mcp`,
+        env: registryEnv,
+        stdio: "inherit",
+    });
 };
 
 // The mod, the client and the MCP server share one version.
