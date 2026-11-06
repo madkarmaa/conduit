@@ -28,6 +28,12 @@ internal fun MinecraftServer.applyPlayerOperation(
         PLAY_SOUND -> playSound(operation.playSound)
         KICK -> kick(operation.kick)
         SET_OPERATOR -> changeOperator(operation.setOperator)
+        GET_OFFLINE_PLAYER -> result.offlinePlayer = offlinePlayer(operation.getOfflinePlayer)
+        GET_OFFLINE_PLAYER_NBT -> result.nbt = offlinePlayerNbt(operation.getOfflinePlayerNbt)
+        MERGE_OFFLINE_PLAYER_NBT -> mergeOfflinePlayerNbt(operation.mergeOfflinePlayerNbt)
+        SET_OFFLINE_INVENTORY_SLOT -> changeOfflineInventorySlot(operation.setOfflineInventorySlot)
+        GET_PLAYER_STATS -> result.playerStats = playerStats(operation.getPlayerStats)
+        LIST_KNOWN_PLAYERS -> result.knownPlayers = listKnownPlayers()
         else -> return false
     }
 

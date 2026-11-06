@@ -98,6 +98,12 @@ message Operation {
         PlaySoundRequest play_sound = 213;
         KickRequest kick = 214;
         SetOperatorRequest set_operator = 215;
+        PlayerRef get_offline_player = 216;
+        PlayerRef get_offline_player_nbt = 217;
+        MergeOfflinePlayerNbtRequest merge_offline_player_nbt = 218;
+        SetInventorySlotRequest set_offline_inventory_slot = 219;
+        PlayerRef get_player_stats = 220;
+        google.protobuf.Empty list_known_players = 221;
 
         ExecuteCommandRequest execute_command = 300;
         BroadcastRequest broadcast = 301;
@@ -142,5 +148,8 @@ message OperationResult {
         GiveItemResponse give_item = 23;
         ExecuteCommandResponse execute_command = 24;
         WorldBorderInfo world_border = 25;
+        OfflinePlayerInfo offline_player = 26;
+        PlayerStats player_stats = 27;
+        KnownPlayerList known_players = 28;
     }
 }
