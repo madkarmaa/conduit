@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { resolve } from "node:path";
-import { call, close, connect } from "@conduit/client";
+import { call, close, connect, connectionFromEnv, type ConnectionOptions } from "@conduit/client";
 import type { AsyncResult } from "results-ts";
 import type { Mode } from "./access.ts";
 import { createAgent, type Agent, type McpServer } from "./agents.ts";
@@ -15,17 +15,24 @@ import { checkDocker, ensureImage } from "./sandbox/images.ts";
 
 const configPath = resolve(process.argv[2] ?? "conduit-bot.json");
 
+interface Setup {
+    readonly config: Config;
+    readonly connection: ConnectionOptions;
+    readonly mcp: McpServer;
+    readonly agents: Record<Mode, Agent>;
+}
+
 void loadConfig(configPath)
     .mapErr((error) => `Invalid config ${error.path}:\n${error.message}`)
-    .andThen((config) =>
+    .andThen((config) => connectionFromEnv().map((connection) => ({ config, connection })))
+    .andThen((setup) =>
         installedMcpServer()
             .mapErr((message) => `Cannot find the Conduit MCP server: ${message}`)
-            .map((mcp) => ({ config, mcp })),
+            .map((mcp) => ({ ...setup, mcp, agents: agentsFor(setup.config) })),
     )
-    .map((setup) => ({ ...setup, agents: agentsFor(setup.config) }))
-    .andThenAsync((setup) => prepareImage(setup.agents.full).map(() => setup))
+    .andThenAsync((setup) => prepareImage(setup.agents.full).map((): Setup => setup))
     .match({
-        Ok: ({ config, mcp, agents }) => start(config, mcp, agents),
+        Ok: start,
         Err: (message) => {
             console.error(message);
             process.exitCode = 1;
@@ -46,11 +53,9 @@ function prepareImage({ image }: Agent): AsyncResult<undefined, string> {
     );
 }
 
-function start(config: Config, mcp: McpServer, agents: Record<Mode, Agent>) {
+function start({ config, connection, mcp, agents }: Setup) {
     const agent = agents.full;
-    const address = process.env.CONDUIT_ADDRESS || undefined;
-    const token = process.env.CONDUIT_TOKEN || undefined;
-    const clients = connect({ address, token });
+    const clients = connect(connection);
     const files = homeFiles(agent.files, config.files);
     // The config's variables are expected, while the ones the copied config files read are optional.
     const referenced = referencedVariables(files.values()).filter((name) => name in process.env);
@@ -69,19 +74,12 @@ function start(config: Config, mcp: McpServer, agents: Record<Mode, Agent>) {
             timeoutSeconds: config.timeoutSeconds,
         },
         logins: files,
-        // Only the MCP server outside the container gets the token. Each request adds its mode's
-        // tool policy.
-        mcp: {
-            server: mcp,
-            env: {
-                ...process.env,
-                CONDUIT_ADDRESS: address ?? "",
-                CONDUIT_TOKEN: token ?? "",
-            },
-        },
+        // Only the MCP server outside the container gets the variables with the host and the token.
+        // Each request adds its mode's tool policy.
+        mcp: { server: mcp, env: process.env },
     };
 
-    // A wrong address or token would otherwise only show up as a failing event stream.
+    // A wrong host, port or token would otherwise only show up as a failing event stream.
     void call(clients.server, "getInfo", {}).match({
         Ok: (info) => log(`Connected to Minecraft ${info.minecraftVersion}`),
         Err: (error) => log(`Cannot reach the server yet: ${describeCall(error)}`),

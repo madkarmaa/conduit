@@ -2,6 +2,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import * as grpc from "@grpc/grpc-js";
 import * as protoLoader from "@grpc/proto-loader";
+import { Err, Ok, type Result } from "results-ts";
 import type { ProtoGrpcType as BatchProto } from "./generated/batch";
 import type { ProtoGrpcType as EntityProto } from "./generated/entity";
 import type { ProtoGrpcType as EventsProto } from "./generated/events";
@@ -48,7 +49,8 @@ const LOADER_OPTIONS = {
 } satisfies protoLoader.Options;
 
 export interface ConnectionOptions {
-    address?: string;
+    host?: string;
+    port?: number;
     token?: string;
 }
 
@@ -64,9 +66,13 @@ export interface ConduitClients {
 }
 
 export function connect({
-    address = "localhost:25585",
+    host = "localhost",
+    port = 25585,
     token,
 }: ConnectionOptions = {}): ConduitClients {
+    // gRPC needs IPv6 hosts in brackets, to tell their colons from the port's.
+    const address =
+        host.includes(":") && !host.startsWith("[") ? `[${host}]:${port}` : `${host}:${port}`;
     const protoFiles = readdirSync(`${PROTO_DIRECTORY}/${PACKAGE_DIRECTORY}`)
         .filter((file) => file.endsWith(".proto"))
         .map((file) => `${PACKAGE_DIRECTORY}/${file}`);
@@ -91,6 +97,20 @@ export function connect({
         structure: new services.StructureService(address, credentials, options),
         world: new services.WorldService(address, credentials, options),
     };
+}
+
+// The MCP server and the bot read the variables that the mod reads for its own host and port.
+export function connectionFromEnv(
+    env: NodeJS.ProcessEnv = process.env,
+): Result<ConnectionOptions, string> {
+    const options = { host: env.CONDUIT_HOST || undefined, token: env.CONDUIT_TOKEN || undefined };
+    if (!env.CONDUIT_PORT) return Ok(options);
+
+    const port = Number(env.CONDUIT_PORT);
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+        return Err(`CONDUIT_PORT must be a port number, not ${env.CONDUIT_PORT}`);
+    }
+    return Ok({ ...options, port });
 }
 
 // All clients share one channel, so closing any of them closes the connection.

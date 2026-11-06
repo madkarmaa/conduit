@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { McpServer } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
-import { close, connect } from "@conduit/client";
+import { close, connect, connectionFromEnv } from "@conduit/client";
 import packageJson from "../package.json" with { type: "json" };
 import { EventFeed } from "./events.ts";
 import { batchTools } from "./tools/batch.ts";
@@ -28,9 +28,12 @@ const INSTRUCTIONS = [
     "Prefer the dedicated tools. run_command covers anything they do not.",
 ].join(" ");
 
-const clients = connect({
-    address: process.env.CONDUIT_ADDRESS || undefined,
-    token: process.env.CONDUIT_TOKEN || undefined,
+const clients = connectionFromEnv().match({
+    Ok: (options) => connect(options),
+    Err: (message) => {
+        console.error(message);
+        process.exit(1);
+    },
 });
 const policy: ToolPolicy = {
     readOnly: process.env.CONDUIT_MCP_READ_ONLY === "true",
