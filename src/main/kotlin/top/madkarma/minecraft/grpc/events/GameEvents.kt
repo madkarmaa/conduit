@@ -28,6 +28,7 @@ object GameEvents {
         PlayerMoves.register()
         EntityLifecycle.register()
         ChunkLifecycle.register()
+        InventoryChanges.register()
     }
 
     // Called from the block placement mixin.

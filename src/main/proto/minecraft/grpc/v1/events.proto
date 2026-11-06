@@ -35,12 +35,14 @@ enum EventType {
     EVENT_TYPE_CHUNK_LOAD = 19;
     EVENT_TYPE_CHUNK_UNLOAD = 20;
     EVENT_TYPE_ADVANCEMENT = 21;
+    EVENT_TYPE_INVENTORY_CHANGE = 22;
 }
 
 message SubscribeRequest {
     // Event types to receive. Empty means all except the high-volume types EVENT_TYPE_SERVER_TICK,
     // EVENT_TYPE_PLAYER_MOVE, EVENT_TYPE_ENTITY_SPAWN, EVENT_TYPE_ENTITY_REMOVE,
-    // EVENT_TYPE_CHUNK_LOAD and EVENT_TYPE_CHUNK_UNLOAD, which are only sent when listed.
+    // EVENT_TYPE_CHUNK_LOAD, EVENT_TYPE_CHUNK_UNLOAD and EVENT_TYPE_INVENTORY_CHANGE, which are only
+    // sent when listed.
     repeated EventType types = 1;
     // Only send EVENT_TYPE_SERVER_TICK every N ticks (default 20).
     int32 tick_interval = 2;
@@ -57,7 +59,7 @@ message SubscribeRequest {
     int32 move_heartbeat_ticks = 5;
 
     // Only send events about these players, by name or UUID. Empty means all players.
-    // Applies to EVENT_TYPE_PLAYER_MOVE and EVENT_TYPE_ADVANCEMENT.
+    // Applies to EVENT_TYPE_PLAYER_MOVE, EVENT_TYPE_ADVANCEMENT and EVENT_TYPE_INVENTORY_CHANGE.
     repeated string players = 6;
 
     // Only send EVENT_TYPE_ENTITY_SPAWN and EVENT_TYPE_ENTITY_REMOVE for these entity types, e.g.
@@ -96,6 +98,7 @@ message Event {
         ChunkEvent chunk_load = 28;
         ChunkEvent chunk_unload = 29;
         AdvancementEvent advancement = 30;
+        InventoryChangeEvent inventory_change = 31;
     }
 }
 
@@ -208,6 +211,18 @@ message AdvancementEvent {
     AdvancementFrame frame = 5;
     // The advancement is announced in chat, unless the game rule for advancement messages is off.
     bool announced = 6;
+}
+
+// A slot of a player's inventory changed. Inventories are compared once per tick, so several
+// changes to one slot within a tick are combined into one event, and a change that is undone
+// within the same tick is not reported.
+message InventoryChangeEvent {
+    string player = 1;
+    string player_uuid = 2;
+    // Same numbering as PlayerService: 0-8 hotbar, 9-35 main, 36-39 armor, 40 offhand.
+    int32 slot = 3;
+    ItemStack old_item = 4;
+    ItemStack new_item = 5;
 }
 
 message CommandEvent {
