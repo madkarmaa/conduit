@@ -86,15 +86,7 @@ private fun <T : Any> MinecraftServer.setRule(rule: GameRule<T>, value: String) 
     gameRules.set(rule, parsed, this)
 }
 
-internal fun MinecraftServer.spawnPoint(): SpawnPoint {
-    val data = overworld().respawnData
-    return spawnPoint {
-        dimension = data.dimension().identifier().toString()
-        pos = data.pos().toProto()
-        yaw = data.yaw()
-        pitch = data.pitch()
-    }
-}
+internal fun MinecraftServer.spawnPoint(): SpawnPoint = overworld().respawnData.toProto()
 
 internal fun MinecraftServer.changeSpawnPoint(request: SpawnPoint) {
     level(request.dimension)

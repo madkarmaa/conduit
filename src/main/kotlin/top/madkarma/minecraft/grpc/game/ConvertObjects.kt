@@ -13,9 +13,12 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.storage.LevelData
+import top.madkarma.minecraft.grpc.proto.SpawnPoint
 import top.madkarma.minecraft.grpc.proto.blockState
 import top.madkarma.minecraft.grpc.proto.entityInfo
 import top.madkarma.minecraft.grpc.proto.itemStack
+import top.madkarma.minecraft.grpc.proto.spawnPoint
 import top.madkarma.minecraft.grpc.proto.statusEffect
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import kotlin.jvm.optionals.getOrNull
@@ -117,5 +120,15 @@ fun MobEffectInstance.toProto(): ProtoStatusEffect {
         ambient = effect.isAmbient
         visible = effect.isVisible
         showIcon = effect.showIcon()
+    }
+}
+
+fun LevelData.RespawnData.toProto(): SpawnPoint {
+    val data = this
+    return spawnPoint {
+        dimension = data.dimension().identifier().toString()
+        pos = data.pos().toProto()
+        yaw = data.yaw()
+        pitch = data.pitch()
     }
 }
