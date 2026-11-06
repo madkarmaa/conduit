@@ -8,6 +8,7 @@
         "CommandsMixin",
         "FurnaceResultSlotMixin",
         "ItemEntityMixin",
+        "LivingEntityMixin",
         "MerchantResultSlotMixin",
         "PlayerAdvancementsMixin",
         "ResultSlotMixin",

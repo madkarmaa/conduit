@@ -37,6 +37,8 @@ enum EventType {
     EVENT_TYPE_ADVANCEMENT = 21;
     EVENT_TYPE_INVENTORY_CHANGE = 22;
     EVENT_TYPE_ITEM_PICKUP = 23;
+    // Items a player drops or throws, including the items dropped on death and the items GiveItem
+    // could not fit into the inventory.
     EVENT_TYPE_ITEM_DROP = 24;
     EVENT_TYPE_ITEM_CRAFT = 25;
     EVENT_TYPE_ITEM_SMELT = 26;
@@ -244,6 +246,9 @@ message ItemEntityEvent {
     // For pickups, only the part that fit into the inventory.
     ItemStack item = 3;
     string item_entity_uuid = 4;
+    // Only for EVENT_TYPE_ITEM_DROP: the item was dropped because the player died, from the
+    // inventory, the equipment, the crafting grid or the cursor.
+    bool death = 5;
 }
 
 // A player took the result out of a crafting grid or a furnace, blast furnace or smoker. Taking

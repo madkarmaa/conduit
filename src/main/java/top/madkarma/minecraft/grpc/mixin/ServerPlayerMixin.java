@@ -13,8 +13,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import top.madkarma.minecraft.grpc.events.ItemEntities;
 
 /**
- * Dropping with Q or Ctrl+Q, throwing items out of a menu and items that no longer fit into the
- * inventory when a menu closes all pass through drop. Items dropped on death do not.
+ * Dropping with Q or Ctrl+Q, throwing items out of a menu, items that no longer fit into the
+ * inventory when a menu closes and the overflow of GiveItem all pass through drop. The inventory
+ * and equipment dropped on death do not; LivingEntityMixin reports those. Only the crafting grid
+ * and the cursor of a dead player are dropped through here, when the player entity is removed.
  */
 @Mixin(ServerPlayer.class)
 public abstract class ServerPlayerMixin {
@@ -25,6 +27,7 @@ public abstract class ServerPlayerMixin {
             return;
         }
 
-        ItemEntities.onDropped((ServerPlayer) (Object) this, itemEntity);
+        ServerPlayer player = (ServerPlayer) (Object) this;
+        ItemEntities.onDropped(player, itemEntity, player.isDeadOrDying());
     }
 }

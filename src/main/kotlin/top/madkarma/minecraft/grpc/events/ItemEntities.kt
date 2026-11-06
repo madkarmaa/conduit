@@ -7,6 +7,7 @@ import net.minecraft.world.item.ItemStack
 import top.madkarma.minecraft.grpc.game.toProto
 import top.madkarma.minecraft.grpc.proto.EventType
 import top.madkarma.minecraft.grpc.proto.ItemEntityEvent
+import top.madkarma.minecraft.grpc.proto.copy
 import top.madkarma.minecraft.grpc.proto.itemEntityEvent
 
 /** Publishes EVENT_TYPE_ITEM_PICKUP and EVENT_TYPE_ITEM_DROP. */
@@ -26,11 +27,11 @@ object ItemEntities {
         }
     }
 
-    // Called from the player drop mixin, only when an item entity was created.
+    // Called from the player drop and death drop mixins, only when an item entity was created.
     @JvmStatic
-    fun onDropped(player: ServerPlayer, itemEntity: ItemEntity) {
+    fun onDropped(player: ServerPlayer, itemEntity: ItemEntity, death: Boolean) {
         EventBus.publish(EventType.EVENT_TYPE_ITEM_DROP, accepts = { it.wantsPlayer(player) }) {
-            itemDrop = itemPayload(player, itemEntity.item, itemEntity)
+            itemDrop = itemPayload(player, itemEntity.item, itemEntity).copy { this.death = death }
         }
     }
 
