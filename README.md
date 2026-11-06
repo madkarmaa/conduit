@@ -106,7 +106,14 @@ grpcurl -plaintext -H "authorization: Bearer $TOKEN" -d '{"command": "time set d
 [`client`](./client) is a typed Node.js client built with the official
 [`@grpc/grpc-js`](https://www.npmjs.com/package/@grpc/grpc-js) and
 [`@grpc/proto-loader`](https://www.npmjs.com/package/@grpc/proto-loader) packages. Its types are
-generated from the mod's protos, and `./gradlew build` regenerates them. To build only the client:
+generated from the mod's protos, and `./gradlew build` regenerates them. Each release publishes it
+as `@conduit/client` to the same registry as the [MCP server](#mcp-server):
+
+```sh
+npm install @conduit/client
+```
+
+To build only the client from this checkout:
 
 ```sh
 bun install

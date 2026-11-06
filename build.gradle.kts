@@ -208,14 +208,13 @@ val buildClient =
         outputs.dir("client/dist")
     }
 
-// The MCP server and the bot each bundle the client and ship a copy of the protos.
-fun registerBundledBuild(name: String, workspace: String) =
+// The MCP server and the bot import the built client.
+fun registerWorkspaceBuild(name: String, workspace: String) =
     tasks.register<Exec>(name) {
         dependsOn(buildClient)
         workingDir(workspace)
         commandLine(bun, "run", "build")
 
-        inputs.dir("src/main/proto")
         inputs.files(
             "$workspace/package.json",
             "$workspace/tsconfig.json",
@@ -225,8 +224,8 @@ fun registerBundledBuild(name: String, workspace: String) =
         outputs.dir("$workspace/dist")
     }
 
-val buildMcp = registerBundledBuild("buildMcp", "mcp")
-val buildBot = registerBundledBuild("buildBot", "bot")
+val buildMcp = registerWorkspaceBuild("buildMcp", "mcp")
+val buildBot = registerWorkspaceBuild("buildBot", "bot")
 
 tasks.build { finalizedBy(buildClient, buildMcp, buildBot) }
 

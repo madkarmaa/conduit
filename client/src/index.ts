@@ -30,8 +30,7 @@ type ConduitProto = BatchProto &
     StructureProto &
     WorldProto;
 
-// A bundle that ships the protos next to itself, such as the published MCP server, loads those.
-// Otherwise the client loads the mod's own protos, which resolve the same way from src and dist.
+// The built client ships the protos next to itself. Run from source, it loads the mod's own protos.
 const BUNDLED_PROTO_DIRECTORY = fileURLToPath(new URL("./proto", import.meta.url));
 const PROTO_DIRECTORY = existsSync(BUNDLED_PROTO_DIRECTORY)
     ? BUNDLED_PROTO_DIRECTORY

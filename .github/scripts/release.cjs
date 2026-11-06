@@ -2,8 +2,8 @@ const { execFileSync } = require("node:child_process");
 const { readFileSync, writeFileSync } = require("node:fs");
 
 const REGISTRY = "https://npm.madkarma.top";
-// The bot depends on the MCP server it launches, so the MCP server has to be published first.
-const PUBLISHED_WORKSPACES = ["mcp", "bot"];
+// In dependency order: the MCP server uses the client, and the bot both.
+const WORKSPACES = ["client", "mcp", "bot"];
 
 // npm version cannot read the workspace: protocol, so the versions are written here and bun
 // publishes the packages instead of @semantic-release/npm. Checking the login first stops a
@@ -21,7 +21,7 @@ exports.verifyConditions = (_, { cwd, env }) => {
 exports.prepare = (_, { nextRelease, cwd, env }) => {
     const { version } = nextRelease;
     replaceInFile(`${cwd}/gradle.properties`, /^version=.*$/m, `version=${version}`);
-    for (const workspace of ["client", ...PUBLISHED_WORKSPACES]) {
+    for (const workspace of WORKSPACES) {
         const manifest = `${cwd}/${workspace}/package.json`;
         replaceInFile(manifest, /"version": "[^"]*"/, `"version": "${version}"`);
     }
@@ -33,10 +33,10 @@ exports.prepare = (_, { nextRelease, cwd, env }) => {
 };
 
 exports.publish = (_, { cwd, env }) => {
-    for (const workspace of PUBLISHED_WORKSPACES) {
+    for (const workspace of WORKSPACES) {
         execFileSync("bun", ["publish"], { cwd: `${cwd}/${workspace}`, env, stdio: "inherit" });
     }
-    return { name: "@conduit/mcp and @conduit/bot", url: `${REGISTRY}/-/web/detail/@conduit/bot` };
+    return { name: "@conduit packages", url: `${REGISTRY}/-/web/detail/@conduit/bot` };
 };
 
 function replaceInFile(path, pattern, replacement) {

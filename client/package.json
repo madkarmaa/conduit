@@ -3,8 +3,18 @@
     "version": "0.1.0",
     "description": "Typed Node.js client for the Conduit mod",
     "license": "CC0-1.0",
-    "private": true,
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/madkarmaa/conduit.git",
+        "directory": "client"
+    },
     "type": "module",
+    "files": [
+        "dist"
+    ],
+    "engines": {
+        "node": ">=20"
+    },
     "scripts": {
         "prebuild": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --includeComments --grpcLib=@grpc/grpc-js -I ../src/main/proto -O src/generated conduit/v1/batch.proto conduit/v1/common.proto conduit/v1/entity.proto conduit/v1/events.proto conduit/v1/player.proto conduit/v1/registry.proto conduit/v1/server.proto conduit/v1/structure.proto conduit/v1/world.proto",
         "build": "tsdown",
