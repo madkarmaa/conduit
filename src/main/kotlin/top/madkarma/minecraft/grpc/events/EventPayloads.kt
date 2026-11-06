@@ -12,10 +12,28 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
+import top.madkarma.minecraft.grpc.game.GameServer
 import top.madkarma.minecraft.grpc.game.rotationOf
 import top.madkarma.minecraft.grpc.game.toProto
 import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.service.server.performance
+
+inline fun buildEvent(fill: Event.Builder.() -> Unit): Event {
+    val builder =
+        Event.newBuilder()
+            .setTimestampMs(System.currentTimeMillis())
+            .setTick(GameServer.current?.tickCount ?: 0)
+
+    builder.fill()
+    return builder.build()
+}
+
+internal fun droppedEvent(firstSequence: Long, count: Long): Event = buildEvent {
+    eventsDropped = eventsDroppedEvent {
+        this.firstSequence = firstSequence
+        this.count = count
+    }
+}
 
 internal fun chatPayload(sender: ServerPlayer, message: String): ChatEvent = chatEvent {
     player = sender.gameProfile.name

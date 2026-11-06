@@ -81,6 +81,10 @@ In singleplayer the gRPC server runs while a world is open.
 Entities can only be spawned or teleported into loaded chunks; use `WorldService.SetChunkForced`
 or keep a player nearby.
 
+Events in a subscription are numbered. A client that reads too slowly loses the oldest buffered
+events, and an `events_dropped` event reports which ones were lost, so the client knows to re-read
+any state it tracks.
+
 ```sh
 grpcurl -plaintext -H "authorization: Bearer $TOKEN" localhost:25585 \
     minecraft.grpc.v1.ServerService/GetInfo

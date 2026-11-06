@@ -66,7 +66,7 @@ object PlayerMoves {
             )
 
         val event by lazy {
-            EventBus.buildEvent {
+            buildEvent {
                 playerMove = movePayload(player, player.uuid in teleportedPlayers)
             }
         }

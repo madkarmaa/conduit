@@ -85,6 +85,11 @@ message Event {
     int64 timestamp_ms = 1;
     // Server tick count at the time of the event.
     int32 tick = 2;
+    // Position of the event in this subscription, starting at 1 and increasing by one for every
+    // event. Clients that read too slowly lose the oldest buffered events; the gap is reported by
+    // an events_dropped event, which has no sequence number of its own, right before the next
+    // delivered event.
+    int64 sequence = 3;
     oneof payload {
         ChatEvent chat = 10;
         PlayerEvent player_join = 11;
@@ -113,7 +118,16 @@ message Event {
         ItemCraftEvent item_craft = 34;
         ItemCraftEvent item_smelt = 35;
         TradeEvent trade = 36;
+        // Always sent when events were lost, whatever types the subscription lists.
+        EventsDroppedEvent events_dropped = 37;
     }
+}
+
+message EventsDroppedEvent {
+    // Sequence number of the first lost event.
+    int64 first_sequence = 1;
+    // Number of consecutive events lost.
+    int64 count = 2;
 }
 
 message ChatEvent {

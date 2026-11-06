@@ -1,6 +1,7 @@
 package top.madkarma.minecraft.grpc.service.events
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import top.madkarma.minecraft.grpc.events.EventBus
 import top.madkarma.minecraft.grpc.events.EventSubscription
@@ -15,7 +16,7 @@ class EventServiceImpl : EventServiceGrpcKt.EventServiceCoroutineImplBase() {
         EventBus.subscribe(subscription)
 
         try {
-            for (event in subscription.channel) emit(event)
+            emitAll(subscription.events())
         } finally {
             EventBus.unsubscribe(subscription)
         }
