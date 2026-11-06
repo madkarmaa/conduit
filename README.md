@@ -90,9 +90,9 @@ In singleplayer the gRPC server runs while a world is open.
 Entities can only spawn or be teleported into loaded chunks. Force-load the chunk with
 `WorldService.SetChunkForced` or keep a player nearby.
 
-Events in a subscription are numbered. A client that reads too slowly loses the oldest buffered
-events, and an `events_dropped` event reports which ones were lost, so the client knows to re-read
-any state it tracks.
+The mod numbers the events in a subscription. A client that reads too slowly loses the oldest
+buffered events, and an `events_dropped` event reports which ones were lost, so the client knows to
+re-read any state it tracks.
 
 ```sh
 grpcurl -plaintext -H "authorization: Bearer $TOKEN" localhost:25585 \
@@ -103,14 +103,24 @@ grpcurl -plaintext -H "authorization: Bearer $TOKEN" -d '{"command": "time set d
 
 ## TypeScript client
 
-[`client`](./client) is a typed Node.js client built with the official
+[`client/`](./client) is a typed Node.js client built with the official
 [`@grpc/grpc-js`](https://www.npmjs.com/package/@grpc/grpc-js) and
-[`@grpc/proto-loader`](https://www.npmjs.com/package/@grpc/proto-loader) packages. Its types are
-generated from the mod's protos, and `./gradlew build` regenerates them. Each release publishes it
-as `@conduit/client` to the same registry as the [MCP server](#mcp-server):
+[`@grpc/proto-loader`](https://www.npmjs.com/package/@grpc/proto-loader) packages. Its types come
+from the mod's protos, and `./gradlew build` regenerates them. It needs Node.js 24 or later. Each
+release publishes it as `@conduit/client` to the same registry as the [MCP server](#mcp-server).
 
 ```sh
 npm install @conduit/client
+```
+
+```ts
+import { close, connect } from "@conduit/client";
+
+const clients = connect({ host: "localhost", port: 25585, token: process.env.TOKEN });
+clients.server.executeCommand({ command: "time set day" }, (error, response) => {
+    console.log(error ?? response);
+    close(clients);
+});
 ```
 
 To build only the client from this checkout:
@@ -121,37 +131,28 @@ cd client
 bun run build
 ```
 
-```ts
-import { close, connect } from "@conduit/client";
-
-const clients = connect({ address: "localhost:25585", token: process.env.TOKEN });
-clients.server.executeCommand({ command: "time set day" }, (error, response) => {
-    console.log(error ?? response);
-    close(clients);
-});
-```
-
 ## MCP server
 
-[`mcp`](./mcp) is an [MCP](https://modelcontextprotocol.io) server over stdio that lets AI agents
-control the game through the mod. It needs Node.js 20 or later. Each release publishes it as
+[`mcp/`](./mcp) is an [MCP](https://modelcontextprotocol.io) server over stdio that lets AI agents
+control the game through the mod. It needs Node.js 24 or later. Each release publishes it as
 `@conduit/mcp` to `https://npm.madkarma.top`, so npm needs that registry for the `@conduit` scope:
 
 ```sh
 npm config set @conduit:registry https://npm.madkarma.top
 ```
 
-| Variable                 | Default           | Description                                          |
-| ------------------------ | ----------------- | ---------------------------------------------------- |
-| `CONDUIT_ADDRESS`        | `localhost:25585` | gRPC address of the mod                              |
-| `CONDUIT_TOKEN`          |                   | Bearer token of the mod                              |
-| `CONDUIT_MCP_READ_ONLY`  | `false`           | Only offer tools that read state                     |
-| `CONDUIT_MCP_TOOLS`      |                   | Only offer these tools, separated by commas          |
-| `CONDUIT_MCP_DENY_TOOLS` |                   | Never offer these tools, separated by commas         |
-| `CONDUIT_MCP_PLAYER`     |                   | Names and UUIDs of the only player the tools may see |
+| Variable                 | Default     | Description                                          |
+| ------------------------ | ----------- | ---------------------------------------------------- |
+| `CONDUIT_HOST`           | `localhost` | Host of the mod's gRPC server                        |
+| `CONDUIT_PORT`           | `25585`     | Port of the mod's gRPC server                        |
+| `CONDUIT_TOKEN`          |             | Bearer token of the mod                              |
+| `CONDUIT_MCP_READ_ONLY`  | `false`     | Only offer tools that read state                     |
+| `CONDUIT_MCP_TOOLS`      |             | Only offer these tools, separated by commas          |
+| `CONDUIT_MCP_DENY_TOOLS` |             | Never offer these tools, separated by commas         |
+| `CONDUIT_MCP_PLAYER`     |             | Names and UUIDs of the only player the tools may see |
 
-With `CONDUIT_MCP_PLAYER`, tools only accept that player in their player arguments, tools that list
-other players or entities are not offered, and results leave out IP addresses.
+With `CONDUIT_MCP_PLAYER`, tools only accept that player in their player arguments. The server
+leaves out the tools that list other players or entities, and removes IP addresses from results.
 
 The server has 30 tools. Tools with several operations take an `action` argument.
 
@@ -190,50 +191,54 @@ cd mcp
 bun run build
 ```
 
-A local build runs with `node mcp/dist/index.mjs` and loads its dependencies from the repository's
-`node_modules`.
-
 ## Chat bot
 
-[`bot`](./bot) lets players talk to an AI agent in the game chat. A message that mentions
-`@conduit`, such as `@conduit build a small house next to me`, goes to an agent CLI that controls the
-game through the [MCP server](#mcp-server). The bot posts the agent's answer in the chat. It needs
-Node.js 20 or later and [Docker](https://www.docker.com). Each release publishes it as
-`@conduit/bot` to the same registry as the MCP server.
+[`bot/`](./bot) lets players talk to an AI agent in the game chat. A message that mentions
+`@conduit`, such as `@conduit build a small house next to me`, goes to an agent CLI that controls
+the game through the [MCP server](#mcp-server). The bot posts the agent's answer in the chat, with
+colors and styles if the agent uses Minecraft's `§` codes. It needs Node.js 24 or later and
+[Docker](https://www.docker.com). Each release publishes it as `@conduit/bot` to the same registry
+as the MCP server.
 
 ```sh
 CONDUIT_TOKEN=<token> npx @conduit/bot [config file]
 ```
 
-The config file defaults to `conduit-bot.json` in the working directory. `CONDUIT_ADDRESS` and
-`CONDUIT_TOKEN` work as they do for the MCP server.
+The config file defaults to `conduit-bot.json` in the working directory. `CONDUIT_HOST`,
+`CONDUIT_PORT` and `CONDUIT_TOKEN` work as they do for the MCP server.
 
 ```json
 {
     "agent": "claude",
     "model": "sonnet",
+    "effort": "high",
     "allow": ["Steve"],
-    "chat": { "enabled": true, "model": "haiku" }
+    "chat": { "model": "haiku", "effort": "low" }
 }
 ```
 
 | Key              | Default        | Description                                                      |
 | ---------------- | -------------- | ---------------------------------------------------------------- |
-| `agent`          |                | Agent CLI, model and effort, see [Agents](#agents)               |
+| `agent`          |                | Agent CLI, see [Agents](#agents)                                 |
+| `model`          |                | Model, as the agent CLI names it                                 |
+| `effort`         |                | Reasoning effort, as the agent CLI names it                      |
+| `args`           | `[]`           | Extra arguments for the agent CLI                                |
 | `keyword`        | `conduit`      | Word that players mention with `@`                               |
 | `memory`         | `player`       | `player` keeps one conversation per player, `shared` one for all |
 |                  |                | players, and `none` starts a new one for every request           |
 | `operators`      | `true`         | Server operators get full mode                                   |
 | `allow`          | `[]`           | Players who get full mode, by name or UUID                       |
 | `readOnly`       | `false`        | Only give full mode tools that read state                        |
-| `chat`           |                | Chat mode for everyone else, see below                           |
+| `chat`           |                | Chat mode for everyone else, see [Modes](#modes)                 |
 | `offline`        | `false`        | Cut the agent's container off from every network                 |
 | `files`          | `[]`           | More login files to copy into the agent's home, relative to `~`  |
 | `env`            | `[]`           | Names of variables to pass to the agent, such as API keys        |
 | `instructions`   |                | Extra instructions for the agent                                 |
 | `timeoutSeconds` | `300`          | Time limit for one request                                       |
-| `maxReplyLength` | `1000`         | Longer answers are cut off                                       |
-| `stateDirectory` | `.conduit-bot` | Where conversations are kept, relative to the config file        |
+| `maxReplyLength` | `1000`         | The bot cuts longer answers                                      |
+| `stateDirectory` | `.conduit-bot` | Where the bot keeps conversations, relative to the config file   |
+
+`agent`, `model` and `effort` are required.
 
 ### Modes
 
@@ -241,23 +246,23 @@ Operators and the players in `allow` get full mode, where the agent controls the
 full mode controls the agent and every tool it has, so keep the list short or turn on `readOnly`.
 With `shared` memory, full mode answers go to everyone.
 
-Chat mode lets every other player ask questions. It is off unless `chat.enabled` is `true`. The
-agent can only read the game, and the player tools only show the asking player's own data: their
-inventory, position and statistics, but nobody else's and no IP addresses. Chat mode conversations
-are never shared, with other players or with full mode, and their answers only go to the asking
-player.
+Chat mode lets every other player ask questions. The `chat` section turns it on, and its `model`
+and `effort` are required. In chat mode the agent can only read the game. The player tools only
+show the asking player's own data, such as their inventory, position and statistics, and never
+another player's data or an IP address. Chat mode never shares a conversation, with other players
+or with full mode, and only the asking player sees its answers.
 
 | Key            | Default | Description                                                  |
 | -------------- | ------- | ------------------------------------------------------------ |
-| `chat.enabled` | `false` | Answer players who do not get full mode                      |
+| `chat.enabled` | `true`  | Answer players who do not get full mode                      |
+| `chat.model`   |         | Model for chat mode, such as a cheaper one                   |
+| `chat.effort`  |         | Reasoning effort for chat mode                               |
 | `chat.allow`   |         | Only these tools. Defaults to a list of safe read tools      |
 | `chat.deny`    | `[]`    | Never these tools. On its own, every other read tool applies |
-| `chat.model`   |         | Model for chat mode, instead of the agent's                  |
-| `chat.effort`  |         | Effort for chat mode, instead of the agent's                 |
 
 The default tools are `server_info`, `world_info`, `game_rules`, `get_block`, `get_region`,
-`terrain`, `registry`, `recipes`, `structures` and `get_player`. Tools that list other players or
-entities are never available in chat mode.
+`terrain`, `registry`, `recipes`, `structures` and `get_player`. Chat mode never gets the tools that
+list other players or entities.
 
 ### Isolation
 
@@ -265,26 +270,24 @@ Every request runs the agent in a new Docker container. The container sees only 
 home, with the conversation, and a copy of its login files. It cannot see the host's files, other
 processes or the Docker socket, and its root filesystem is read-only. The Conduit MCP server runs in
 the bot, outside the container, and the agent reaches it through the container's input and output.
-The gRPC token never enters the container, and `readOnly` holds even against an agent that tries to
-work around it.
+The gRPC token never enters the container, and the agent cannot turn off `readOnly` or the chat mode
+limits from inside it.
 
 The container can reach the internet, which the agent needs for its model's API, unless `offline`
-is on. Services that only listen on the host's loopback interface, such as the mod's gRPC server
-by default, stay out of reach.
+is on. It cannot reach services that only listen on the host's loopback interface, such as the
+mod's gRPC server by default.
 
-The login files are copied into the agent's home before each run and deleted after it. A token that
-the agent's CLI refreshed during the run is copied back, unless the host file changed in the
-meantime.
+The bot copies the login files into the agent's home before each run and deletes them after it. If
+the agent's CLI refreshed a token during the run, the bot copies it back, unless the host file
+changed in the meantime.
 
 ### Agents
 
 `agent` is `claude`, `codex` or `opencode`. To use another agent CLI, open an issue. The bot builds
 an image with the latest version of the CLI the first time it runs, and again after each bot update.
-It copies the CLI's login files from the host into the container, so log in on the host first, and
-turns off the CLI's own tools, so the agent only uses the Conduit tools.
-
-`model` and `effort` go to the CLI as given, in its own names, and `args` adds extra arguments for
-the CLI. `chat.model` and `chat.effort` override them in chat mode, such as with a cheaper model.
+It copies the CLI's logins from the host into the container, so log in on the host first. It also
+turns off the CLI's own tools, so the agent only uses the Conduit tools. The bot passes `model`,
+`effort` and `args` to the CLI as given.
 
 #### Claude Code
 
@@ -298,7 +301,7 @@ or a token from `claude setup-token` with `"env": ["ANTHROPIC_API_KEY"]` or
     "agent": "claude",
     "model": "sonnet",
     "effort": "high",
-    "chat": { "enabled": true, "model": "haiku", "effort": "low" }
+    "chat": { "model": "haiku", "effort": "low" }
 }
 ```
 
@@ -311,25 +314,27 @@ or a token from `claude setup-token` with `"env": ["ANTHROPIC_API_KEY"]` or
     "agent": "codex",
     "model": "gpt-6.1-sol",
     "effort": "high",
-    "chat": { "enabled": true, "model": "gpt-6-luna", "effort": "low" }
+    "chat": { "model": "gpt-6-luna", "effort": "low" }
 }
 ```
 
 #### OpenCode
 
 [OpenCode](https://opencode.ai) logs in with `opencode auth login` on the host. It keeps those logins
-in a database with every session, so the bot exports them with `opencode auth export` before each
-run and imports them in the container instead. Without a login, the free models such as
-`opencode/beam-free` work too. The bot also copies OpenCode's config file, so custom providers work,
-and passes the variables that the config reads through `{env:NAME}`. The model is `provider/model`,
-as `opencode models` lists them. The effort is one of the model's variants, so it needs a model too.
+in the same database as every session, so the bot exports them with `opencode auth export` before
+each run and imports them in the container. Without a login, free models such as
+`opencode/beam-free` work too.
+
+The bot also copies OpenCode's config file, so custom providers work, and passes the variables that
+the config reads through `{env:NAME}`. The model is `provider/model`, as `opencode models` lists
+them, and the effort is one of the model's variants.
 
 ```json
 {
     "agent": "opencode",
     "model": "opencode-go/glm-5.3",
     "effort": "high",
-    "chat": { "enabled": true, "model": "opencode-go/glm-5.3-flash", "effort": "low" }
+    "chat": { "model": "opencode-go/glm-5.3-flash", "effort": "low" }
 }
 ```
 
