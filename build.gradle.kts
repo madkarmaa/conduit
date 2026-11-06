@@ -208,7 +208,18 @@ val buildClient by
         outputs.dir("client/dist")
     }
 
-tasks.build { finalizedBy(buildClient) }
+val buildMcp by
+    tasks.registering(Exec::class) {
+        dependsOn(buildClient)
+        workingDir("mcp")
+        commandLine(bun, "run", "build")
+
+        inputs.files("mcp/package.json", "mcp/tsconfig.json", "mcp/tsdown.config.ts")
+        inputs.dir("mcp/src")
+        outputs.dir("mcp/dist")
+    }
+
+tasks.build { finalizedBy(buildClient, buildMcp) }
 
 val formatWithBun by tasks.registering(Exec::class) { commandLine(bun, "fmt") }
 
