@@ -39,15 +39,21 @@ interface Outcome {
     readonly dockerStderr: string;
 }
 
+export interface AgentRun {
+    // Commands that prepare the agent's home, run in order before the agent.
+    readonly setup: readonly (readonly string[])[];
+    readonly command: readonly string[];
+}
+
 // Runs an agent command in a new container and returns its stdout.
 export function runInContainer(
     container: Container,
     mcp: McpHost,
-    command: readonly string[],
+    agentRun: AgentRun,
 ): AsyncResult<string, RunError> {
-    return Ok(command)
+    return Ok(agentRun)
         .mapAsync(
-            (parts) => new Promise<Outcome>((resolve) => start(container, mcp, parts, resolve)),
+            (value) => new Promise<Outcome>((resolve) => start(container, mcp, value, resolve)),
         )
         .andThen((outcome) => toResult(outcome, container));
 }
@@ -55,7 +61,7 @@ export function runInContainer(
 function start(
     container: Container,
     mcp: McpHost,
-    command: readonly string[],
+    { setup, command }: AgentRun,
     finish: (outcome: Outcome) => void,
 ) {
     const name = `conduit-bot-${randomUUID()}`;
@@ -95,7 +101,7 @@ function start(
         finish({ exit, spawnError, timedOut, dockerStderr });
     });
 
-    send({ type: "start", command });
+    send({ type: "start", setup, command });
 }
 
 function dockerArguments(container: Container, name: string): string[] {

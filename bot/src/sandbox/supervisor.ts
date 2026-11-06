@@ -39,7 +39,7 @@ server.listen(SOCKET_PATH, () => {
 function receive(frame: ToContainer) {
     switch (frame.type) {
         case "start":
-            return runAgent(frame.command);
+            return start(frame.setup, frame.command);
         case "mcp":
             return connections.get(frame.id)?.write(`${frame.line}\n`);
         case "close":
@@ -48,19 +48,35 @@ function receive(frame: ToContainer) {
     }
 }
 
-function runAgent(command: readonly string[]) {
+// A failed setup command ends the run like a failed agent, with its own error.
+function start(setup: readonly (readonly string[])[], command: readonly string[]) {
+    const [step, ...rest] = setup;
+    if (!step) return run(command, finish);
+
+    run(step, (code, stdout, stderr) => {
+        if (code === 0) start(rest, command);
+        else finish(code, stdout, stderr);
+    });
+}
+
+function finish(code: number | null, stdout: string, stderr: string) {
+    send({ type: "exit", code, stdout, stderr }, () => process.exit(0));
+}
+
+function run(
+    command: readonly string[],
+    done: (code: number | null, stdout: string, stderr: string) => void,
+) {
     const [executable = "", ...args] = command;
-    const agent = spawn(executable, args, { stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(executable, args, { stdio: ["ignore", "pipe", "pipe"] });
 
     let stdout = "";
     let stderr = "";
-    agent.stdout.setEncoding("utf8").on("data", (chunk: string) => (stdout += chunk));
-    agent.stderr.setEncoding("utf8").on("data", (chunk: string) => {
+    child.stdout.setEncoding("utf8").on("data", (chunk: string) => (stdout += chunk));
+    child.stderr.setEncoding("utf8").on("data", (chunk: string) => {
         stderr = (stderr + chunk).slice(-STDERR_LIMIT);
     });
 
-    agent.on("error", (error) => (stderr += `\n${error.message}`));
-    agent.on("close", (code) => {
-        send({ type: "exit", code, stdout, stderr: stderr.trim() }, () => process.exit(0));
-    });
+    child.on("error", (error) => (stderr += `\n${error.message}`));
+    child.on("close", (code) => done(code, stdout, stderr.trim()));
 }

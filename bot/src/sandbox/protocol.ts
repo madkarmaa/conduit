@@ -10,7 +10,12 @@ export const RELAY_PATH = `${ASSETS_MOUNT}/sandbox/relay.mjs`;
 export const SOCKET_PATH = "/tmp/conduit-mcp.sock";
 
 export type ToContainer =
-    | { readonly type: "start"; readonly command: readonly string[] }
+    | {
+          readonly type: "start";
+          // Commands that prepare the agent's home, run in order before the agent.
+          readonly setup: readonly (readonly string[])[];
+          readonly command: readonly string[];
+      }
     | { readonly type: "mcp"; readonly id: number; readonly line: string }
     | { readonly type: "close"; readonly id: number };
 

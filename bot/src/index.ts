@@ -4,7 +4,8 @@ import { call, close, connect } from "@conduit/client";
 import type { AsyncResult, Result } from "results-ts";
 import type { Mode } from "./access.ts";
 import { createAgent, type Agent, type McpServer } from "./agents.ts";
-import { describeCall, handleChat, log, type Bot } from "./bot.ts";
+import { describeCall, handleChat, type Bot } from "./bot.ts";
+import { log } from "./log.ts";
 import { listenToChat } from "./chat.ts";
 import { loadConfig, type Config } from "./config.ts";
 import { Conversations } from "./conversations.ts";
@@ -53,7 +54,9 @@ function start(config: Config, mcp: McpServer, agents: Record<Mode, Agent>) {
     const token = process.env.CONDUIT_TOKEN || undefined;
     const clients = connect({ address, token });
     const files = homeFiles(agent.files, config.files);
-    const variables = [...config.env, ...referencedVariables(files.values())];
+    // The config's variables are expected, while the ones the copied config files read are optional.
+    const referenced = referencedVariables(files.values()).filter((name) => name in process.env);
+    const variables = [...new Set([...config.env, ...referenced])];
 
     const bot: Bot = {
         clients,

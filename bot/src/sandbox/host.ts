@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { catchUnwind } from "results-ts";
-import { log } from "../bot.ts";
+import { log } from "../log.ts";
 
 // Files in the host's home, by their path relative to it. An agent's files are optional, since it
 // can log in through a variable instead, but a missing file the config asks for is worth a warning.

@@ -12,7 +12,8 @@ import {
     type McpHost,
     type RunError,
 } from "./sandbox/container.ts";
-import { copyLogins, returnLogins } from "./sandbox/logins.ts";
+import { log } from "./log.ts";
+import { withLogins } from "./sandbox/logins.ts";
 
 export interface Bot {
     readonly clients: ConduitClients;
@@ -87,21 +88,16 @@ function answer(bot: Bot, request: Request): PromiseLike<void> {
 }
 
 function ask(bot: Bot, conversation: Conversation, request: Request) {
+    const agent = bot.agents[request.mode];
     const prompt = buildPrompt(bot.config, request.sender, request.text, request.mode);
-    const command = bot.agents[request.mode].command(prompt, conversation.started);
+    const command = agent.command(prompt, conversation.started);
     const container = { ...bot.container, home: conversation.directory };
     const policy = toolPolicy(bot.config, request.mode, request.sender);
     const mcp = { ...bot.mcp, env: { ...bot.mcp.env, ...policy } };
 
-    // Logins and configs go into the agent's home for the run, and refreshed tokens come back even if it failed.
-    return copyLogins(conversation.directory, bot.logins).andThenAsync(async (copies) => {
-        const answer = await runInContainer(container, mcp, command);
-        await returnLogins(copies).match({
-            Ok: (saved) => saved.forEach((file) => log(`Saved the refreshed login in ${file}`)),
-            Err: (error) => log(`Could not save a refreshed login: ${error.message}`),
-        });
-        return answer.map((output) => output.trim() || "Done.");
-    });
+    return withLogins(conversation.directory, bot.logins, agent.exportedLogins, (setup) =>
+        runInContainer(container, mcp, { setup, command }),
+    ).map((output) => output.trim() || "Done.");
 }
 
 function tell(bot: Bot, sender: ChatMessage, text: string) {
@@ -137,8 +133,4 @@ function describeFailure(error: RunError | StateError): string {
 
 export function describeCall(error: CallError): string {
     return error.kind === "grpc" ? `${error.status}: ${error.details}` : error.message;
-}
-
-export function log(message: string) {
-    console.error(`[${new Date().toISOString()}] ${message}`);
 }

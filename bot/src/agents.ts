@@ -22,6 +22,14 @@ export interface Agent {
     // Login and config files in the host's home, copied to the same place in the agent's home for
     // each run. Missing ones are skipped.
     readonly files: readonly string[];
+    // Logins that the CLI keeps where they cannot be copied, exported on the host and imported in
+    // the container before each run.
+    readonly exportedLogins?: ExportedLogins;
+}
+
+export interface ExportedLogins {
+    readonly export: readonly string[];
+    readonly import: (file: string) => string[];
 }
 
 // Each CLI names its model and reasoning effort its own way, so the agents translate them.
@@ -111,11 +119,12 @@ const AGENTS: Record<AgentName, (options: AgentOptions) => Agent> = {
             env: { OPENCODE_CONFIG_CONTENT: JSON.stringify(config) },
             image: presetImage("opencode", "@opencode/cli"),
             // The config defines custom providers, whose keys it reads from variables.
-            files: [
-                ".local/share/opencode/auth.json",
-                ".config/opencode/opencode.json",
-                ".config/opencode/opencode.jsonc",
-            ],
+            files: [".config/opencode/opencode.json", ".config/opencode/opencode.jsonc"],
+            // OpenCode keeps its logins in a database with every session, which stays on the host.
+            exportedLogins: {
+                export: ["opencode", "auth", "export"],
+                import: (file) => ["opencode", "auth", "import", file],
+            },
         };
     },
 };
