@@ -1,0 +1,38 @@
+{
+    "name": "@conduit/bot",
+    "version": "1.0.0",
+    "description": "Minecraft chat bot that hands requests to an AI agent CLI with the Conduit MCP server",
+    "license": "CC0-1.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/madkarmaa/conduit.git",
+        "directory": "bot"
+    },
+    "type": "module",
+    "bin": {
+        "conduit-bot": "./dist/index.mjs"
+    },
+    "files": [
+        "dist"
+    ],
+    "engines": {
+        "node": ">=20"
+    },
+    "scripts": {
+        "build": "tsdown",
+        "typecheck": "tsc"
+    },
+    "devDependencies": {
+        "@types/node": "^24.19.2",
+        "@conduit/client": "workspace:*",
+        "tsdown": "^0.23.7",
+        "typescript": "^7.0.2"
+    },
+    "dependencies": {
+        "@conduit/mcp": "workspace:*",
+        "@grpc/grpc-js": "^1.14.7",
+        "@grpc/proto-loader": "^0.8.1",
+        "results-ts": "^4.4.0",
+        "zod": "^4.6.7"
+    }
+}

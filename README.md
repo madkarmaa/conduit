@@ -25,8 +25,8 @@ Building needs JDK 25 and [Bun](https://bun.sh) on the `PATH`.
 ```
 
 The build writes the mod jar to `build/libs/conduit-<mod version>+<minecraft version>.jar`. It also
-installs the Bun workspace and builds the [TypeScript client](#typescript-client) and the
-[MCP server](#mcp-server).
+installs the Bun workspace and builds the [TypeScript client](#typescript-client), the
+[MCP server](#mcp-server) and the [chat bot](#chat-bot).
 
 ## Configuration
 
@@ -179,6 +179,79 @@ bun run build
 
 A local build runs with `node mcp/dist/index.mjs` and loads its dependencies from the repository's
 `node_modules`.
+
+## Chat bot
+
+[`bot`](./bot) lets players talk to an AI agent in the game chat. A message that mentions
+`@conduit`, such as `@conduit build a small house next to me`, goes to an agent CLI that controls the
+game through the [MCP server](#mcp-server). The bot posts the agent's answer in the chat. It needs
+Node.js 20 or later and one of the supported agent CLIs, logged in. Each release publishes it as
+`@conduit/bot` to the same registry as the MCP server.
+
+```sh
+CONDUIT_TOKEN=<token> npx @conduit/bot [config file]
+```
+
+The config file defaults to `conduit-bot.json` in the working directory. `CONDUIT_ADDRESS` and
+`CONDUIT_TOKEN` work as they do for the MCP server.
+
+```json
+{
+    "agent": "claude",
+    "memory": "player",
+    "allow": ["Steve"]
+}
+```
+
+| Key              | Default        | Description                                                      |
+| ---------------- | -------------- | ---------------------------------------------------------------- |
+| `agent`          |                | Agent CLI to run, see below                                      |
+| `keyword`        | `conduit`      | Word that players mention with `@`                               |
+| `memory`         | `player`       | `player` keeps one conversation per player, `shared` one for all |
+|                  |                | players, and `none` starts a new one for every request           |
+| `operators`      | `true`         | Server operators may ask                                         |
+| `allow`          | `[]`           | Players who may ask, by name or UUID                             |
+| `readOnly`       | `false`        | Only give the agent tools that read state                        |
+| `instructions`   |                | Extra instructions for the agent                                 |
+| `timeoutSeconds` | `300`          | Time limit for one request                                       |
+| `maxReplyLength` | `1000`         | Longer answers are cut off                                       |
+| `stateDirectory` | `.conduit-bot` | Where conversations are kept, relative to the config file        |
+
+Anyone who may ask controls the agent and every tool it has, so keep the list of players short or
+turn on `readOnly`. Answers go to the player who asked, or to everyone with `shared` memory.
+
+`agent` is one of the presets `claude` ([Claude Code](https://claude.com/claude-code)), `codex`
+([Codex CLI](https://github.com/openai/codex)) and `opencode` ([OpenCode](https://opencode.ai)).
+Each preset gives the agent the Conduit tools. To pass extra arguments, such as a model, use an
+object:
+
+```json
+{ "agent": { "preset": "claude", "args": ["--model", "sonnet"] } }
+```
+
+Any other agent CLI works through a command that prints the answer on stdout. `resume` continues
+the latest conversation in the working directory, which the bot keeps separate per conversation.
+Without it, every request starts a new conversation.
+
+```json
+{
+    "agent": {
+        "command": ["my-agent", "--mcp-config", "{mcp_config}", "{prompt}"],
+        "resume": ["my-agent", "--continue", "--mcp-config", "{mcp_config}", "{prompt}"]
+    }
+}
+```
+
+| Placeholder     | Value                                                              |
+| --------------- | ------------------------------------------------------------------ |
+| `{prompt}`      | The player's request, with context about the game and the player   |
+| `{mcp_config}`  | JSON in the `mcpServers` format that starts the Conduit MCP server |
+| `{mcp_command}` | Executable that starts the Conduit MCP server                      |
+| `{mcp_script}`  | Script to pass to `{mcp_command}`                                  |
+
+The agent gets `CONDUIT_ADDRESS`, `CONDUIT_TOKEN` and `CONDUIT_MCP_READ_ONLY` in its environment and
+passes them on to the MCP server, which most agent CLIs do by default. `./gradlew build` also builds
+the bot from this checkout.
 
 ## Test environment
 

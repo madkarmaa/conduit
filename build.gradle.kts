@@ -208,20 +208,27 @@ val buildClient =
         outputs.dir("client/dist")
     }
 
-val buildMcp =
-    tasks.register<Exec>("buildMcp") {
+// The MCP server and the bot each bundle the client and ship a copy of the protos.
+fun registerBundledBuild(name: String, workspace: String) =
+    tasks.register<Exec>(name) {
         dependsOn(buildClient)
-        workingDir("mcp")
+        workingDir(workspace)
         commandLine(bun, "run", "build")
 
-        // The MCP server bundles the client and ships a copy of the protos.
         inputs.dir("src/main/proto")
-        inputs.files("mcp/package.json", "mcp/tsconfig.json", "mcp/tsdown.config.ts")
-        inputs.dir("mcp/src")
-        outputs.dir("mcp/dist")
+        inputs.files(
+            "$workspace/package.json",
+            "$workspace/tsconfig.json",
+            "$workspace/tsdown.config.ts",
+        )
+        inputs.dir("$workspace/src")
+        outputs.dir("$workspace/dist")
     }
 
-tasks.build { finalizedBy(buildClient, buildMcp) }
+val buildMcp = registerBundledBuild("buildMcp", "mcp")
+val buildBot = registerBundledBuild("buildBot", "bot")
+
+tasks.build { finalizedBy(buildClient, buildMcp, buildBot) }
 
 val formatWithBun = tasks.register<Exec>("formatWithBun") { commandLine(bun, "fmt") }
 
