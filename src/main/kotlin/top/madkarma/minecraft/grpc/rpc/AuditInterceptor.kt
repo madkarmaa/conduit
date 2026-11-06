@@ -75,14 +75,19 @@ private class AuditedCall<ReqT, RespT>(call: ServerCall<ReqT, RespT>) :
         if (isReadOnly(methodDescriptor)) return
 
         val durationMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos)
-        AUDIT_LOGGER.info(
-            "{} from {} -> {} in {} ms: {}",
-            method,
-            address,
-            status.code,
-            durationMillis,
-            describe(request),
-        )
+        val request = request
+
+        // Printing a large request, such as a batch, would hold up the thread closing the call.
+        startInWorkerThread {
+            AUDIT_LOGGER.info(
+                "{} from {} -> {} in {} ms: {}",
+                method,
+                address,
+                status.code,
+                durationMillis,
+                describe(request),
+            )
+        }
     }
 }
 

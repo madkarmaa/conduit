@@ -3,7 +3,6 @@ package top.madkarma.minecraft.grpc.service.structure
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.nbt.CompoundTag
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate
@@ -17,15 +16,13 @@ import kotlin.math.max
 import kotlin.math.min
 import top.madkarma.minecraft.grpc.proto.BlockPos as ProtoBlockPos
 
-internal class CapturedStructure(val nbt: CompoundTag, val size: Vec3i)
-
 internal fun MinecraftServer.captureStructure(
     dimension: String,
     from: ProtoBlockPos,
     to: ProtoBlockPos,
     includeEntities: Boolean,
     ignoreBlock: String,
-): CapturedStructure {
+): StructureTemplate {
     val level = level(dimension)
     val ignoredBlocks = ignoredBlocks(ignoreBlock)
     val min = BlockPos(min(from.x, to.x), min(from.y, to.y), min(from.z, to.z))
@@ -37,8 +34,10 @@ internal fun MinecraftServer.captureStructure(
     val size = Vec3i(max.x - min.x + 1, max.y - min.y + 1, max.z - min.z + 1)
     val template = StructureTemplate()
 
+    // The template holds copies of the blocks and entities, so it can be turned into NBT off the
+    // server thread.
     template.fillFromWorld(level, min, size, includeEntities, ignoredBlocks)
-    return CapturedStructure(template.save(CompoundTag()), size)
+    return template
 }
 
 internal fun checkVolume(volume: Long) {

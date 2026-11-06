@@ -1,7 +1,5 @@
 package top.madkarma.minecraft.grpc.service.structure
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import net.minecraft.IdentifierException
 import net.minecraft.resources.Identifier
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager
@@ -14,6 +12,7 @@ import top.madkarma.minecraft.grpc.proto.StructureList
 import top.madkarma.minecraft.grpc.proto.structureList
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import top.madkarma.minecraft.grpc.rpc.notFound
+import top.madkarma.minecraft.grpc.rpc.runInWorkerThread
 import java.nio.file.Path
 import kotlin.jvm.optionals.getOrNull
 
@@ -22,7 +21,7 @@ internal suspend fun saveStructure(request: SaveStructureRequest) {
     val manager = templateManager()
     val path = worldStructurePath(manager, id)
 
-    val captured = GameServer.run {
+    val template = GameServer.run {
         it.captureStructure(
             request.dimension,
             request.from,
@@ -32,7 +31,7 @@ internal suspend fun saveStructure(request: SaveStructureRequest) {
         )
     }
 
-    withContext(Dispatchers.IO) { writeStructureFile(path, captured.nbt) }
+    runInWorkerThread { writeStructureFile(path, template) }
 
     // The manager caches loaded templates, which would hide the new file from later placements.
     manager.remove(id)
@@ -43,7 +42,7 @@ internal suspend fun placeStoredStructure(request: PlaceStructureRequest): Impor
     checkPlacement(request.placement)
 
     val manager = templateManager()
-    val template = withContext(Dispatchers.IO) { manager.get(id).getOrNull() }
+    val template = runInWorkerThread { manager.get(id).getOrNull() }
         ?: notFound("Unknown structure: $id")
 
     return GameServer.run { it.placeStructure(template, request.placement) }
@@ -51,7 +50,7 @@ internal suspend fun placeStoredStructure(request: PlaceStructureRequest): Impor
 
 internal suspend fun listStructures(): StructureList {
     val manager = templateManager()
-    val ids = withContext(Dispatchers.IO) {
+    val ids = runInWorkerThread {
         manager.listTemplates().map { it.toString() }.sorted().toList()
     }
 

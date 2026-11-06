@@ -19,9 +19,9 @@ import java.nio.file.Path
 // The game's template loader assumes this version for files saved before DataVersion existed.
 private const val UNVERSIONED_DATA_VERSION = 500
 
-internal fun encodeStructure(nbt: CompoundTag): ByteArray {
+internal fun encodeStructure(template: StructureTemplate): ByteArray {
     val output = ByteArrayOutputStream()
-    NbtIo.writeCompressed(nbt, output)
+    NbtIo.writeCompressed(template.save(CompoundTag()), output)
     return output.toByteArray()
 }
 
@@ -43,10 +43,10 @@ internal fun MinecraftServer.decodeStructure(data: ByteArray): StructureTemplate
     return template
 }
 
-internal fun writeStructureFile(path: Path, nbt: CompoundTag) {
+internal fun writeStructureFile(path: Path, template: StructureTemplate) {
     try {
         Files.createDirectories(path.parent)
-        NbtIo.writeCompressed(nbt, path)
+        NbtIo.writeCompressed(template.save(CompoundTag()), path)
     } catch (exception: IOException) {
         throw exception.toStatusException()
     }

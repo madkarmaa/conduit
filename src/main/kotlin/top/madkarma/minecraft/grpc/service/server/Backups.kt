@@ -1,6 +1,5 @@
 package top.madkarma.minecraft.grpc.service.server
 
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import net.minecraft.server.MinecraftServer
@@ -14,6 +13,7 @@ import top.madkarma.minecraft.grpc.proto.BackupResponse
 import top.madkarma.minecraft.grpc.proto.backupResponse
 import top.madkarma.minecraft.grpc.rpc.aborted
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
+import top.madkarma.minecraft.grpc.rpc.runInWorkerThread
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -46,7 +46,7 @@ internal suspend fun createBackup(request: BackupRequest): BackupResponse {
 
 internal suspend fun describeBackups(): BackupList {
     val directory = GameServer.run { it.backupDirectory() }
-    return withContext(Dispatchers.IO) { listBackupFiles(directory) }
+    return runInWorkerThread { listBackupFiles(directory) }
 }
 
 private suspend fun backUpWorld(request: BackupRequest): BackupResponse {
@@ -55,7 +55,7 @@ private suspend fun backUpWorld(request: BackupRequest): BackupResponse {
 
     try {
         val paths = GameServer.run { it.saveForBackup(request) }
-        val size = withContext(Dispatchers.IO) { zipWorld(paths.world, paths.target) }
+        val size = runInWorkerThread { zipWorld(paths.world, paths.target) }
 
         return backupResponse {
             path = paths.target.toString()

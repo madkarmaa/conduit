@@ -1,10 +1,8 @@
 package top.madkarma.minecraft.grpc.service.structure
 
 import com.google.protobuf.ByteString
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.withContext
 import top.madkarma.minecraft.grpc.MinecraftGRPC
 import top.madkarma.minecraft.grpc.game.GameServer
 import top.madkarma.minecraft.grpc.proto.ExportStructureRequest
@@ -14,6 +12,7 @@ import top.madkarma.minecraft.grpc.proto.StructureData
 import top.madkarma.minecraft.grpc.proto.StructurePlacement
 import top.madkarma.minecraft.grpc.proto.structureData
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
+import top.madkarma.minecraft.grpc.rpc.runInWorkerThread
 import java.io.ByteArrayOutputStream
 import kotlin.math.min
 
@@ -23,7 +22,7 @@ private const val PIECE_BYTES = 1024 * 1024
 private class Upload(val placement: StructurePlacement, val data: ByteArray)
 
 internal fun exportStructure(request: ExportStructureRequest): Flow<StructureData> = flow {
-    val captured = GameServer.run {
+    val template = GameServer.run {
         it.captureStructure(
             request.dimension,
             request.from,
@@ -32,12 +31,12 @@ internal fun exportStructure(request: ExportStructureRequest): Flow<StructureDat
             request.ignoreBlock,
         )
     }
-    val file = withContext(Dispatchers.Default) { encodeStructure(captured.nbt) }
+    val file = runInWorkerThread { encodeStructure(template) }
 
     for (offset in file.indices step PIECE_BYTES) {
         val piece = structureData {
             data = ByteString.copyFrom(file, offset, min(PIECE_BYTES, file.size - offset))
-            if (offset == 0) size = captured.size.toProto()
+            if (offset == 0) size = template.size.toProto()
         }
 
         emit(piece)
@@ -49,7 +48,7 @@ internal suspend fun importStructure(
 ): ImportStructureResponse {
     val upload = receiveUpload(requests)
     val server = GameServer.require()
-    val template = withContext(Dispatchers.Default) { server.decodeStructure(upload.data) }
+    val template = runInWorkerThread { server.decodeStructure(upload.data) }
 
     return GameServer.run { it.placeStructure(template, upload.placement) }
 }
