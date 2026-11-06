@@ -134,11 +134,17 @@ control the game through the mod. It needs Node.js 20 or later. Each release pub
 npm config set @conduit:registry https://npm.madkarma.top
 ```
 
-| Variable                | Default           | Description                      |
-| ----------------------- | ----------------- | -------------------------------- |
-| `CONDUIT_ADDRESS`       | `localhost:25585` | gRPC address of the mod          |
-| `CONDUIT_TOKEN`         |                   | Bearer token of the mod          |
-| `CONDUIT_MCP_READ_ONLY` | `false`           | Only offer tools that read state |
+| Variable                 | Default           | Description                                          |
+| ------------------------ | ----------------- | ---------------------------------------------------- |
+| `CONDUIT_ADDRESS`        | `localhost:25585` | gRPC address of the mod                              |
+| `CONDUIT_TOKEN`          |                   | Bearer token of the mod                              |
+| `CONDUIT_MCP_READ_ONLY`  | `false`           | Only offer tools that read state                     |
+| `CONDUIT_MCP_TOOLS`      |                   | Only offer these tools, separated by commas          |
+| `CONDUIT_MCP_DENY_TOOLS` |                   | Never offer these tools, separated by commas         |
+| `CONDUIT_MCP_PLAYER`     |                   | Names and UUIDs of the only player the tools may see |
+
+With `CONDUIT_MCP_PLAYER`, tools only accept that player in their player arguments, tools that list
+other players or entities are not offered, and results leave out IP addresses.
 
 The server has 30 tools. Tools with several operations take an `action` argument.
 

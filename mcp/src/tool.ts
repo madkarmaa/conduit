@@ -2,6 +2,7 @@ import type { CallToolResult, McpServer } from "@modelcontextprotocol/server";
 import { Err, Ok, type AsyncResult, type Result } from "results-ts";
 import { z } from "zod";
 import { invalidInput, type ToolError } from "./grpc.ts";
+import { checkPlayers, offers, redact, type ToolPolicy } from "./policy.ts";
 
 export type Access = "read" | "write";
 
@@ -23,14 +24,19 @@ export interface Tool<Shape extends z.ZodRawShape> {
     readonly description: string;
     readonly input: Shape;
     readonly actions: Record<string, Action<z.infer<z.ZodObject<Shape>>>>;
+    // Returns data about players without naming them in a player argument, so a server limited to
+    // one player cannot offer it.
+    readonly seesOtherPlayers?: boolean;
 }
 
-export type Registration = (server: McpServer, readOnly: boolean) => void;
+export type Registration = (server: McpServer, policy: ToolPolicy) => void;
 
 export function defineTool<Shape extends z.ZodRawShape>(tool: Tool<Shape>): Registration {
-    return (server, readOnly) => {
+    return (server, policy) => {
+        if (!offers(policy, tool)) return;
+
         const allowed = Object.entries(tool.actions).filter(
-            ([, action]) => !readOnly || action.access === "read",
+            ([, action]) => !policy.readOnly || action.access === "read",
         );
         if (allowed.length === 0) return;
 
@@ -56,12 +62,14 @@ export function defineTool<Shape extends z.ZodRawShape>(tool: Tool<Shape>): Regi
             },
             (args: unknown) =>
                 parseInput(schema, args)
+                    .andThen((input) => checkPlayers(input, policy.player).map(() => input))
                     .andThen((input) =>
                         selectAction(allowed, "action" in input ? input.action : undefined).map(
                             (action) => ({ action, input }),
                         ),
                     )
                     .andThenAsync(({ action, input }) => action.run(input))
+                    .map((reply) => (policy.player.length > 0 ? redact(reply) : reply))
                     .match({ Ok: toolResult, Err: errorResult }),
         );
     };

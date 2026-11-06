@@ -14,6 +14,20 @@ export function compact(value: unknown): unknown {
     return Object.fromEntries(entries);
 }
 
+export function withoutKeys(value: Record<string, unknown>, keys: readonly string[]) {
+    return removeKeys(value, keys) as Record<string, unknown>;
+}
+
+function removeKeys(value: unknown, keys: readonly string[]): unknown {
+    if (Array.isArray(value)) return value.map((item) => removeKeys(item, keys));
+    if (typeof value !== "object" || value === null) return value;
+
+    const entries = Object.entries(value)
+        .filter(([key]) => !keys.includes(key))
+        .map(([key, field]) => [key, removeKeys(field, keys)] as const);
+    return Object.fromEntries(entries);
+}
+
 function isEmpty(value: unknown): boolean {
     if (value === null || value === undefined || value === "") return true;
     if (Array.isArray(value)) return value.length === 0;

@@ -14,6 +14,7 @@ export function playerTools({ player: players }: ConduitClients) {
     return [
         defineTool({
             name: "list_players",
+            seesOtherPlayers: true,
             title: "List players",
             description:
                 "online: online players with game mode, position, health and food. known: every " +

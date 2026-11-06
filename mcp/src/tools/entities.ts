@@ -19,6 +19,7 @@ export function entityTools({ entity }: ConduitClients) {
     return [
         defineTool({
             name: "list_entities",
+            seesOtherPlayers: true,
             title: "List entities",
             description:
                 "Finds entities by type, area, tag or a vanilla selector. Each line lists one entity " +
@@ -54,6 +55,7 @@ export function entityTools({ entity }: ConduitClients) {
         }),
         defineTool({
             name: "get_entity",
+            seesOtherPlayers: true,
             title: "Get entity",
             description:
                 "info: full state of one entity. nbt: its complete data as SNBT. effects: its " +
