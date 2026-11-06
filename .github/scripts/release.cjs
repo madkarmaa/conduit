@@ -2,10 +2,11 @@ const { execFileSync } = require("node:child_process");
 const { readFileSync, writeFileSync } = require("node:fs");
 
 const REGISTRY = "https://npm.madkarma.top";
-const REGISTRY_PAGE = `${REGISTRY}/-/web/detail/@conduit/mcp`;
+// The bot depends on the MCP server it launches, so the MCP server has to be published first.
+const PUBLISHED_WORKSPACES = ["mcp", "bot"];
 
 // npm version cannot read the workspace: protocol, so the versions are written here and bun
-// publishes the MCP server instead of @semantic-release/npm. Checking the login first stops a
+// publishes the packages instead of @semantic-release/npm. Checking the login first stops a
 // release without a registry token before it commits and tags anything.
 exports.verifyConditions = (_, { cwd, env }) => {
     const registryEnv = { ...env, NPM_CONFIG_REGISTRY: REGISTRY };
@@ -16,11 +17,11 @@ exports.verifyConditions = (_, { cwd, env }) => {
     });
 };
 
-// The mod, the client and the MCP server share one version.
+// The mod and all workspaces share one version.
 exports.prepare = (_, { nextRelease, cwd, env }) => {
     const { version } = nextRelease;
     replaceInFile(`${cwd}/gradle.properties`, /^version=.*$/m, `version=${version}`);
-    for (const workspace of ["client", "mcp"]) {
+    for (const workspace of ["client", ...PUBLISHED_WORKSPACES]) {
         const manifest = `${cwd}/${workspace}/package.json`;
         replaceInFile(manifest, /"version": "[^"]*"/, `"version": "${version}"`);
     }
@@ -32,8 +33,10 @@ exports.prepare = (_, { nextRelease, cwd, env }) => {
 };
 
 exports.publish = (_, { cwd, env }) => {
-    execFileSync("bun", ["publish"], { cwd: `${cwd}/mcp`, env, stdio: "inherit" });
-    return { name: "@conduit/mcp", url: REGISTRY_PAGE };
+    for (const workspace of PUBLISHED_WORKSPACES) {
+        execFileSync("bun", ["publish"], { cwd: `${cwd}/${workspace}`, env, stdio: "inherit" });
+    }
+    return { name: "@conduit/mcp and @conduit/bot", url: `${REGISTRY}/-/web/detail/@conduit/bot` };
 };
 
 function replaceInFile(path, pattern, replacement) {

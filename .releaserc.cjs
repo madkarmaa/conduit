@@ -32,6 +32,7 @@ module.exports = {
                     "gradle.properties",
                     "client/package.json",
                     "mcp/package.json",
+                    "bot/package.json",
                     "bun.lock",
                 ],
                 message: "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
