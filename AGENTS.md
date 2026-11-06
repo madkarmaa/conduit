@@ -12,6 +12,8 @@
 
 - Always respect the .editorconfig configuration.
 
+- Run `./gradlew spotlessApply` as the last step before considering a task done.
+
 - Run Entanglement against a baseline from time to time and refactor afterwards: every edited file must stay green (maintainability index of at least 20).
 
 # Minecraft and gRPC standards
