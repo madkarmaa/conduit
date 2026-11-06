@@ -14,7 +14,7 @@
     },
     "bot": {
       "name": "@conduit/bot",
-      "version": "1.0.0",
+      "version": "0.1.0",
       "bin": {
         "conduit-bot": "./dist/index.mjs",
       },

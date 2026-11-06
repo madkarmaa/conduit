@@ -1,6 +1,6 @@
 {
     "name": "@conduit/bot",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "description": "Minecraft chat bot that hands requests to an AI agent CLI with the Conduit MCP server",
     "license": "CC0-1.0",
     "repository": {
