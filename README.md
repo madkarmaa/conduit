@@ -158,12 +158,7 @@ The server has 30 tools. Tools with several operations take an `action` argument
 | Game data | `registry`, `recipes`                 |                                             |
 | Other     | `structures`, `wait_for_events`       | `structures`, `batch`                       |
 
-`game_rules` and `structures` read and write, depending on the action. Read-only mode offers 14
-tools and leaves out the write actions of those two. The server marks the reading tools as
-read-only and no tool as destructive, so MCP hosts that ask before each call can skip the reads.
-`wait_for_events` records events from its first call on.
-
-To add the server to an MCP host such as Claude Code:
+To add the server to an MCP host:
 
 ```json
 {
@@ -181,8 +176,7 @@ To add the server to an MCP host such as Claude Code:
 
 [`compose.yaml`](./compose.yaml) runs a Fabric server with the mod from `build/libs` and a vanilla
 headless client as a real player, using the [HeadlessMC](https://github.com/headlesshq/headlessmc)
-Docker image. The client always uses an offline account, so the test server runs with
-`online-mode=false`.
+Docker image.
 
 `MC_VERSION` is required and must match the Minecraft version the mod was built for:
 
