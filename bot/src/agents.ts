@@ -57,8 +57,17 @@ const AGENTS: Record<AgentName, (options: AgentOptions) => Agent> = {
         };
     },
     codex: ({ model, effort, args }) => {
-        const disabled = ["shell_tool", "unified_exec", "apps", "plugins", "browser_use"];
-        disabled.push("in_app_browser", "computer_use", "image_generation", "view_image");
+        const disabled = [
+            "shell_tool",
+            "unified_exec",
+            "apps",
+            "plugins",
+            "browser_use",
+            "in_app_browser",
+            "computer_use",
+            "image_generation",
+            "view_image",
+        ];
 
         // -c values are TOML, and a JSON string or array of strings is valid TOML.
         const flags = [
