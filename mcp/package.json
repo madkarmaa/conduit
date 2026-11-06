@@ -1,6 +1,6 @@
 {
     "name": "@conduit/mcp",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "description": "MCP server that lets AI agents control Minecraft through the Conduit mod",
     "license": "CC0-1.0",
     "repository": {
