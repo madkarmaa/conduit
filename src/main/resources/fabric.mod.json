@@ -3,7 +3,7 @@
     "id": "conduit",
     "version": "${version}",
     "name": "Conduit",
-    "description": "A gRPC server that allows any kind of interaction with Minecraft.",
+    "description": "Runs a gRPC server inside Minecraft so external programs can control the world, entities and players, run commands and stream live events.",
     "authors": ["madkarma"],
     "contact": {},
     "license": "CC0-1.0",

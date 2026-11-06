@@ -10,8 +10,7 @@ import top.madkarma.conduit.events.EntityLifecycle;
 
 /**
  * New entities enter the world through addFreshEntity. Entities loaded with their chunk, players
- * and entities changing dimension are added through other paths, so they are not reported as
- * spawned.
+ * and entities changing dimension take other paths, so this mixin does not report them as spawned.
  */
 @Mixin(ServerLevel.class)
 public abstract class ServerLevelMixin {

@@ -74,8 +74,8 @@ internal fun MinecraftServer.changeRotation(request: SetRotationRequest) {
 
 internal fun rotate(entity: Entity, yaw: Float, pitch: Float) {
     if (entity is ServerPlayer) {
-        // Players own their rotation on the client, so it is sent as a relative teleport that
-        // keeps the position.
+        // The client controls a player's rotation, so the server sends it as a relative teleport
+        // that keeps the position.
         entity.teleportTo(
             entity.level(),
             0.0,

@@ -34,10 +34,10 @@ message ListRegistryEntriesRequest {
     string registry = 1;
     // Case-insensitive substring of the entry id.
     string filter = 2;
-    // Only members of this tag, e.g. "#minecraft:logs"; the "#" is optional.
+    // Only members of this tag, e.g. "#minecraft:logs". The "#" is optional.
     string tag = 3;
     int32 offset = 4;
-    // 0 means 1000; at most 10000.
+    // 0 means 1000, at most 10000.
     int32 limit = 5;
 }
 
@@ -72,7 +72,7 @@ message ListRecipesRequest {
     // Only recipes producing this item, e.g. "minecraft:crafting_table".
     string result_item = 2;
     int32 offset = 3;
-    // 0 means 1000; at most 10000.
+    // 0 means 1000, at most 10000.
     int32 limit = 4;
 }
 

@@ -5,7 +5,7 @@
 
 A server-side Fabric mod that runs a gRPC server inside Minecraft, so external programs can control
 the world, entities and players, run any command and stream live events. It runs on dedicated
-servers and in singleplayer worlds; players do not need the mod to join.
+servers and in singleplayer worlds. Players do not need the mod to join.
 
 ## Requirements
 
@@ -20,7 +20,7 @@ servers and in singleplayer worlds; players do not need the mod to join.
 ./gradlew build
 ```
 
-The mod jar is written to `build/libs/conduit-<mod version>+<minecraft version>.jar`.
+The build writes the mod jar to `build/libs/conduit-<mod version>+<minecraft version>.jar`.
 
 ## Configuration
 
@@ -43,20 +43,20 @@ On first start the mod writes `config/conduit.json`:
 | `maxStructureUploadBytes` | `67108864` (64 MiB)            | Largest structure file that can be  |
 |                           |                                | imported                            |
 
-Each setting can be overridden with an environment variable: `CONDUIT_ENABLED`, `CONDUIT_HOST`,
+An environment variable can override each setting: `CONDUIT_ENABLED`, `CONDUIT_HOST`,
 `CONDUIT_PORT`, `CONDUIT_REQUIRE_AUTH`, `CONDUIT_TOKEN`, `CONDUIT_AUDIT_LOG`,
 `CONDUIT_BACKUP_DIRECTORY`, `CONDUIT_MAX_STRUCTURE_VOLUME` and `CONDUIT_MAX_STRUCTURE_UPLOAD_BYTES`.
 
 The audit log records every call that is not read-only, and every call rejected for a missing or
-wrong token, through the `conduit/audit` logger, so it can be routed to its own file.
+wrong token. It writes through the `conduit/audit` logger, so a logging configuration can route it
+to its own file.
 
 Every call except the standard health check needs `authorization: Bearer <token>`.
 
 ## API
 
-The service definitions live in
-[`src/main/proto/conduit/v1`](src/main/proto/conduit/v1). Server reflection is
-enabled, so tools like `grpcurl` can discover them.
+The service definitions are in [`src/main/proto/conduit/v1`](src/main/proto/conduit/v1). The server
+has reflection enabled, so tools like `grpcurl` can discover the services.
 
 | Service            | Scope                                                                 |
 | ------------------ | --------------------------------------------------------------------- |
@@ -80,8 +80,8 @@ enabled, so tools like `grpcurl` can discover them.
 
 In singleplayer the gRPC server runs while a world is open.
 
-Entities can only be spawned or teleported into loaded chunks; use `WorldService.SetChunkForced`
-or keep a player nearby.
+Entities can only spawn or be teleported into loaded chunks. Force-load the chunk with
+`WorldService.SetChunkForced` or keep a player nearby.
 
 Events in a subscription are numbered. A client that reads too slowly loses the oldest buffered
 events, and an `events_dropped` event reports which ones were lost, so the client knows to re-read
@@ -120,8 +120,9 @@ clients.server.executeCommand({ command: "time set day" }, (error, response) => 
 ## MCP server
 
 [`mcp`](./mcp) is an [MCP](https://modelcontextprotocol.io) server over stdio that lets AI agents
-control the game through the mod: blocks and regions, entities, players, inventories, registries,
-structures, commands and live events. It is built together with the mod, or on its own:
+control the game through the mod. Its tools cover blocks and regions, entities, players,
+inventories, registries, structures, commands and live events. `./gradlew build` builds it with the
+mod. To build it on its own:
 
 ```sh
 bun install
@@ -165,8 +166,8 @@ MC_VERSION=<minecraft version> docker compose up -d server   # server, gRPC on l
 MC_VERSION=<minecraft version> docker compose up -d          # server and a client joining it
 ```
 
-The gRPC endpoint uses the token `dev-token` unless `CONDUIT_TOKEN` is set. Game data is
-kept in Docker volumes between runs. The client uses the preconfigured
+The gRPC endpoint uses the token `dev-token` unless `CONDUIT_TOKEN` is set. Docker volumes keep
+the game data between runs. The client uses the preconfigured
 [`docker/options.txt`](./docker/options.txt), so it skips the first-start onboarding and joins the
 server directly.
 

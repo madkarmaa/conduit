@@ -11,9 +11,9 @@ export function serverTools({ server, world }: ConduitClients) {
             name: "server_info",
             title: "Server info",
             description:
-                "summary: Minecraft and mod versions, players, seed, difficulty, performance (TPS, " +
-                "MSPT, memory) and dimensions with their height range. mods, datapacks and backups " +
-                "list those.",
+                "summary reads the Minecraft and mod versions, players, seed, difficulty, " +
+                "performance (TPS, MSPT, memory) and the dimensions with their height range. mods, " +
+                "datapacks and backups list those.",
             input: {
                 action: z.enum(["summary", "mods", "datapacks", "backups"]).default("summary"),
             },
@@ -97,9 +97,9 @@ export function serverTools({ server, world }: ConduitClients) {
             name: "server_admin",
             title: "Server administration",
             description:
-                "save writes worlds and players to disk, backup saves the world and zips it while " +
-                "the server keeps running, set_datapack enables or disables a datapack and reloads " +
-                "the data, stop saves and stops the server.",
+                "save writes worlds and players to disk. backup saves the world and zips it while " +
+                "the server keeps running. set_datapack enables or disables a datapack and reloads " +
+                "the data. stop saves and stops the server.",
             input: {
                 action: z.enum(["save", "backup", "set_datapack", "stop"]),
                 flush: z

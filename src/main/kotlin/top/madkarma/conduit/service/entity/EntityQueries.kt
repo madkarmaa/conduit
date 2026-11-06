@@ -65,14 +65,14 @@ internal fun MinecraftServer.spawnEntity(request: SpawnEntityRequest): EntityInf
 
     if (request.hasRotation()) rotate(entity, request.rotation.yaw, request.rotation.pitch)
 
-    // Spawn setup can lower the max health (horses roll theirs) without lowering the health; the
-    // entity's first tick would clamp it, so the reply shows that state right away.
+    // Spawn setup can lower the max health without lowering the health, since horses get a random
+    // max health. The entity's first tick would lower the health to match, so this does it now.
     if (entity is LivingEntity && entity.health > entity.maxHealth) entity.health = entity.maxHealth
 
     return entity.toProto()
 }
 
-// Entities added to chunks that are not loaded are saved to disk and unloaded immediately.
+// The game saves entities added to unloaded chunks to disk and unloads them right away.
 internal fun requireEntityTicking(level: ServerLevel, position: Vec3) {
     if (level.isPositionEntityTicking(BlockPos.containing(position))) return
     failedPrecondition(UNLOADED_CHUNK_MESSAGE)

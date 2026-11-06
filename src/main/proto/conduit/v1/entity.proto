@@ -39,10 +39,10 @@ message ListEntitiesRequest {
     // Entity type ids, e.g. "minecraft:zombie". Empty means any type.
     repeated string types = 2;
     optional Box box = 3;
-    // Distance filter around center (requires a dimension).
+    // Distance filter around center. Requires a dimension.
     optional Vec3 center = 4;
     optional double radius = 5;
-    // An entity selector such as "@e[type=cow,limit=5]"; overrides other filters.
+    // An entity selector such as "@e[type=cow,limit=5]". Overrides the other filters.
     optional string selector = 6;
     // Required scoreboard tag.
     optional string tag = 7;
@@ -66,7 +66,7 @@ message SpawnEntityRequest {
 
 message RemoveEntityRequest {
     string uuid = 1;
-    // Kill (drops loot, death effects) instead of silently discarding.
+    // Kill the entity, with loot and death effects, instead of discarding it without a trace.
     bool kill = 2;
 }
 

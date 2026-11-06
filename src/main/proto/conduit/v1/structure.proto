@@ -66,13 +66,13 @@ message ExportStructureRequest {
 
 message StructureData {
     bytes data = 1;
-    // Size of the structure; only set in the first message.
+    // Size of the structure. Only set in the first message.
     BlockPos size = 2;
 }
 
 message StructurePlacement {
     string dimension = 1;
-    // Where the structure's lowest corner goes; rotation and mirroring pivot around it, like
+    // Where the structure's lowest corner goes. Rotation and mirroring pivot around it, like
     // /place template.
     BlockPos origin = 2;
     StructureRotation rotation = 3;
@@ -95,9 +95,9 @@ message ImportStructureRequest {
 message ImportStructureResponse {
     // Size of the placed structure, after rotation.
     BlockPos size = 1;
-    // Blocks in the structure, including air; with an integrity below 1 fewer are placed.
+    // Blocks in the structure, including air. With an integrity below 1, fewer are placed.
     int32 block_count = 2;
-    // Entities in the structure; 0 when include_entities is false.
+    // Entities in the structure, or 0 when include_entities is false.
     int32 entity_count = 3;
 }
 

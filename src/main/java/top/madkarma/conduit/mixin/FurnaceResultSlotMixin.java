@@ -13,7 +13,7 @@ import top.madkarma.conduit.events.CraftedItems;
 
 /**
  * Covers furnaces, blast furnaces and smokers. Shift-click reports through onQuickCraft and then
- * calls onTake with nothing left to count, other takes only call onTake.
+ * calls onTake with nothing left to count. Other takes only call onTake.
  */
 @Mixin(FurnaceResultSlot.class)
 public abstract class FurnaceResultSlotMixin {

@@ -53,11 +53,11 @@ internal fun MinecraftServer.listKnownPlayers(): KnownPlayerList = knownPlayerLi
     }
 }
 
-// Online players are saved on demand, so reads always see their current state.
+// Reads save online players first, so they always see the current state.
 private fun MinecraftServer.currentPlayerData(id: UUID): CompoundTag =
     playerList.getPlayer(id)?.let { saveEntity(it) } ?: readPlayerData(id)
 
-// The data is checked before and after the edit, so the file is only replaced with data the game
+// Edits check the data before and after the change and only replace the file with data the game
 // can load completely.
 private fun MinecraftServer.editPlayerData(ref: String, edit: (CompoundTag) -> Unit) {
     val id = resolvePlayerId(ref)

@@ -13,8 +13,8 @@ import top.madkarma.conduit.events.ItemEntities;
 /**
  * Dropping with Q or Ctrl+Q, throwing items out of a menu, items that no longer fit into the
  * inventory when a menu closes and the overflow of GiveItem all pass through drop. The inventory
- * and equipment dropped on death do not; LivingEntityMixin reports those. Only the crafting grid
- * and the cursor of a dead player are dropped through here, when the player entity is removed.
+ * and equipment dropped on death do not, and LivingEntityMixin reports those. Of a dead player's
+ * items, only the crafting grid and the cursor pass through here, when the game removes the player.
  */
 @Mixin(ServerPlayer.class)
 public abstract class ServerPlayerMixin {

@@ -36,7 +36,7 @@ export function environmentTools({ world }: ConduitClients) {
             name: "world_border",
             title: "Set world border",
             description:
-                "Changes a dimension's world border; fields left out stay unchanged. world_info " +
+                "Changes a dimension's world border. Fields left out stay unchanged. world_info " +
                 "reads the current border.",
             input: {
                 dimension,
@@ -47,7 +47,7 @@ export function environmentTools({ world }: ConduitClients) {
                     .int()
                     .min(0)
                     .default(0)
-                    .describe("Time to grow or shrink to size; 0 changes it instantly."),
+                    .describe("Time to grow or shrink to size. 0 changes it instantly."),
                 damage_per_block: z.number().min(0).optional(),
                 damage_safe_zone: z.number().min(0).optional(),
                 warning_blocks: z.int().min(0).optional(),
@@ -83,7 +83,7 @@ export function environmentTools({ world }: ConduitClients) {
                 interaction: z
                     .enum(["NONE", "BLOCK", "MOB", "TNT", "TRIGGER"])
                     .default("TNT")
-                    .describe("How the explosion affects blocks; NONE breaks no blocks."),
+                    .describe("How the explosion affects blocks. NONE breaks no blocks."),
             },
             actions: {
                 explode: {

@@ -38,11 +38,11 @@ val grpcKotlinVersion = providers.gradleProperty("grpc_kotlin_version").get()
 val protobufVersion = providers.gradleProperty("protobuf_version").get()
 
 dependencies {
-    // To change the versions see the gradle.properties file
+    // gradle.properties sets the versions.
     minecraft("com.mojang:minecraft:$minecraftVersion")
     implementation("net.fabricmc:fabric-loader:$loaderVersion")
 
-    // Fabric API. This is technically optional, but you probably want it anyway.
+    // Fabric API, which the mod requires.
     implementation("net.fabricmc.fabric-api:fabric-api:$fabricApiVersion")
     implementation("net.fabricmc:fabric-language-kotlin:$fabricKotlinVersion")
 
@@ -55,8 +55,7 @@ dependencies {
     bundled("com.google.protobuf:protobuf-java-util:$protobufVersion")
     bundled("com.google.protobuf:protobuf-kotlin:$protobufVersion")
 
-    // Loom's include configuration is not transitive, so every resolved module is listed
-    // explicitly.
+    // Loom's include configuration is not transitive, so this lists every resolved module.
     bundled.resolvedConfiguration.resolvedArtifacts
         .map { it.moduleVersion.id }
         .filter { it.group !in providedGroups }
@@ -124,9 +123,8 @@ eclipse {
 }
 
 java {
-    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-    // if it is present.
-    // If you remove this line, sources will not be generated.
+    // Loom attaches sourcesJar to a RemapSourcesJar task and to the build task. Without this
+    // line, the build produces no sources jar.
     withSourcesJar()
 
     sourceCompatibility = JavaVersion.VERSION_25
@@ -195,7 +193,7 @@ val bun: String =
 val installClientDependencies by
     tasks.registering(Exec::class) { commandLine(bun, "install", "--frozen-lockfile") }
 
-// The TypeScript client is generated from the mod's protos, so it is rebuilt together with the mod.
+// The TypeScript client is generated from the mod's protos, so Gradle rebuilds it with the mod.
 val buildClient by
     tasks.registering(Exec::class) {
         dependsOn(installClientDependencies)
@@ -229,7 +227,7 @@ val checkFormatWithBun by tasks.registering(Exec::class) { commandLine(bun, "fmt
 
 tasks.spotlessCheck { finalizedBy(checkFormatWithBun) }
 
-// configure the maven publication
+// Maven publication.
 publishing {
     publications {
         register<MavenPublication>("mavenJava") {

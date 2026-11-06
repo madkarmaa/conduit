@@ -21,8 +21,8 @@ export function entityTools({ entity }: ConduitClients) {
             name: "list_entities",
             title: "List entities",
             description:
-                "Finds entities by type, area, tag or a vanilla selector. Lists one entity per line: " +
-                "uuid, type, name, dimension, position and health.",
+                "Finds entities by type, area, tag or a vanilla selector. Each line lists one entity " +
+                "with its uuid, type, name, dimension, position and health.",
             input: {
                 dimension: z.string().optional().describe("Empty means every dimension."),
                 types: z.array(z.string()).optional().describe('e.g. ["minecraft:zombie"].'),
@@ -85,8 +85,8 @@ export function entityTools({ entity }: ConduitClients) {
             name: "spawn_entity",
             title: "Spawn entity",
             description:
-                "Spawns an entity in a loaded chunk and returns it. Use the chunk tool to " +
-                "force-load chunks away from players.",
+                "Spawns an entity in a loaded chunk and returns it. The force_chunk action of " +
+                "world_settings loads chunks away from players.",
             input: {
                 type: z.string().describe('Entity type, e.g. "minecraft:villager".'),
                 dimension,

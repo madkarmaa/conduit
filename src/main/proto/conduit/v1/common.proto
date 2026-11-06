@@ -18,7 +18,7 @@ message BlockPos {
 }
 
 message Rotation {
-    // Degrees, Minecraft convention: yaw 0 = south, pitch -90 = up.
+    // Degrees, as in Minecraft. Yaw 0 faces south and pitch -90 faces up.
     float yaw = 1;
     float pitch = 2;
 }

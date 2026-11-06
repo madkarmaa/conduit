@@ -11,9 +11,9 @@ export function entityEditTools({ entity }: ConduitClients) {
             name: "edit_entity",
             title: "Edit entity",
             description:
-                "name sets or clears the custom name, tags adds and removes scoreboard tags, " +
-                "health sets the health, damage hurts like an attack, nbt merges SNBT into the " +
-                "data, add_effect and remove_effect change status effects, set_attribute sets an " +
+                "name sets or clears the custom name. tags adds and removes scoreboard tags. health " +
+                "sets the health. damage hurts the entity like an attack. nbt merges SNBT into its " +
+                "data. add_effect and remove_effect change status effects. set_attribute sets an " +
                 'attribute base value such as "minecraft:max_health".',
             input: {
                 action: z.enum([
@@ -27,7 +27,7 @@ export function entityEditTools({ entity }: ConduitClients) {
                     "set_attribute",
                 ]),
                 uuid,
-                name: text.optional().describe("New custom name; leave out to clear it."),
+                name: text.optional().describe("New custom name. Leave it out to clear it."),
                 name_visible: z.boolean().default(false),
                 add_tags: z.array(z.string()).optional(),
                 remove_tags: z.array(z.string()).optional(),

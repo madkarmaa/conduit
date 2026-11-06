@@ -35,8 +35,8 @@ export function blockTools({ world }: ConduitClients) {
             name: "edit_blocks",
             title: "Edit blocks",
             description:
-                "set places block states at positions in one tick, fill fills a cuboid (corners " +
-                "inclusive), break breaks a block like a player, merge_nbt merges SNBT into a " +
+                "set places block states at positions in one tick. fill fills a cuboid, corners " +
+                "inclusive. break breaks a block like a player. merge_nbt merges SNBT into a " +
                 "block entity.",
             input: {
                 action: z.enum(["set", "fill", "break", "merge_nbt"]),

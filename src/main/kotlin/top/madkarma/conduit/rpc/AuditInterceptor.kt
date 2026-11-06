@@ -42,7 +42,7 @@ class AuditInterceptor : ServerInterceptor {
 
         return object : SimpleForwardingServerCallListener<ReqT>(listener) {
             // Client streams such as structure imports start with a header that describes the
-            // call; the messages after it can carry megabytes of data.
+            // call. The messages after it can carry megabytes of data.
             override fun onMessage(message: ReqT) {
                 if (auditedCall.request == null) auditedCall.request = message
                 super.onMessage(message)
@@ -76,7 +76,7 @@ private class AuditedCall<ReqT, RespT>(call: ServerCall<ReqT, RespT>) :
         val durationMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos)
         val request = request
 
-        // Printing a large request, such as a batch, would hold up the thread closing the call.
+        // Printing a large request, such as a batch, would delay the thread that closes the call.
         startInWorkerThread {
             AUDIT_LOGGER.info(
                 "{} from {} -> {} in {} ms: {}",

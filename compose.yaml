@@ -1,11 +1,11 @@
-# Gameplay test environment through HeadlessMC: a Fabric server running the mod from build/libs,
-# and a vanilla headless client (offline account) as a real player. Build the mod first with
-# ./gradlew build. MC_VERSION must be the Minecraft version the mod was built for:
+# Gameplay test environment with HeadlessMC. It runs a Fabric server with the mod from build/libs
+# and a vanilla headless client with an offline account as a real player. Build the mod first with
+# ./gradlew build. MC_VERSION must be the Minecraft version the mod was built for.
 #
 #   MC_VERSION=<version> docker compose up -d server   # server only, gRPC on localhost:25585
-#   MC_VERSION=<version> docker compose up -d          # server + vanilla client joining it
+#   MC_VERSION=<version> docker compose up -d          # server and a vanilla client that joins it
 #
-# The gRPC endpoint uses the bearer token from CONDUIT_TOKEN (default: dev-token).
+# The gRPC endpoint uses the bearer token from CONDUIT_TOKEN, or dev-token when it is not set.
 
 x-headlessmc: &headlessmc
     image: 3arthqu4ke/headlessmc:latest

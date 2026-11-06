@@ -9,8 +9,8 @@ import "conduit/v1/world.proto";
 option java_multiple_files = true;
 option java_package = "top.madkarma.conduit.proto";
 
-// Players, addressed by name or UUID. Most RPCs need the player to be online; use EntityService
-// for their position, effects, NBT, etc. The offline RPCs work on saved player data.
+// Players, addressed by name or UUID. Most RPCs need the player to be online. EntityService covers
+// their position, effects and NBT. The offline RPCs work on saved player data.
 service PlayerService {
     rpc ListPlayers(google.protobuf.Empty) returns (PlayerList);
     rpc GetPlayer(PlayerRef) returns (PlayerInfo);
@@ -32,7 +32,7 @@ service PlayerService {
     // Saved player data, also for players who are offline. A name is resolved through the
     // server's cache of known players, or as an offline-mode UUID when the server is in offline
     // mode. Reads of online players return their live data. Edits of online or joining players
-    // fail with FAILED_PRECONDITION; edits take effect at the player's next login. A player
+    // fail with FAILED_PRECONDITION. Edits take effect at the player's next login. A player
     // without saved data is NOT_FOUND, and a corrupt data file is FAILED_PRECONDITION.
     rpc GetOfflinePlayer(PlayerRef) returns (OfflinePlayerInfo);
     // The full saved data, updated to the current game version.
@@ -132,7 +132,7 @@ message SendTitleRequest {
     string player = 1;
     optional Text title = 2;
     optional Text subtitle = 3;
-    // Ticks; defaults 10, 70, 20.
+    // Ticks. The defaults are 10, 70 and 20.
     optional int32 fade_in = 4;
     optional int32 stay = 5;
     optional int32 fade_out = 6;
@@ -164,7 +164,7 @@ message OfflinePlayerInfo {
     string uuid = 1;
     // Last known name, empty if the server does not know it.
     string name = 2;
-    // Unix milliseconds of the last save; the current time for online players.
+    // Unix milliseconds of the last save, or the current time for online players.
     int64 last_played = 3;
     bool online = 4;
     string dimension = 5;
@@ -180,7 +180,7 @@ message OfflinePlayerInfo {
     Inventory inventory = 15;
     Inventory ender_chest = 16;
     repeated StatusEffect effects = 17;
-    // Bed or respawn anchor; unset when the player has none.
+    // Bed or respawn anchor. Unset when the player has none.
     SpawnPoint spawn_point = 18;
 }
 
@@ -199,7 +199,7 @@ message KnownPlayer {
     string uuid = 1;
     // Last known name, empty if the server does not know it.
     string name = 2;
-    // Unix milliseconds of the last save; the current time for online players.
+    // Unix milliseconds of the last save, or the current time for online players.
     int64 last_played = 3;
     bool online = 4;
 }

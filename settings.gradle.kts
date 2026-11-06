@@ -13,5 +13,5 @@ pluginManagement {
     }
 }
 
-// Should match your modid
+// Matches the mod id.
 rootProject.name = "conduit"

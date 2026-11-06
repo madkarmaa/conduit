@@ -11,9 +11,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import top.madkarma.conduit.events.ItemEntities;
 
 /**
- * A player's inventory and equipment are dropped on death through createItemStackToDrop with
- * randomly set, which nothing else does: drop, which ServerPlayerMixin reports, and the give
- * command, which also creates fake item entities, both leave it unset.
+ * On death, the game drops a player's inventory and equipment through createItemStackToDrop with
+ * randomly set. Nothing else sets it. Drop, which ServerPlayerMixin reports, leaves it unset, and
+ * so does the give command, which also creates fake item entities.
  */
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin {

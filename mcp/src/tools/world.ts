@@ -13,8 +13,8 @@ const WEATHER = {
 } as const;
 
 const column = {
-    x: z.int().optional().describe("Block x of the column; required for height and chunks."),
-    z: z.int().optional().describe("Block z of the column; required for height and chunks."),
+    x: z.int().optional().describe("Block x of the column. Required for height and chunks."),
+    z: z.int().optional().describe("Block z of the column. Required for height and chunks."),
 };
 
 export function worldTools({ world }: ConduitClients) {
@@ -59,8 +59,8 @@ export function worldTools({ world }: ConduitClients) {
             name: "world_info",
             title: "World info",
             description:
-                "Time (a day is 24000 ticks; 0 is sunrise, 6000 noon), weather, world spawn and " +
-                "world border of a dimension.",
+                "Time, weather, world spawn and world border of a dimension. A day is 24000 ticks, " +
+                "with sunrise at 0 and noon at 6000.",
             input: { dimension },
             actions: {
                 get: {
@@ -82,9 +82,9 @@ export function worldTools({ world }: ConduitClients) {
             name: "world_settings",
             title: "World settings",
             description:
-                "time sets the time of day from exactly one of time, add or preset; weather sets " +
-                "the weather; spawn sets the world spawn; force_chunk force-loads or releases the " +
-                "chunk containing a column, so entities can be spawned or moved there.",
+                "time sets the time of day from exactly one of time, add or preset. weather sets the " +
+                "weather. spawn sets the world spawn. force_chunk force-loads or releases the chunk " +
+                "that contains a column, so entities can spawn or move there.",
             input: {
                 action: z.enum(["time", "weather", "spawn", "force_chunk"]),
                 dimension,

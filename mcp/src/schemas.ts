@@ -11,7 +11,7 @@ export const vec3 = z.object({ x: z.number(), y: z.number(), z: z.number() });
 
 export const rotation = z
     .object({ yaw: z.number(), pitch: z.number() })
-    .describe("Degrees; yaw 0 faces south, pitch -90 faces up.");
+    .describe("Degrees. Yaw 0 faces south and pitch -90 faces up.");
 
 export const uuid = z.string().describe("Entity UUID.");
 

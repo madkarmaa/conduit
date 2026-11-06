@@ -15,7 +15,7 @@ export function regionTools({ world }: ConduitClients) {
             name: "get_region",
             title: "Read region",
             description:
-                "Reads a cuboid region (corners inclusive). 'summary' counts each block state; " +
+                "Reads a cuboid region, corners inclusive. 'summary' counts each block state. " +
                 `'draw' prints every y layer as a character grid, up to ${MAX_DRAWN_VOLUME} blocks.`,
             input: {
                 dimension,
@@ -25,7 +25,7 @@ export function regionTools({ world }: ConduitClients) {
                 loaded_only: z
                     .boolean()
                     .default(false)
-                    .describe("Do not load chunks; unloaded positions read as void air."),
+                    .describe("Do not load chunks. Unloaded positions read as void air."),
             },
             actions: {
                 read: {

@@ -24,7 +24,8 @@ type ConduitProto = BatchProto &
 const PROTO_DIRECTORY = fileURLToPath(new URL("../../src/main/proto", import.meta.url));
 const PACKAGE_DIRECTORY = "conduit/v1";
 
-// Must match the flags of the generate script, or the generated types describe other shapes.
+// These must match the flags of the prebuild script, or the generated types will not match the
+// loaded messages.
 const LOADER_OPTIONS = {
     longs: String,
     enums: String,

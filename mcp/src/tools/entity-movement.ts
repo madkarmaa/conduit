@@ -12,9 +12,9 @@ export function entityMovementTools({ entity }: ConduitClients) {
             name: "move_entity",
             title: "Move entity",
             description:
-                "teleport moves an entity (players too, also across dimensions), rotate turns it, " +
-                "push sets its velocity in blocks per tick, mount puts it on a vehicle, dismount " +
-                "takes it off.",
+                "teleport moves an entity, players included, also across dimensions. rotate turns " +
+                "it. push sets its velocity in blocks per tick. mount puts it on a vehicle, and " +
+                "dismount takes it off.",
             input: {
                 action: z.enum(["teleport", "rotate", "push", "mount", "dismount"]),
                 uuid,
@@ -28,7 +28,7 @@ export function entityMovementTools({ entity }: ConduitClients) {
                     .boolean()
                     .default(false)
                     .describe("push adds to the current velocity instead of replacing it."),
-                vehicle: z.string().optional().describe("Vehicle UUID; required for mount."),
+                vehicle: z.string().optional().describe("Vehicle UUID. Required for mount."),
             },
             actions: {
                 teleport: {

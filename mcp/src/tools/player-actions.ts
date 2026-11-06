@@ -75,7 +75,7 @@ export function playerActionTools({ player: players, server }: ConduitClients) {
             title: "Notify players",
             description:
                 "message sends a chat or action bar message to a player, or to everyone when no " +
-                "player is given; title shows a title and subtitle to a player; sound plays a " +
+                "player is given. title shows a title and subtitle to a player. sound plays a " +
                 "sound to a player.",
             input: {
                 action: z.enum(["message", "title", "sound"]),
@@ -87,7 +87,7 @@ export function playerActionTools({ player: players, server }: ConduitClients) {
                     .string()
                     .optional()
                     .describe('Sound id, e.g. "minecraft:entity.player.levelup".'),
-                position: vec3.optional().describe("Sound position; defaults to the player."),
+                position: vec3.optional().describe("Sound position. Defaults to the player."),
                 volume: z.number().min(0).default(1),
                 pitch: z.number().min(0.5).max(2).default(1),
             },

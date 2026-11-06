@@ -10,8 +10,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.madkarma.conduit.events.CraftedItems;
 
 /**
- * Shift-clicking a result slot takes batch after batch within one click, so the click boundaries
- * let the batches be reported as one total.
+ * Shift-clicking a result slot takes batch after batch within one click, so CraftedItems uses the
+ * click boundaries to report the batches as one total.
  */
 @Mixin(AbstractContainerMenu.class)
 public abstract class AbstractContainerMenuMixin {

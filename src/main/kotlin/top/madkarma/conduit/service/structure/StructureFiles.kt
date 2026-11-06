@@ -27,8 +27,8 @@ internal fun encodeStructure(template: StructureTemplate): ByteArray {
 
 /**
  * Reads a structure file like the game's template loader does, upgrading files from older game
- * versions. Safe off the server thread: the game runs the data fixer on worker threads too, and the
- * registries are frozen.
+ * versions. It is safe off the server thread, because the game runs the data fixer on worker
+ * threads too and the registries are frozen.
  */
 internal fun MinecraftServer.decodeStructure(data: ByteArray): StructureTemplate {
     val template =

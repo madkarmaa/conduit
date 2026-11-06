@@ -24,17 +24,17 @@ export function structureTools({ structure }: ConduitClients) {
             name: "structures",
             title: "Structures",
             description:
-                "Structure templates, the same ones structure blocks and /place template use: list " +
-                "finds saved and datapack templates (including vanilla ones such as " +
-                '"minecraft:village/plains/houses/plains_small_house_1"), save copies a region into ' +
-                "a template, place pastes a template with its lowest corner at origin.",
+                "Structure templates, the same ones structure blocks and /place template use. list " +
+                "finds saved and datapack templates, including vanilla ones such as " +
+                '"minecraft:village/plains/houses/plains_small_house_1". save copies a region into ' +
+                "a template. place pastes a template with its lowest corner at origin.",
             input: {
                 action: z.enum(["list", "save", "place"]),
                 id: z
                     .string()
                     .optional()
                     .describe('Template id for save and place, e.g. "builds:house".'),
-                filter: z.string().default("").describe("For list: substring of the id."),
+                filter: z.string().default("").describe("Substring of the id, for list."),
                 limit,
                 dimension,
                 from: blockPos.optional().describe("Region corner for save."),

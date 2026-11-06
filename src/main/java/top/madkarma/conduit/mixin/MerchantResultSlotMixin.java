@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.madkarma.conduit.events.Trades;
 
-/** notifyTrade is only called once the costs were taken from the payment slots. */
+/** The game calls notifyTrade only after it took the costs from the payment slots. */
 @Mixin(MerchantResultSlot.class)
 public abstract class MerchantResultSlotMixin {
     @Shadow @Final private MerchantContainer slots;

@@ -41,8 +41,8 @@ internal fun MinecraftServer.resolvePlayerId(ref: String): UUID {
         return it.uuid
     }
 
-    // The name cache's own lookup by name asks the Mojang API on a miss, which must not block the
-    // server thread, so the cached names of the known players are compared instead.
+    // The name cache's own lookup by name calls the Mojang API on a miss, which would block the
+    // server thread. Comparing the cached names of the known players avoids that.
     val known = knownPlayerIds().firstOrNull { lastKnownName(it).equals(ref, ignoreCase = true) }
     if (known != null) return known
 

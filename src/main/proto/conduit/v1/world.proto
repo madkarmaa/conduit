@@ -74,7 +74,7 @@ message GetBlocksRequest {
     string dimension = 1;
     BlockPos from = 2;
     BlockPos to = 3;
-    // Only load chunks that are already loaded; unloaded positions report "minecraft:void_air".
+    // Only read chunks that are already loaded. Unloaded positions report "minecraft:void_air".
     bool loaded_only = 4;
 }
 
@@ -201,7 +201,7 @@ message SetWeatherRequest {
         WEATHER_CLEAR = 3;
     }
     Weather weather = 1;
-    // Duration in ticks; 0 means a random duration.
+    // Duration in ticks. 0 means a random duration.
     int32 duration = 2;
 }
 
@@ -235,7 +235,7 @@ message WorldBorderInfo {
     double center_z = 2;
     // Current side length in blocks.
     double size = 3;
-    // Size the border is moving towards; the current size when it is not moving.
+    // Size the border is moving towards, or the current size when it is not moving.
     double target_size = 4;
     // Time until the border reaches the target size, at the current tick rate.
     int64 remaining_transition_ms = 5;
@@ -255,7 +255,7 @@ message SetWorldBorderRequest {
     // Between 1 and 59,999,968.
     optional double size = 4;
     // Moves the border from its current size to size over this time, converted to ticks at the
-    // current tick rate; 0 changes it instantly. Requires size.
+    // current tick rate. 0 changes it instantly. Requires size.
     int64 transition_ms = 5;
     // At least 0.
     optional double damage_per_block = 6;

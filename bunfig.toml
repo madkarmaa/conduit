@@ -1,3 +1,3 @@
 [install]
-# Gradle watches the project folder and trips over the symlinks of the isolated linker.
+# Gradle watches the project folder and cannot handle the symlinks that the isolated linker creates.
 linker = "hoisted"

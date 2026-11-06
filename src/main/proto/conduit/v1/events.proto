@@ -86,9 +86,8 @@ message Event {
     // Server tick count at the time of the event.
     int32 tick = 2;
     // Position of the event in this subscription, starting at 1 and increasing by one for every
-    // event. Clients that read too slowly lose the oldest buffered events; the gap is reported by
-    // an events_dropped event, which has no sequence number of its own, right before the next
-    // delivered event.
+    // event. Clients that read too slowly lose the oldest buffered events. An events_dropped event
+    // reports the gap right before the next delivered event, and has no sequence number of its own.
     int64 sequence = 3;
     oneof payload {
         ChatEvent chat = 10;

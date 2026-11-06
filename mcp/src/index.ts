@@ -21,9 +21,9 @@ import { worldTools } from "./tools/world.ts";
 
 const INSTRUCTIONS = [
     "Controls a running Minecraft server through the Conduit mod.",
-    "Positions are block coordinates; y grows upwards. Dimensions default to the overworld.",
-    "Use the registry tool to find valid block, item and entity ids before guessing them.",
-    "Prefer the dedicated tools; run_command covers anything they do not.",
+    "Positions are block coordinates, and y grows upwards. Dimensions default to the overworld.",
+    "Use the registry tool to look up valid block, item and entity ids instead of guessing them.",
+    "Prefer the dedicated tools. run_command covers anything they do not.",
 ].join(" ");
 
 const clients = connect({

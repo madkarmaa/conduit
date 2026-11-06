@@ -14,7 +14,7 @@ import top.madkarma.conduit.rpc.aborted
 import top.madkarma.conduit.rpc.failedPrecondition
 import top.madkarma.conduit.rpc.notFound
 
-// A count, not a flag: /reload can start while another reload still runs, and the API holds one
+// This is a count because /reload can start while another reload still runs. The API holds one
 // extra slot from its check until its own reload ends, so two API calls cannot both start one.
 private val reloadsInProgress = AtomicInteger(0)
 
@@ -61,9 +61,9 @@ internal suspend fun changeDatapackEnabled(request: SetDatapackEnabledRequest): 
     return GameServer.run { it.listDatapacks() }
 }
 
-// Called off the server thread on purpose: on the server thread, reloadResources blocks the tick
-// until the reload is done. Every step of the reload still runs on the server thread or the
-// worker pool.
+// Called off the server thread on purpose, because on the server thread reloadResources blocks
+// the tick until the reload is done. Every step of the reload still runs on the server thread or
+// the worker pool.
 private suspend fun reload(server: MinecraftServer, selection: List<String>) {
     try {
         server.reloadResources(selection).await()

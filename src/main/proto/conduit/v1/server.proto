@@ -117,7 +117,7 @@ message SetDatapackEnabledRequest {
 }
 
 message BackupRequest {
-    // Appended to the file name, at most 64 characters; characters other than A-Z, a-z, 0-9, _
+    // Appended to the file name, at most 64 characters. Characters other than A-Z, a-z, 0-9, _
     // and - become _.
     optional string name = 1;
 }

@@ -15,18 +15,18 @@ option java_package = "top.madkarma.conduit.proto";
 // Runs many operations in one round trip.
 //
 // All operations of a batch run in order within the same server tick, so no other game logic
-// runs between them. A batch is not atomic: there is no rollback, and the operations before a
+// runs between them. A batch is not atomic. Nothing is rolled back, and the operations before a
 // failed one stay applied. Running in the same tick is the only guarantee.
 service BatchService {
     // Fails with INVALID_ARGUMENT for more than 10,000 operations. Failed operations are reported
-    // in their results; the call itself still succeeds. The whole batch must finish within the
+    // in their results, and the call itself still succeeds. The whole batch must finish within the
     // 30 second game thread timeout.
     rpc Execute(BatchRequest) returns (BatchResponse);
 }
 
 message BatchRequest {
     repeated Operation operations = 1;
-    // Stop at the first failed operation; the remaining ones are reported as skipped.
+    // Stop at the first failed operation and report the remaining ones as skipped.
     bool stop_on_error = 2;
 }
 

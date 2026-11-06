@@ -13,9 +13,9 @@ export function registryTools({ registry }: ConduitClients) {
             name: "registry",
             title: "Game registries",
             description:
-                "Looks up valid ids, including datapack content: registries lists every registry " +
-                '(e.g. "minecraft:block", "minecraft:item", "minecraft:entity_type", ' +
-                '"minecraft:worldgen/biome"), entries lists ids in one, tags lists its tags.',
+                "Looks up valid ids, including datapack content. registries lists every registry, " +
+                'such as "minecraft:block", "minecraft:item", "minecraft:entity_type" and ' +
+                '"minecraft:worldgen/biome". entries lists the ids in one. tags lists its tags.',
             input: {
                 action: z.enum(["registries", "entries", "tags"]),
                 registry: z.string().optional().describe("Required for entries and tags."),
@@ -74,8 +74,8 @@ export function registryTools({ registry }: ConduitClients) {
             name: "recipes",
             title: "Recipes and loot tables",
             description:
-                "list finds recipe ids, optionally by type or result item; get reads a recipe and " +
-                'loot_table a loot table (e.g. "minecraft:blocks/diamond_ore") as datapack JSON.',
+                "list finds recipe ids, optionally by type or result item. get reads a recipe and " +
+                'loot_table a loot table, such as "minecraft:blocks/diamond_ore", as datapack JSON.',
             input: {
                 action: z.enum(["list", "get", "loot_table"]),
                 id: z
