@@ -1,5 +1,7 @@
 package top.madkarma.minecraft.grpc.service.player
 
+import java.nio.file.Files
+import java.util.*
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.MinecraftServer
 import net.minecraft.stats.ServerStatsCounter
@@ -10,8 +12,6 @@ import top.madkarma.minecraft.grpc.proto.PlayerRef
 import top.madkarma.minecraft.grpc.proto.PlayerStats
 import top.madkarma.minecraft.grpc.proto.playerStats
 import top.madkarma.minecraft.grpc.rpc.notFound
-import java.nio.file.Files
-import java.util.*
 
 internal fun MinecraftServer.playerStats(request: PlayerRef): PlayerStats {
     val id = resolvePlayerId(request.player)

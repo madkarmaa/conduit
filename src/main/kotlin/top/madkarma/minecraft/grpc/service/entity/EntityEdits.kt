@@ -22,9 +22,10 @@ internal fun MinecraftServer.removeEntity(request: RemoveEntityRequest) {
     when {
         request.kill -> entity.kill(entity.level() as ServerLevel)
 
-        entity is ServerPlayer -> failedPrecondition(
-            "Players cannot be discarded; use kill or PlayerService.Kick",
-        )
+        entity is ServerPlayer ->
+            failedPrecondition(
+                "Players cannot be discarded; use kill or PlayerService.Kick",
+            )
 
         else -> entity.discard()
     }
@@ -40,7 +41,8 @@ internal fun MinecraftServer.teleportEntity(request: TeleportRequest): EntityInf
 
     if (entity !is ServerPlayer) requireEntityTicking(level, position.toMc())
 
-    if (!entity.teleportTo(
+    if (
+        !entity.teleportTo(
             level,
             position.x,
             position.y,
@@ -101,8 +103,9 @@ internal fun MinecraftServer.saveEntity(entity: Entity): CompoundTag {
     return output.buildResult()
 }
 
-internal fun MinecraftServer.entityNbt(request: EntityRef): Nbt =
-    nbt { snbt = saveEntity(entity(request.uuid)).toString() }
+internal fun MinecraftServer.entityNbt(request: EntityRef): Nbt = nbt {
+    snbt = saveEntity(entity(request.uuid)).toString()
+}
 
 internal fun MinecraftServer.mergeEntityNbt(request: MergeNbtRequest) {
     val entity = entity(request.uuid)

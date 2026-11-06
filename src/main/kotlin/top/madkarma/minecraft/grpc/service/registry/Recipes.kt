@@ -1,6 +1,7 @@
 package top.madkarma.minecraft.grpc.service.registry
 
 import com.mojang.serialization.JsonOps
+import kotlin.jvm.optionals.getOrNull
 import net.minecraft.core.HolderLookup
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
@@ -14,24 +15,30 @@ import net.minecraft.world.item.crafting.RecipeHolder
 import net.minecraft.world.item.crafting.display.SlotDisplay
 import top.madkarma.minecraft.grpc.game.toProto
 import top.madkarma.minecraft.grpc.proto.ListRecipesRequest
+import top.madkarma.minecraft.grpc.proto.Recipe as ProtoRecipe
 import top.madkarma.minecraft.grpc.proto.RecipeList
 import top.madkarma.minecraft.grpc.proto.recipe
 import top.madkarma.minecraft.grpc.proto.recipeList
 import top.madkarma.minecraft.grpc.rpc.notFound
-import kotlin.jvm.optionals.getOrNull
-import top.madkarma.minecraft.grpc.proto.Recipe as ProtoRecipe
 
 internal fun MinecraftServer.readRecipes(request: ListRecipesRequest): RecipeList {
-    val serializer = request.type.ifBlank { null }?.let {
-        BuiltInRegistries.RECIPE_SERIALIZER.requireValue(it, "recipe type")
-    }
+    val serializer =
+        request.type
+            .ifBlank { null }
+            ?.let {
+                BuiltInRegistries.RECIPE_SERIALIZER.requireValue(it, "recipe type")
+            }
 
-    val item = request.resultItem.ifBlank { null }?.let {
-        BuiltInRegistries.ITEM.requireValue(it, "item")
-    }
+    val item =
+        request.resultItem
+            .ifBlank { null }
+            ?.let {
+                BuiltInRegistries.ITEM.requireValue(it, "item")
+            }
 
     val matching =
-        recipeManager.recipes.filter { serializer == null || it.value().serializer == serializer }
+        recipeManager.recipes
+            .filter { serializer == null || it.value().serializer == serializer }
             .filter { item == null || it.value().fixedResult()?.item == item }
             .sortedBy { it.id().identifier().toString() }
 

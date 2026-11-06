@@ -4,12 +4,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Prediction;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
 import top.madkarma.minecraft.grpc.events.ItemEntities;
 
 /**
@@ -20,8 +18,15 @@ import top.madkarma.minecraft.grpc.events.ItemEntities;
  */
 @Mixin(ServerPlayer.class)
 public abstract class ServerPlayerMixin {
-    @Inject(method = "drop(Lnet/minecraft/world/item/ItemStack;ZLnet/minecraft/util/Prediction;)Lnet/minecraft/world/entity/item/ItemEntity;", at = @At("RETURN"))
-    private void minecraftGrpc$onDrop(ItemStack stack, boolean thrownFromHand, Prediction prediction, CallbackInfoReturnable<ItemEntity> info) {
+    @Inject(
+            method =
+                    "drop(Lnet/minecraft/world/item/ItemStack;ZLnet/minecraft/util/Prediction;)Lnet/minecraft/world/entity/item/ItemEntity;",
+            at = @At("RETURN"))
+    private void minecraftGrpc$onDrop(
+            ItemStack itemStack,
+            boolean thrownFromHand,
+            Prediction prediction,
+            CallbackInfoReturnable<ItemEntity> info) {
         ItemEntity itemEntity = info.getReturnValue();
         if (itemEntity == null) {
             return;

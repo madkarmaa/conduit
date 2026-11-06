@@ -11,8 +11,9 @@ class PlayerServiceImpl : PlayerServiceGrpcKt.PlayerServiceCoroutineImplBase() {
         it.listPlayers()
     }
 
-    override suspend fun getPlayer(request: PlayerRef): PlayerInfo =
-        GameServer.run { it.describePlayer(request) }
+    override suspend fun getPlayer(request: PlayerRef): PlayerInfo = GameServer.run {
+        it.describePlayer(request)
+    }
 
     override suspend fun getInventory(request: PlayerRef): Inventory = GameServer.run {
         it.inventoryOf(request.player)
@@ -28,8 +29,9 @@ class PlayerServiceImpl : PlayerServiceGrpcKt.PlayerServiceCoroutineImplBase() {
             EMPTY
         }
 
-    override suspend fun giveItem(request: GiveItemRequest): GiveItemResponse =
-        GameServer.run { it.giveItem(request) }
+    override suspend fun giveItem(request: GiveItemRequest): GiveItemResponse = GameServer.run {
+        it.giveItem(request)
+    }
 
     override suspend fun clearInventory(request: PlayerRef): Empty = GameServer.run {
         it.clearInventory(request)
@@ -81,11 +83,13 @@ class PlayerServiceImpl : PlayerServiceGrpcKt.PlayerServiceCoroutineImplBase() {
         EMPTY
     }
 
-    override suspend fun getOfflinePlayer(request: PlayerRef): OfflinePlayerInfo =
-        GameServer.run { it.offlinePlayer(request) }
+    override suspend fun getOfflinePlayer(request: PlayerRef): OfflinePlayerInfo = GameServer.run {
+        it.offlinePlayer(request)
+    }
 
-    override suspend fun getOfflinePlayerNbt(request: PlayerRef): Nbt =
-        GameServer.run { it.offlinePlayerNbt(request) }
+    override suspend fun getOfflinePlayerNbt(request: PlayerRef): Nbt = GameServer.run {
+        it.offlinePlayerNbt(request)
+    }
 
     override suspend fun mergeOfflinePlayerNbt(request: MergeOfflinePlayerNbtRequest): Empty =
         GameServer.run {
@@ -99,9 +103,11 @@ class PlayerServiceImpl : PlayerServiceGrpcKt.PlayerServiceCoroutineImplBase() {
             EMPTY
         }
 
-    override suspend fun getPlayerStats(request: PlayerRef): PlayerStats =
-        GameServer.run { it.playerStats(request) }
+    override suspend fun getPlayerStats(request: PlayerRef): PlayerStats = GameServer.run {
+        it.playerStats(request)
+    }
 
-    override suspend fun listKnownPlayers(request: Empty): KnownPlayerList =
-        GameServer.run { it.listKnownPlayers() }
+    override suspend fun listKnownPlayers(request: Empty): KnownPlayerList = GameServer.run {
+        it.listKnownPlayers()
+    }
 }

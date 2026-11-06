@@ -2,13 +2,11 @@ package top.madkarma.minecraft.grpc.mixin;
 
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
 import top.madkarma.minecraft.grpc.events.ItemEntities;
 
 /**
@@ -17,8 +15,7 @@ import top.madkarma.minecraft.grpc.events.ItemEntities;
  */
 @Mixin(ItemEntity.class)
 public abstract class ItemEntityMixin {
-    @Unique
-    private int minecraftGrpc$countBeforeTouch;
+    @Unique private int minecraftGrpc$countBeforeTouch;
 
     @Inject(method = "playerTouch", at = @At("HEAD"))
     private void minecraftGrpc$beforeTouch(Player player, CallbackInfo info) {

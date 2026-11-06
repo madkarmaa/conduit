@@ -1,5 +1,6 @@
 package top.madkarma.minecraft.grpc.events
 
+import java.util.*
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.server.MinecraftServer
@@ -10,7 +11,6 @@ import top.madkarma.minecraft.grpc.game.toProto
 import top.madkarma.minecraft.grpc.proto.EventType
 import top.madkarma.minecraft.grpc.proto.InventoryChangeEvent
 import top.madkarma.minecraft.grpc.proto.inventoryChangeEvent
-import java.util.*
 
 // Hotbar, main inventory, armor and offhand, numbered like PlayerService.
 private const val SLOT_COUNT = Inventory.SLOT_OFFHAND + 1

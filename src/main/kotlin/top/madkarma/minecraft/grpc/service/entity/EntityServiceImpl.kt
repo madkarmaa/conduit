@@ -7,8 +7,9 @@ import top.madkarma.minecraft.grpc.proto.*
 private val EMPTY: Empty = Empty.getDefaultInstance()
 
 class EntityServiceImpl : EntityServiceGrpcKt.EntityServiceCoroutineImplBase() {
-    override suspend fun listEntities(request: ListEntitiesRequest): EntityList =
-        GameServer.run { it.findEntities(request) }
+    override suspend fun listEntities(request: ListEntitiesRequest): EntityList = GameServer.run {
+        it.findEntities(request)
+    }
 
     override suspend fun getEntity(request: EntityRef): EntityInfo = GameServer.run {
         it.describeEntity(request)

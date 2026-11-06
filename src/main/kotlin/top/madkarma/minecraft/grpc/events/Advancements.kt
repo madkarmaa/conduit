@@ -39,9 +39,10 @@ object Advancements {
         }
     }
 
-    private fun frameOf(type: AdvancementType): AdvancementFrame = when (type) {
-        AdvancementType.TASK -> AdvancementFrame.ADVANCEMENT_FRAME_TASK
-        AdvancementType.GOAL -> AdvancementFrame.ADVANCEMENT_FRAME_GOAL
-        AdvancementType.CHALLENGE -> AdvancementFrame.ADVANCEMENT_FRAME_CHALLENGE
-    }
+    private fun frameOf(type: AdvancementType): AdvancementFrame =
+        when (type) {
+            AdvancementType.TASK -> AdvancementFrame.ADVANCEMENT_FRAME_TASK
+            AdvancementType.GOAL -> AdvancementFrame.ADVANCEMENT_FRAME_GOAL
+            AdvancementType.CHALLENGE -> AdvancementFrame.ADVANCEMENT_FRAME_CHALLENGE
+        }
 }

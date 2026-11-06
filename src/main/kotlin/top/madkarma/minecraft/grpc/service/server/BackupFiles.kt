@@ -1,15 +1,15 @@
 package top.madkarma.minecraft.grpc.service.server
 
-import net.minecraft.world.level.storage.LevelResource
-import top.madkarma.minecraft.grpc.proto.BackupList
-import top.madkarma.minecraft.grpc.proto.backupFile
-import top.madkarma.minecraft.grpc.proto.backupList
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import net.minecraft.world.level.storage.LevelResource
+import top.madkarma.minecraft.grpc.proto.BackupList
+import top.madkarma.minecraft.grpc.proto.backupFile
+import top.madkarma.minecraft.grpc.proto.backupList
 
 /** Zips the world folder into target and returns the size of the zip file. */
 internal fun zipWorld(world: Path, target: Path): Long {
@@ -31,10 +31,13 @@ internal fun zipWorld(world: Path, target: Path): Long {
 internal fun listBackupFiles(directory: Path): BackupList {
     if (!Files.isDirectory(directory)) return BackupList.getDefaultInstance()
 
-    val files = Files.list(directory).use { paths ->
-        paths.filter { it.fileName.toString().endsWith(".zip") && Files.isRegularFile(it) }.sorted()
-            .toList()
-    }
+    val files =
+        Files.list(directory).use { paths ->
+            paths
+                .filter { it.fileName.toString().endsWith(".zip") && Files.isRegularFile(it) }
+                .sorted()
+                .toList()
+        }
 
     return backupList {
         for (file in files) {
@@ -55,12 +58,14 @@ private fun writeZip(world: Path, target: Path) {
 
     ZipOutputStream(Files.newOutputStream(target).buffered()).use { zip ->
         Files.walk(world).use { files ->
-            files.filter { Files.isRegularFile(it) && it != lockFile }.forEach { file ->
-                val entryPath = world.fileName.resolve(world.relativize(file))
-                zip.putNextEntry(ZipEntry(entryPath.joinToString("/")))
-                Files.copy(file, zip)
-                zip.closeEntry()
-            }
+            files
+                .filter { Files.isRegularFile(it) && it != lockFile }
+                .forEach { file ->
+                    val entryPath = world.fileName.resolve(world.relativize(file))
+                    zip.putNextEntry(ZipEntry(entryPath.joinToString("/")))
+                    Files.copy(file, zip)
+                    zip.closeEntry()
+                }
         }
     }
 }

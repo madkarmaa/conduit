@@ -39,8 +39,9 @@ internal fun MinecraftServer.describePlayer(player: ServerPlayer): PlayerInfo {
 }
 
 internal fun MinecraftServer.changeGameMode(request: SetGameModeRequest) {
-    val mode = GameType.byName(request.gameMode.lowercase(), null)
-        ?: invalidArgument("Unknown game mode: ${request.gameMode}")
+    val mode =
+        GameType.byName(request.gameMode.lowercase(), null)
+            ?: invalidArgument("Unknown game mode: ${request.gameMode}")
 
     player(request.player).setGameMode(mode)
 }

@@ -6,6 +6,7 @@ import top.madkarma.minecraft.grpc.proto.BatchResponse
 import top.madkarma.minecraft.grpc.proto.BatchServiceGrpcKt
 
 class BatchServiceImpl : BatchServiceGrpcKt.BatchServiceCoroutineImplBase() {
-    override suspend fun execute(request: BatchRequest): BatchResponse =
-        GameServer.run { it.executeBatch(request) }
+    override suspend fun execute(request: BatchRequest): BatchResponse = GameServer.run {
+        it.executeBatch(request)
+    }
 }

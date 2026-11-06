@@ -2,12 +2,12 @@ package top.madkarma.minecraft.grpc.config
 
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParseException
-import net.fabricmc.loader.api.FabricLoader
-import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.SecureRandom
 import java.util.*
+import net.fabricmc.loader.api.FabricLoader
+import org.slf4j.LoggerFactory
 
 data class GrpcConfig(
     var enabled: Boolean = true,

@@ -59,9 +59,12 @@ internal fun MinecraftServer.placeStructure(
 }
 
 private fun placeSettings(placement: StructurePlacement): StructurePlaceSettings {
-    val settings = StructurePlaceSettings().setRotation(placement.rotation.toMc())
-        .setMirror(placement.mirror.toMc()).setIgnoreEntities(!placement.includeEntities)
-        .setKnownShape(placement.noUpdates)
+    val settings =
+        StructurePlaceSettings()
+            .setRotation(placement.rotation.toMc())
+            .setMirror(placement.mirror.toMc())
+            .setIgnoreEntities(!placement.includeEntities)
+            .setKnownShape(placement.noUpdates)
 
     if (placement.hasIntegrity() && placement.integrity < 1f) {
         settings.addProcessor(BlockRotProcessor(placement.integrity))
@@ -71,15 +74,17 @@ private fun placeSettings(placement: StructurePlacement): StructurePlaceSettings
 }
 
 /**
- * Forcing a chunk keeps it loaded while the structure is placed, and getChunk loads it right
- * away instead of on a later tick. Only the forces added here are released, so chunks that were
- * already forced, e.g. with SetChunkForced, stay forced.
+ * Forcing a chunk keeps it loaded while the structure is placed, and getChunk loads it right away
+ * instead of on a later tick. Only the forces added here are released, so chunks that were already
+ * forced, e.g. with SetChunkForced, stay forced.
  */
 private fun ServerLevel.withChunksForced(box: BoundingBox, placement: () -> Unit) {
-    val chunks = ChunkPos.rangeClosed(
-        ChunkPos.containing(box.minCorner()),
-        ChunkPos.containing(box.maxCorner()),
-    ).toList()
+    val chunks =
+        ChunkPos.rangeClosed(
+                ChunkPos.containing(box.minCorner()),
+                ChunkPos.containing(box.maxCorner()),
+            )
+            .toList()
     val addedForces = chunks.filter { chunkSource.updateChunkForced(it, true) }
 
     try {
@@ -94,17 +99,21 @@ private fun BoundingBox.minCorner(): BlockPos = BlockPos(minX(), minY(), minZ())
 
 private fun BoundingBox.maxCorner(): BlockPos = BlockPos(maxX(), maxY(), maxZ())
 
-private fun StructureRotation.toMc(): Rotation = when (this) {
-    StructureRotation.STRUCTURE_ROTATION_UNSPECIFIED, StructureRotation.STRUCTURE_ROTATION_NONE -> Rotation.NONE
-    StructureRotation.STRUCTURE_ROTATION_CLOCKWISE_90 -> Rotation.CLOCKWISE_90
-    StructureRotation.STRUCTURE_ROTATION_CLOCKWISE_180 -> Rotation.CLOCKWISE_180
-    StructureRotation.STRUCTURE_ROTATION_COUNTERCLOCKWISE_90 -> Rotation.COUNTERCLOCKWISE_90
-    StructureRotation.UNRECOGNIZED -> invalidArgument("Unknown rotation")
-}
+private fun StructureRotation.toMc(): Rotation =
+    when (this) {
+        StructureRotation.STRUCTURE_ROTATION_UNSPECIFIED,
+        StructureRotation.STRUCTURE_ROTATION_NONE -> Rotation.NONE
+        StructureRotation.STRUCTURE_ROTATION_CLOCKWISE_90 -> Rotation.CLOCKWISE_90
+        StructureRotation.STRUCTURE_ROTATION_CLOCKWISE_180 -> Rotation.CLOCKWISE_180
+        StructureRotation.STRUCTURE_ROTATION_COUNTERCLOCKWISE_90 -> Rotation.COUNTERCLOCKWISE_90
+        StructureRotation.UNRECOGNIZED -> invalidArgument("Unknown rotation")
+    }
 
-private fun StructureMirror.toMc(): Mirror = when (this) {
-    StructureMirror.STRUCTURE_MIRROR_UNSPECIFIED, StructureMirror.STRUCTURE_MIRROR_NONE -> Mirror.NONE
-    StructureMirror.STRUCTURE_MIRROR_LEFT_RIGHT -> Mirror.LEFT_RIGHT
-    StructureMirror.STRUCTURE_MIRROR_FRONT_BACK -> Mirror.FRONT_BACK
-    StructureMirror.UNRECOGNIZED -> invalidArgument("Unknown mirror")
-}
+private fun StructureMirror.toMc(): Mirror =
+    when (this) {
+        StructureMirror.STRUCTURE_MIRROR_UNSPECIFIED,
+        StructureMirror.STRUCTURE_MIRROR_NONE -> Mirror.NONE
+        StructureMirror.STRUCTURE_MIRROR_LEFT_RIGHT -> Mirror.LEFT_RIGHT
+        StructureMirror.STRUCTURE_MIRROR_FRONT_BACK -> Mirror.FRONT_BACK
+        StructureMirror.UNRECOGNIZED -> invalidArgument("Unknown mirror")
+    }

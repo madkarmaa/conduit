@@ -40,8 +40,12 @@ private fun MinecraftServer.commandSource(request: ExecuteCommandRequest): Comma
     if (request.hasAs()) {
         val entity = entityOrPlayer(request.`as`)
 
-        source = source.withEntity(entity).withPosition(entity.position())
-            .withRotation(Vec2(entity.xRot, entity.yRot)).withLevel(entity.level() as ServerLevel)
+        source =
+            source
+                .withEntity(entity)
+                .withPosition(entity.position())
+                .withRotation(Vec2(entity.xRot, entity.yRot))
+                .withLevel(entity.level() as ServerLevel)
     }
 
     if (request.hasDimension()) source = source.withLevel(level(request.dimension))

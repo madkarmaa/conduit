@@ -1,5 +1,6 @@
 package top.madkarma.minecraft.grpc.game
 
+import kotlin.jvm.optionals.getOrNull
 import net.minecraft.commands.arguments.blocks.BlockStateParser
 import net.minecraft.core.HolderLookup
 import net.minecraft.core.component.DataComponentPatch
@@ -15,21 +16,21 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.storage.LevelData
 import top.madkarma.minecraft.grpc.proto.*
-import top.madkarma.minecraft.grpc.rpc.invalidArgument
-import kotlin.jvm.optionals.getOrNull
 import top.madkarma.minecraft.grpc.proto.BlockState as ProtoBlockState
 import top.madkarma.minecraft.grpc.proto.EntityInfo as ProtoEntityInfo
 import top.madkarma.minecraft.grpc.proto.ItemStack as ProtoItemStack
 import top.madkarma.minecraft.grpc.proto.StatusEffect as ProtoStatusEffect
+import top.madkarma.minecraft.grpc.rpc.invalidArgument
 
 data class ParsedBlock(val state: BlockState, val nbt: CompoundTag?)
 
 fun parseBlock(registries: HolderLookup.Provider, input: String): ParsedBlock {
-    val result = BlockStateParser.parseForBlock(
-        registries.lookupOrThrow(Registries.BLOCK),
-        input,
-        true,
-    )
+    val result =
+        BlockStateParser.parseForBlock(
+            registries.lookupOrThrow(Registries.BLOCK),
+            input,
+            true,
+        )
 
     return ParsedBlock(result.blockState(), result.nbt())
 }
@@ -57,9 +58,10 @@ fun ItemStack.toProto(registries: HolderLookup.Provider): ProtoItemStack {
 fun ProtoItemStack.toMc(registries: HolderLookup.Provider): ItemStack {
     if (id.isBlank() || id == "minecraft:air" || count < 0) return ItemStack.EMPTY
 
-    val item = BuiltInRegistries.ITEM.get(parseId(id)).orElseGet {
-        invalidArgument("Unknown item: $id")
-    }
+    val item =
+        BuiltInRegistries.ITEM.get(parseId(id)).orElseGet {
+            invalidArgument("Unknown item: $id")
+        }
     val patch = decodeComponents(components, registries)
 
     return ItemStack(item, if (count == 0) 1 else count, patch)
@@ -76,8 +78,9 @@ private fun decodeComponents(snbt: String, registries: HolderLookup.Provider): D
     if (snbt.isBlank()) return DataComponentPatch.EMPTY
 
     val context = registries.createSerializationContext(NbtOps.INSTANCE)
-    return DataComponentPatch.CODEC.parse(context, TagParser.parseCompoundFully(snbt))
-        .getOrThrow { invalidArgument("Invalid item components: $it") }
+    return DataComponentPatch.CODEC.parse(context, TagParser.parseCompoundFully(snbt)).getOrThrow {
+        invalidArgument("Invalid item components: $it")
+    }
 }
 
 fun Entity.toProto(): ProtoEntityInfo {

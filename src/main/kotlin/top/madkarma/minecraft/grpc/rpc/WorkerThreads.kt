@@ -1,16 +1,17 @@
 package top.madkarma.minecraft.grpc.rpc
 
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.withContext
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.withContext
 
 // A cached pool gives every job a thread of its own, so a long job never delays another one, and
 // reuses idle threads. It is never shut down: the threads are daemons and end after a minute
 // without work, so the same pool also serves the next world opened in singleplayer.
-private val WORKER_EXECUTOR: ExecutorService = Executors.newCachedThreadPool(
-    Thread.ofPlatform().name("minecraft-grpc-worker-", 1).daemon().factory(),
-)
+private val WORKER_EXECUTOR: ExecutorService =
+    Executors.newCachedThreadPool(
+        Thread.ofPlatform().name("minecraft-grpc-worker-", 1).daemon().factory(),
+    )
 
 private val WORKER_DISPATCHER = WORKER_EXECUTOR.asCoroutineDispatcher()
 

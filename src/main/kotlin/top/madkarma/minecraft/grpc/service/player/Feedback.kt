@@ -53,16 +53,17 @@ internal fun MinecraftServer.playSound(request: PlaySoundRequest) {
     val volume = if (request.volume > 0) request.volume else 1f
     val pitch = if (request.pitch > 0) request.pitch else 1f
 
-    val packet = ClientboundSoundPacket(
-        soundEvent(request.sound),
-        soundCategory(request.category),
-        position.x,
-        position.y,
-        position.z,
-        volume,
-        pitch,
-        player.random.nextLong(),
-    )
+    val packet =
+        ClientboundSoundPacket(
+            soundEvent(request.sound),
+            soundCategory(request.category),
+            position.x,
+            position.y,
+            position.z,
+            volume,
+            pitch,
+            player.random.nextLong(),
+        )
 
     player.connection.send(packet)
 }
@@ -70,7 +71,8 @@ internal fun MinecraftServer.playSound(request: PlaySoundRequest) {
 // Unregistered sounds, e.g. from resource packs, can only be sent by id.
 private fun soundEvent(sound: String): Holder<SoundEvent> {
     val id = parseId(sound)
-    return BuiltInRegistries.SOUND_EVENT.get(id).map<Holder<SoundEvent>> { it }
+    return BuiltInRegistries.SOUND_EVENT.get(id)
+        .map<Holder<SoundEvent>> { it }
         .orElseGet { Holder.direct(SoundEvent.createVariableRangeEvent(id)) }
 }
 

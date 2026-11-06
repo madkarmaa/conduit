@@ -3,14 +3,12 @@ package top.madkarma.minecraft.grpc.mixin;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.FurnaceResultSlot;
 import net.minecraft.world.item.ItemStack;
-
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
 import top.madkarma.minecraft.grpc.events.CraftedItems;
 
 /**
@@ -19,12 +17,9 @@ import top.madkarma.minecraft.grpc.events.CraftedItems;
  */
 @Mixin(FurnaceResultSlot.class)
 public abstract class FurnaceResultSlotMixin {
-    @Shadow
-    @Final
-    private Player player;
+    @Shadow @Final private Player player;
 
-    @Shadow
-    private int removeCount;
+    @Shadow private int removeCount;
 
     @Inject(method = "onQuickCraft(Lnet/minecraft/world/item/ItemStack;I)V", at = @At("HEAD"))
     private void minecraftGrpc$onQuickCraft(ItemStack picked, int count, CallbackInfo info) {

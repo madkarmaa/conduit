@@ -1,8 +1,8 @@
 package top.madkarma.minecraft.grpc.rpc
 
 import io.grpc.*
-import top.madkarma.minecraft.grpc.config.GrpcConfig
 import java.security.MessageDigest
+import top.madkarma.minecraft.grpc.config.GrpcConfig
 
 class AuthInterceptor(private val config: GrpcConfig) : ServerInterceptor {
     private val header = Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER)

@@ -26,11 +26,12 @@ private const val UNLOADED_CHUNK_MESSAGE =
 internal fun MinecraftServer.findEntities(request: ListEntitiesRequest): EntityList {
     val limit = if (request.limit > 0) request.limit else Int.MAX_VALUE
 
-    val found = if (request.hasSelector()) {
-        select(request).take(limit)
-    } else {
-        EntityFilter(this, request).collect(limit)
-    }
+    val found =
+        if (request.hasSelector()) {
+            select(request).take(limit)
+        } else {
+            EntityFilter(this, request).collect(limit)
+        }
 
     return entityList { entities += found.map { it.toProto() } }
 }
@@ -41,8 +42,10 @@ internal fun MinecraftServer.describeEntity(request: EntityRef): EntityInfo =
 internal fun MinecraftServer.spawnEntity(request: SpawnEntityRequest): EntityInfo {
     val key = ResourceKey.create(Registries.ENTITY_TYPE, parseId(request.type))
 
-    val type = registryAccess().lookupOrThrow(Registries.ENTITY_TYPE).get(key)
-        .orElseGet { invalidArgument("Unknown entity type: ${request.type}") }
+    val type =
+        registryAccess().lookupOrThrow(Registries.ENTITY_TYPE).get(key).orElseGet {
+            invalidArgument("Unknown entity type: ${request.type}")
+        }
 
     val level = level(request.dimension)
     requireEntityTicking(level, request.position.toMc())
@@ -50,13 +53,14 @@ internal fun MinecraftServer.spawnEntity(request: SpawnEntityRequest): EntityInf
     val snbt = request.snbt
     val tag = if (snbt.isBlank()) CompoundTag() else TagParser.parseCompoundFully(snbt)
     val source = createCommandSourceStack().withLevel(level).withSuppressedOutput()
-    val entity = SummonCommand.createEntity(
-        source,
-        type,
-        request.position.toMc(),
-        tag,
-        request.initialize,
-    )
+    val entity =
+        SummonCommand.createEntity(
+            source,
+            type,
+            request.position.toMc(),
+            tag,
+            request.initialize,
+        )
 
     if (request.hasRotation()) rotate(entity, request.rotation.yaw, request.rotation.pitch)
     return entity.toProto()
@@ -74,20 +78,26 @@ private fun MinecraftServer.select(request: ListEntitiesRequest): List<Entity> {
     if (request.dimension.isNotBlank()) source = source.withLevel(level(request.dimension))
     if (request.hasCenter()) source = source.withPosition(request.center.toMc())
 
-    return EntityArgument.entities().parse(
-        StringReader(request.selector),
-    ).findEntities(source).toList()
+    return EntityArgument.entities()
+        .parse(
+            StringReader(request.selector),
+        )
+        .findEntities(source)
+        .toList()
 }
 
 private class EntityFilter(
     private val server: MinecraftServer,
     private val request: ListEntitiesRequest,
 ) {
-    private val types: Set<EntityType<*>> = request.typesList.map { id ->
-        BuiltInRegistries.ENTITY_TYPE.getOptional(parseId(id)).orElseGet {
-            invalidArgument("Unknown entity type: $id")
-        }
-    }.toSet()
+    private val types: Set<EntityType<*>> =
+        request.typesList
+            .map { id ->
+                BuiltInRegistries.ENTITY_TYPE.getOptional(parseId(id)).orElseGet {
+                    invalidArgument("Unknown entity type: $id")
+                }
+            }
+            .toSet()
 
     private val box: AABB? =
         if (request.hasBox()) AABB(request.box.min.toMc(), request.box.max.toMc()) else null
@@ -107,11 +117,12 @@ private class EntityFilter(
         return levels.asSequence().flatMap { it.allEntities }.filter(::matches).take(limit).toList()
     }
 
-    private fun matches(entity: Entity): Boolean = when {
-        types.isNotEmpty() && entity.type !in types -> false
-        box != null && !box.contains(entity.position()) -> false
-        radiusSq != null && entity.position().distanceToSqr(center!!) > radiusSq -> false
-        request.hasTag() && request.tag !in entity.entityTags() -> false
-        else -> true
-    }
+    private fun matches(entity: Entity): Boolean =
+        when {
+            types.isNotEmpty() && entity.type !in types -> false
+            box != null && !box.contains(entity.position()) -> false
+            radiusSq != null && entity.position().distanceToSqr(center!!) > radiusSq -> false
+            request.hasTag() && request.tag !in entity.entityTags() -> false
+            else -> true
+        }
 }

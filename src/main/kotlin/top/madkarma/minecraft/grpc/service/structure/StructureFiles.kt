@@ -1,5 +1,10 @@
 package top.madkarma.minecraft.grpc.service.structure
 
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
 import net.minecraft.core.registries.Registries
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtAccounter
@@ -10,11 +15,6 @@ import net.minecraft.util.datafix.DataFixTypes
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import top.madkarma.minecraft.grpc.rpc.toStatusException
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.Path
 
 // The game's template loader assumes this version for files saved before DataVersion existed.
 private const val UNVERSIONED_DATA_VERSION = 500
@@ -27,15 +27,16 @@ internal fun encodeStructure(template: StructureTemplate): ByteArray {
 
 /**
  * Reads a structure file like the game's template loader does, upgrading files from older game
- * versions. Safe off the server thread: the game runs the data fixer on worker threads too, and
- * the registries are frozen.
+ * versions. Safe off the server thread: the game runs the data fixer on worker threads too, and the
+ * registries are frozen.
  */
 internal fun MinecraftServer.decodeStructure(data: ByteArray): StructureTemplate {
-    val template = try {
-        readTemplate(data)
-    } catch (exception: Exception) {
-        invalidArgument("Invalid structure data: ${exception.message}")
-    }
+    val template =
+        try {
+            readTemplate(data)
+        } catch (exception: Exception) {
+            invalidArgument("Invalid structure data: ${exception.message}")
+        }
 
     val size = template.size
     if (size.x < 1 || size.y < 1 || size.z < 1) invalidArgument("The data is not a structure")

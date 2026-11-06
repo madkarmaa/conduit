@@ -1,6 +1,8 @@
 package top.madkarma.minecraft.grpc.service.server
 
 import io.grpc.Status
+import java.util.concurrent.CancellationException
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.future.await
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.minecraft.server.MinecraftServer
@@ -11,8 +13,6 @@ import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.aborted
 import top.madkarma.minecraft.grpc.rpc.failedPrecondition
 import top.madkarma.minecraft.grpc.rpc.notFound
-import java.util.concurrent.CancellationException
-import java.util.concurrent.atomic.AtomicInteger
 
 // A count, not a flag: /reload can start while another reload still runs, and the API holds one
 // extra slot from its check until its own reload ends, so two API calls cannot both start one.
@@ -71,7 +71,8 @@ private suspend fun reload(server: MinecraftServer, selection: List<String>) {
         throw exception
     } catch (exception: Exception) {
         throw Status.INTERNAL.withDescription("Datapack reload failed: $exception")
-            .withCause(exception).asException()
+            .withCause(exception)
+            .asException()
     }
 }
 
@@ -110,10 +111,11 @@ private fun checkCanDisable(pack: Pack) {
     }
 }
 
-private fun sourceOf(pack: Pack): Datapack.Source = when (pack.packSource) {
-    PackSource.BUILT_IN -> Datapack.Source.SOURCE_BUILT_IN
-    PackSource.FEATURE -> Datapack.Source.SOURCE_FEATURE
-    PackSource.WORLD -> Datapack.Source.SOURCE_WORLD
-    PackSource.SERVER -> Datapack.Source.SOURCE_SERVER
-    else -> Datapack.Source.SOURCE_OTHER
-}
+private fun sourceOf(pack: Pack): Datapack.Source =
+    when (pack.packSource) {
+        PackSource.BUILT_IN -> Datapack.Source.SOURCE_BUILT_IN
+        PackSource.FEATURE -> Datapack.Source.SOURCE_FEATURE
+        PackSource.WORLD -> Datapack.Source.SOURCE_WORLD
+        PackSource.SERVER -> Datapack.Source.SOURCE_SERVER
+        else -> Datapack.Source.SOURCE_OTHER
+    }

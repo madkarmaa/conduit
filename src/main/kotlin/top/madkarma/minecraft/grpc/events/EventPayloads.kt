@@ -1,5 +1,6 @@
 package top.madkarma.minecraft.grpc.events
 
+import kotlin.jvm.optionals.getOrNull
 import net.minecraft.core.BlockPos
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerLevel
@@ -15,7 +16,6 @@ import top.madkarma.minecraft.grpc.game.rotationOf
 import top.madkarma.minecraft.grpc.game.toProto
 import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.service.server.performance
-import kotlin.jvm.optionals.getOrNull
 
 internal fun chatPayload(sender: ServerPlayer, message: String): ChatEvent = chatEvent {
     player = sender.gameProfile.name

@@ -3,15 +3,15 @@ package top.madkarma.minecraft.grpc.rpc
 import com.mojang.brigadier.exceptions.CommandSyntaxException
 import io.grpc.Status
 import io.grpc.StatusException
+import java.util.concurrent.CancellationException
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionException
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withTimeout
 import net.minecraft.util.thread.BlockableEventLoop
 import org.slf4j.LoggerFactory
-import java.util.concurrent.CancellationException
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CompletionException
-import kotlin.time.Duration.Companion.milliseconds
 
 private val LOGGER = LoggerFactory.getLogger("minecraft_grpc")
 
@@ -41,11 +41,13 @@ fun Throwable.toStatusException(): StatusException {
             .asException()
     }
 
-    val status = when (cause) {
-        is CommandSyntaxException, is IllegalArgumentException -> Status.INVALID_ARGUMENT
-        is IllegalStateException -> Status.FAILED_PRECONDITION
-        else -> null
-    }
+    val status =
+        when (cause) {
+            is CommandSyntaxException,
+            is IllegalArgumentException -> Status.INVALID_ARGUMENT
+            is IllegalStateException -> Status.FAILED_PRECONDITION
+            else -> null
+        }
 
     if (status != null) return status.withDescription(cause.message).withCause(cause).asException()
 

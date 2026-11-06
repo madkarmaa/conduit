@@ -1,5 +1,6 @@
 package top.madkarma.minecraft.grpc.service.player
 
+import java.util.*
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.TagParser
 import net.minecraft.server.MinecraftServer
@@ -10,15 +11,15 @@ import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.failedPrecondition
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import top.madkarma.minecraft.grpc.service.entity.saveEntity
-import java.util.*
 
 internal fun MinecraftServer.offlinePlayer(request: PlayerRef): OfflinePlayerInfo {
     val id = resolvePlayerId(request.player)
     return describePlayerData(id, currentPlayerData(id), ProblemReporter.DISCARDING)
 }
 
-internal fun MinecraftServer.offlinePlayerNbt(request: PlayerRef): Nbt =
-    nbt { snbt = currentPlayerData(resolvePlayerId(request.player)).toString() }
+internal fun MinecraftServer.offlinePlayerNbt(request: PlayerRef): Nbt = nbt {
+    snbt = currentPlayerData(resolvePlayerId(request.player)).toString()
+}
 
 internal fun MinecraftServer.mergeOfflinePlayerNbt(request: MergeOfflinePlayerNbtRequest) {
     val patch = TagParser.parseCompoundFully(request.snbt)

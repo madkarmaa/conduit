@@ -1,5 +1,8 @@
 package top.madkarma.minecraft.grpc.service.structure
 
+import kotlin.jvm.optionals.getOrNull
+import kotlin.math.max
+import kotlin.math.min
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.core.registries.BuiltInRegistries
@@ -9,12 +12,9 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import top.madkarma.minecraft.grpc.MinecraftGRPC
 import top.madkarma.minecraft.grpc.game.level
 import top.madkarma.minecraft.grpc.game.parseId
+import top.madkarma.minecraft.grpc.proto.BlockPos as ProtoBlockPos
 import top.madkarma.minecraft.grpc.proto.blockPos
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
-import kotlin.jvm.optionals.getOrNull
-import kotlin.math.max
-import kotlin.math.min
-import top.madkarma.minecraft.grpc.proto.BlockPos as ProtoBlockPos
 
 internal fun MinecraftServer.captureStructure(
     dimension: String,
@@ -45,7 +45,8 @@ internal fun checkVolume(volume: Long) {
     if (volume > limit) invalidArgument("Structure of $volume blocks exceeds the limit of $limit")
 }
 
-internal val Vec3i.volume: Long get() = x.toLong() * y * z
+internal val Vec3i.volume: Long
+    get() = x.toLong() * y * z
 
 internal fun Vec3i.toProto(): ProtoBlockPos = blockPos {
     x = this@toProto.x

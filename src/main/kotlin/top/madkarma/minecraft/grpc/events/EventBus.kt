@@ -1,5 +1,7 @@
 package top.madkarma.minecraft.grpc.events
 
+import java.util.*
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import net.minecraft.world.entity.player.Player
@@ -8,8 +10,6 @@ import top.madkarma.minecraft.grpc.game.parseId
 import top.madkarma.minecraft.grpc.proto.Event
 import top.madkarma.minecraft.grpc.proto.EventType
 import top.madkarma.minecraft.grpc.proto.SubscribeRequest
-import java.util.*
-import java.util.concurrent.CopyOnWriteArrayList
 
 class EventSubscription(request: SubscribeRequest) {
     val types: Set<EventType> =
@@ -35,7 +35,9 @@ class EventSubscription(request: SubscribeRequest) {
     val channel = Channel<Event>(capacity = 4096, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
     fun wantsPlayer(player: Player): Boolean {
-        return players.isEmpty() || player.stringUUID in players || player.gameProfile.name.lowercase() in players
+        return players.isEmpty() ||
+            player.stringUUID in players ||
+            player.gameProfile.name.lowercase() in players
     }
 
     fun wantsEntityType(type: String): Boolean {
@@ -52,15 +54,17 @@ private val SUBSCRIBABLE: Set<EventType> =
     EventType.entries.toSet() - EventType.EVENT_TYPE_UNSPECIFIED - EventType.UNRECOGNIZED
 
 // High-volume types have to be requested explicitly.
-private val DEFAULT_TYPES: Set<EventType> = SUBSCRIBABLE - setOf(
-    EventType.EVENT_TYPE_SERVER_TICK,
-    EventType.EVENT_TYPE_PLAYER_MOVE,
-    EventType.EVENT_TYPE_ENTITY_SPAWN,
-    EventType.EVENT_TYPE_ENTITY_REMOVE,
-    EventType.EVENT_TYPE_CHUNK_LOAD,
-    EventType.EVENT_TYPE_CHUNK_UNLOAD,
-    EventType.EVENT_TYPE_INVENTORY_CHANGE,
-)
+private val DEFAULT_TYPES: Set<EventType> =
+    SUBSCRIBABLE -
+        setOf(
+            EventType.EVENT_TYPE_SERVER_TICK,
+            EventType.EVENT_TYPE_PLAYER_MOVE,
+            EventType.EVENT_TYPE_ENTITY_SPAWN,
+            EventType.EVENT_TYPE_ENTITY_REMOVE,
+            EventType.EVENT_TYPE_CHUNK_LOAD,
+            EventType.EVENT_TYPE_CHUNK_UNLOAD,
+            EventType.EVENT_TYPE_INVENTORY_CHANGE,
+        )
 
 // Item entities and experience orbs come and go constantly, and player events already cover
 // players, so these only show up in entity events when a subscription lists them.
@@ -81,8 +85,9 @@ object EventBus {
 
     fun wants(type: EventType): Boolean = subscriptions.any { type in it.types }
 
-    fun subscribers(type: EventType): List<EventSubscription> =
-        subscriptions.filter { type in it.types }
+    fun subscribers(type: EventType): List<EventSubscription> = subscriptions.filter {
+        type in it.types
+    }
 
     // Inline so that events nobody receives are never built. [accepts] applies per-subscription
     // filters, so one event can go to some subscriptions and not others.
@@ -101,8 +106,10 @@ object EventBus {
     }
 
     inline fun buildEvent(fill: Event.Builder.() -> Unit): Event {
-        val builder = Event.newBuilder().setTimestampMs(System.currentTimeMillis())
-            .setTick(GameServer.current?.tickCount ?: 0)
+        val builder =
+            Event.newBuilder()
+                .setTimestampMs(System.currentTimeMillis())
+                .setTick(GameServer.current?.tickCount ?: 0)
 
         builder.fill()
         return builder.build()

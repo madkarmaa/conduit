@@ -1,5 +1,6 @@
 package top.madkarma.minecraft.grpc.service.world
 
+import kotlin.math.roundToLong
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.border.WorldBorder
 import top.madkarma.minecraft.grpc.game.level
@@ -8,7 +9,6 @@ import top.madkarma.minecraft.grpc.proto.SetWorldBorderRequest
 import top.madkarma.minecraft.grpc.proto.WorldBorderInfo
 import top.madkarma.minecraft.grpc.proto.worldBorderInfo
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
-import kotlin.math.roundToLong
 
 private val CENTER_RANGE = -WorldBorder.MAX_CENTER_COORDINATE..WorldBorder.MAX_CENTER_COORDINATE
 private val SIZE_RANGE = 1.0..WorldBorder.MAX_SIZE

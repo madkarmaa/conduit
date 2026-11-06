@@ -11,8 +11,8 @@ import top.madkarma.minecraft.grpc.proto.ItemCraftEvent
 import top.madkarma.minecraft.grpc.proto.itemCraftEvent
 
 /**
- * Publishes EVENT_TYPE_ITEM_CRAFT and EVENT_TYPE_ITEM_SMELT. Shift-clicking a result slot takes
- * one batch after another within a single click, so batches are added up until the click ends.
+ * Publishes EVENT_TYPE_ITEM_CRAFT and EVENT_TYPE_ITEM_SMELT. Shift-clicking a result slot takes one
+ * batch after another within a single click, so batches are added up until the click ends.
  */
 object CraftedItems {
     private class Take(
@@ -22,9 +22,13 @@ object CraftedItems {
         val recipeId: String?,
     ) {
         fun continues(other: Take): Boolean =
-            type == other.type && player == other.player && recipeId == other.recipeId && ItemStack.isSameItemSameComponents(
-                result, other.result
-            )
+            type == other.type &&
+                player == other.player &&
+                recipeId == other.recipeId &&
+                ItemStack.isSameItemSameComponents(
+                    result,
+                    other.result,
+                )
     }
 
     // Only touched on the server thread.

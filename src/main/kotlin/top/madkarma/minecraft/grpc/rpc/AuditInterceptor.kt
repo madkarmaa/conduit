@@ -7,11 +7,11 @@ import io.grpc.ForwardingServerCall.SimpleForwardingServerCall
 import io.grpc.ForwardingServerCallListener.SimpleForwardingServerCallListener
 import io.grpc.health.v1.HealthGrpc
 import io.grpc.reflection.v1.ServerReflectionGrpc
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import top.madkarma.minecraft.grpc.proto.BatchRequest
 import top.madkarma.minecraft.grpc.proto.EventServiceGrpc
 import top.madkarma.minecraft.grpc.proto.ImportStructureRequest
-import java.util.concurrent.TimeUnit
 
 private val AUDIT_LOGGER = LoggerFactory.getLogger("minecraft_grpc/audit")
 
@@ -55,8 +55,7 @@ private class AuditedCall<ReqT, RespT>(call: ServerCall<ReqT, RespT>) :
     SimpleForwardingServerCall<ReqT, RespT>(call) {
     private val startNanos = System.nanoTime()
 
-    @Volatile
-    var request: Any? = null
+    @Volatile var request: Any? = null
 
     override fun close(status: Status, trailers: Metadata) {
         super.close(status, trailers)

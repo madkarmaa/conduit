@@ -1,6 +1,8 @@
 package top.madkarma.minecraft.grpc.service.structure
 
 import com.google.protobuf.ByteString
+import java.io.ByteArrayOutputStream
+import kotlin.math.min
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import top.madkarma.minecraft.grpc.MinecraftGRPC
@@ -8,8 +10,6 @@ import top.madkarma.minecraft.grpc.game.GameServer
 import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import top.madkarma.minecraft.grpc.rpc.runInWorkerThread
-import java.io.ByteArrayOutputStream
-import kotlin.math.min
 
 // Well below gRPC's default 4 MiB message limit, so large files stream in several pieces.
 private const val PIECE_BYTES = 1024 * 1024

@@ -52,10 +52,11 @@ private fun MinecraftServer.runOperation(operation: Operation): OperationResult 
 }
 
 private fun MinecraftServer.applyOperation(operation: Operation, result: OperationResult.Builder) {
-    val applied = applyWorldOperation(operation, result) ||
-        applyEntityOperation(operation, result) ||
-        applyPlayerOperation(operation, result) ||
-        applyServerOperation(operation, result)
+    val applied =
+        applyWorldOperation(operation, result) ||
+            applyEntityOperation(operation, result) ||
+            applyPlayerOperation(operation, result) ||
+            applyServerOperation(operation, result)
 
     if (!applied) invalidArgument("Operation is not set or not supported by this server")
 }

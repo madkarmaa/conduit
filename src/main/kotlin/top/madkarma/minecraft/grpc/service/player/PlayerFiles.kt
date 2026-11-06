@@ -1,5 +1,9 @@
 package top.madkarma.minecraft.grpc.service.player
 
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.*
+import kotlin.jvm.optionals.getOrNull
 import net.minecraft.core.UUIDUtil
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtAccounter
@@ -13,10 +17,6 @@ import net.minecraft.world.level.storage.LevelResource
 import top.madkarma.minecraft.grpc.rpc.failedPrecondition
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import top.madkarma.minecraft.grpc.rpc.notFound
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.*
-import kotlin.jvm.optionals.getOrNull
 
 // Saved player data is read and written on the server thread, each call within one
 // GameServer.run block. Logins load this data on the server thread too, so a login never reads a
@@ -32,8 +32,14 @@ private fun MinecraftServer.dataFile(id: UUID): Path = dataDirectory().resolve("
 internal fun MinecraftServer.resolvePlayerId(ref: String): UUID {
     if (ref.isBlank()) invalidArgument("A player name or UUID is required")
 
-    runCatching { UUID.fromString(ref) }.getOrNull()?.let { return it }
-    playerList.getPlayerByName(ref)?.let { return it.uuid }
+    runCatching { UUID.fromString(ref) }
+        .getOrNull()
+        ?.let {
+            return it
+        }
+    playerList.getPlayerByName(ref)?.let {
+        return it.uuid
+    }
 
     // The name cache's own lookup by name asks the Mojang API on a miss, which must not block the
     // server thread, so the cached names of the known players are compared instead.
@@ -74,10 +80,11 @@ internal fun MinecraftServer.requireOffline(id: UUID) {
 
 // A joining player's data is loaded before they are in the player list, and their first save
 // would overwrite any edit made in between.
-private fun MinecraftServer.isJoining(id: UUID): Boolean = connection.connections.any {
-    val listener = it.packetListener as? ServerConfigurationPacketListenerImpl
-    listener?.owner?.id == id
-}
+private fun MinecraftServer.isJoining(id: UUID): Boolean =
+    connection.connections.any {
+        val listener = it.packetListener as? ServerConfigurationPacketListenerImpl
+        listener?.owner?.id == id
+    }
 
 /** Reads saved data like the game does at login, but fails instead of using the backup. */
 internal fun MinecraftServer.readPlayerData(id: UUID): CompoundTag {

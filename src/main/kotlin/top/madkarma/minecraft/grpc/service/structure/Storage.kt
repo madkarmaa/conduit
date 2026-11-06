@@ -1,5 +1,7 @@
 package top.madkarma.minecraft.grpc.service.structure
 
+import java.nio.file.Path
+import kotlin.jvm.optionals.getOrNull
 import net.minecraft.IdentifierException
 import net.minecraft.resources.Identifier
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager
@@ -9,8 +11,6 @@ import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import top.madkarma.minecraft.grpc.rpc.notFound
 import top.madkarma.minecraft.grpc.rpc.runInWorkerThread
-import java.nio.file.Path
-import kotlin.jvm.optionals.getOrNull
 
 internal suspend fun saveStructure(request: SaveStructureRequest) {
     val id = parseId(request.id)
@@ -38,8 +38,8 @@ internal suspend fun placeStoredStructure(request: PlaceStructureRequest): Impor
     checkPlacement(request.placement)
 
     val manager = templateManager()
-    val template = runInWorkerThread { manager.get(id).getOrNull() }
-        ?: notFound("Unknown structure: $id")
+    val template =
+        runInWorkerThread { manager.get(id).getOrNull() } ?: notFound("Unknown structure: $id")
 
     return GameServer.run { it.placeStructure(template, request.placement) }
 }
@@ -57,9 +57,11 @@ internal suspend fun listStructures(): StructureList {
 private fun templateManager(): StructureTemplateManager =
     GameServer.require().structureTemplateManager
 
-private fun worldStructurePath(manager: StructureTemplateManager, id: Identifier): Path = try {
-    manager.worldTemplates()
-        .createAndValidatePathToStructure(id, StructureTemplateManager.WORLD_STRUCTURE_LISTER)
-} catch (exception: IdentifierException) {
-    invalidArgument("Invalid structure id: ${exception.message}")
-}
+private fun worldStructurePath(manager: StructureTemplateManager, id: Identifier): Path =
+    try {
+        manager
+            .worldTemplates()
+            .createAndValidatePathToStructure(id, StructureTemplateManager.WORLD_STRUCTURE_LISTER)
+    } catch (exception: IdentifierException) {
+        invalidArgument("Invalid structure id: ${exception.message}")
+    }

@@ -27,9 +27,11 @@ internal fun MinecraftServer.changeHealth(request: SetHealthRequest) {
 internal fun MinecraftServer.damage(request: DamageRequest) {
     val entity = entity(request.uuid)
     val typeId = request.damageType.ifBlank { "minecraft:generic" }
-    val type = registryAccess().lookupOrThrow(Registries.DAMAGE_TYPE)
-        .get(ResourceKey.create(Registries.DAMAGE_TYPE, parseId(typeId)))
-        .orElseGet { invalidArgument("Unknown damage type: $typeId") }
+    val type =
+        registryAccess()
+            .lookupOrThrow(Registries.DAMAGE_TYPE)
+            .get(ResourceKey.create(Registries.DAMAGE_TYPE, parseId(typeId)))
+            .orElseGet { invalidArgument("Unknown damage type: $typeId") }
     val attacker = if (request.hasAttacker()) entity(request.attacker) else null
 
     entity.hurtServer(entity.level() as ServerLevel, DamageSource(type, attacker), request.amount)
@@ -41,18 +43,20 @@ internal fun MinecraftServer.effectsOf(request: EntityRef): EffectList = effectL
 
 internal fun MinecraftServer.addEffect(request: AddEffectRequest) {
     val effect = request.effect
-    val holder = BuiltInRegistries.MOB_EFFECT.get(parseId(effect.id)).orElseGet {
-        invalidArgument("Unknown effect: ${effect.id}")
-    }
+    val holder =
+        BuiltInRegistries.MOB_EFFECT.get(parseId(effect.id)).orElseGet {
+            invalidArgument("Unknown effect: ${effect.id}")
+        }
     val duration = if (effect.duration == 0) DEFAULT_EFFECT_TICKS else effect.duration
-    val instance = MobEffectInstance(
-        holder,
-        duration,
-        effect.amplifier,
-        effect.ambient,
-        effect.visible,
-        effect.showIcon,
-    )
+    val instance =
+        MobEffectInstance(
+            holder,
+            duration,
+            effect.amplifier,
+            effect.ambient,
+            effect.visible,
+            effect.showIcon,
+        )
 
     living(request.uuid).addEffect(instance)
 }
@@ -65,8 +69,10 @@ internal fun MinecraftServer.removeEffect(request: RemoveEffectRequest) {
         return
     }
 
-    val holder = BuiltInRegistries.MOB_EFFECT.get(parseId(request.effect))
-        .orElseGet { invalidArgument("Unknown effect: ${request.effect}") }
+    val holder =
+        BuiltInRegistries.MOB_EFFECT.get(parseId(request.effect)).orElseGet {
+            invalidArgument("Unknown effect: ${request.effect}")
+        }
 
     entity.removeEffect(holder)
 }
@@ -88,11 +94,14 @@ internal fun MinecraftServer.attributesOf(uuid: String): AttributeList {
 }
 
 internal fun MinecraftServer.changeAttributeBase(request: SetAttributeBaseRequest) {
-    val holder = BuiltInRegistries.ATTRIBUTE.get(parseId(request.attribute))
-        .orElseGet { invalidArgument("Unknown attribute: ${request.attribute}") }
+    val holder =
+        BuiltInRegistries.ATTRIBUTE.get(parseId(request.attribute)).orElseGet {
+            invalidArgument("Unknown attribute: ${request.attribute}")
+        }
 
-    val instance = living(request.uuid).getAttribute(holder)
-        ?: failedPrecondition("Entity has no attribute ${request.attribute}")
+    val instance =
+        living(request.uuid).getAttribute(holder)
+            ?: failedPrecondition("Entity has no attribute ${request.attribute}")
 
     instance.baseValue = request.base
 }

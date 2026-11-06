@@ -1,5 +1,6 @@
 package top.madkarma.minecraft.grpc.game
 
+import java.util.*
 import net.minecraft.commands.CommandSource
 import net.minecraft.commands.CommandSourceStack
 import net.minecraft.network.chat.Component
@@ -13,11 +14,9 @@ import top.madkarma.minecraft.grpc.rpc.call
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import top.madkarma.minecraft.grpc.rpc.notFound
 import top.madkarma.minecraft.grpc.rpc.unavailable
-import java.util.*
 
 object GameServer {
-    @Volatile
-    var current: MinecraftServer? = null
+    @Volatile var current: MinecraftServer? = null
 
     fun require(): MinecraftServer =
         current ?: unavailable("No Minecraft server is running (open a world first)")
@@ -43,7 +42,9 @@ fun MinecraftServer.entity(uuid: String): Entity {
         runCatching { UUID.fromString(uuid) }.getOrNull() ?: invalidArgument("Invalid UUID: $uuid")
 
     for (level in allLevels) {
-        level.getEntity(id)?.let { return it }
+        level.getEntity(id)?.let {
+            return it
+        }
     }
 
     notFound("Entity not found: $uuid")
@@ -82,10 +83,11 @@ fun MinecraftServer.runCommand(
     val capture = CapturingSource()
     var success = false
     var result = 0
-    val source = base.withSource(capture).withCallback { ok, value ->
-        success = ok
-        result = value
-    }
+    val source =
+        base.withSource(capture).withCallback { ok, value ->
+            success = ok
+            result = value
+        }
 
     commands.performPrefixedCommand(source, command)
     return CommandResult(success, result, capture.output.toList())

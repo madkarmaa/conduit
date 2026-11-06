@@ -1,5 +1,7 @@
 package top.madkarma.minecraft.grpc.service.player
 
+import java.util.*
+import kotlin.jvm.optionals.getOrNull
 import net.minecraft.core.HolderLookup
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.server.MinecraftServer
@@ -24,8 +26,6 @@ import top.madkarma.minecraft.grpc.game.toProto
 import top.madkarma.minecraft.grpc.proto.OfflinePlayerInfo
 import top.madkarma.minecraft.grpc.proto.offlinePlayerInfo
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
-import java.util.*
-import kotlin.jvm.optionals.getOrNull
 
 // Saved player data is read with the same keys and codecs the game loads players with.
 
@@ -47,9 +47,10 @@ internal fun MinecraftServer.describePlayerData(
     val effects =
         input.read("active_effects", MobEffectInstance.CODEC.listOf()).getOrNull().orEmpty()
 
-    val enderChest = PlayerEnderChestContainer().apply {
-        fromSlots(input.listOrEmpty("EnderItems", ItemStackWithSlot.CODEC))
-    }
+    val enderChest =
+        PlayerEnderChestContainer().apply {
+            fromSlots(input.listOrEmpty("EnderItems", ItemStackWithSlot.CODEC))
+        }
 
     return offlinePlayerInfo {
         uuid = id.toString()

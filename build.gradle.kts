@@ -6,6 +6,7 @@ plugins {
     `maven-publish`
     id("org.jetbrains.kotlin.jvm") version "2.4.21"
     id("com.google.protobuf") version "0.10.1"
+    id("com.diffplug.spotless") version "8.11.0"
 }
 
 repositories {
@@ -21,15 +22,16 @@ repositories {
 val bundled: Configuration = configurations.create("bundled")
 
 // Already provided at runtime by Minecraft or fabric-language-kotlin.
-val providedGroups = setOf(
-    "com.google.guava",
-    "com.google.code.gson",
-    "org.jspecify",
-    "org.slf4j",
-    "org.jetbrains",
-    "org.jetbrains.kotlin",
-    "org.jetbrains.kotlinx",
-)
+val providedGroups =
+    setOf(
+        "com.google.guava",
+        "com.google.code.gson",
+        "org.jspecify",
+        "org.slf4j",
+        "org.jetbrains",
+        "org.jetbrains.kotlin",
+        "org.jetbrains.kotlinx",
+    )
 
 configurations.implementation { extendsFrom(bundled) }
 
@@ -69,7 +71,8 @@ dependencies {
 
     // Loom's include configuration is not transitive, so every resolved module is listed
     // explicitly.
-    bundled.resolvedConfiguration.resolvedArtifacts.map { it.moduleVersion.id }
+    bundled.resolvedConfiguration.resolvedArtifacts
+        .map { it.moduleVersion.id }
         .filter { it.group !in providedGroups }
         .forEach { include("${it.group}:${it.name}:${it.version}") }
 }
@@ -97,11 +100,12 @@ val minecraftVersion = providers.gradleProperty("minecraft_version").get()
 val loaderVersion = providers.gradleProperty("loader_version").get()
 
 tasks.processResources {
-    val properties = mapOf(
-        "version" to version,
-        "minecraft_version" to minecraftVersion,
-        "loader_version" to loaderVersion,
-    )
+    val properties =
+        mapOf(
+            "version" to version,
+            "minecraft_version" to minecraftVersion,
+            "loader_version" to loaderVersion,
+        )
     inputs.properties(properties)
 
     filesMatching("fabric.mod.json") {
@@ -132,6 +136,46 @@ java {
 
     sourceCompatibility = JavaVersion.VERSION_25
     targetCompatibility = JavaVersion.VERSION_25
+}
+
+spotless {
+    java {
+        target("**/*.java")
+        targetExclude("**/build/**")
+
+        googleJavaFormat().aosp()
+
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+
+    kotlin {
+        target("**/*.kt")
+        targetExclude("**/build/**")
+
+        ktfmt().configure {
+            it.setMaxWidth(100)
+            it.setBlockIndent(4)
+            it.setContinuationIndent(4)
+        }
+
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+
+    kotlinGradle {
+        target("**/*.gradle.kts")
+        targetExclude("**/build/**")
+
+        ktfmt().configure {
+            it.setMaxWidth(100)
+            it.setBlockIndent(4)
+            it.setContinuationIndent(4)
+        }
+
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
 }
 
 tasks.jar {

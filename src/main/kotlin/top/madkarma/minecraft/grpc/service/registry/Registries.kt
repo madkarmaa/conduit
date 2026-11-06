@@ -1,5 +1,6 @@
 package top.madkarma.minecraft.grpc.service.registry
 
+import kotlin.jvm.optionals.getOrNull
 import net.minecraft.core.HolderLookup
 import net.minecraft.core.Registry
 import net.minecraft.resources.Identifier
@@ -10,7 +11,6 @@ import top.madkarma.minecraft.grpc.game.parseId
 import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import top.madkarma.minecraft.grpc.rpc.notFound
-import kotlin.jvm.optionals.getOrNull
 
 private const val DEFAULT_PAGE_SIZE = 1000
 private const val MAX_PAGE_SIZE = 10000
@@ -28,8 +28,9 @@ internal fun <T> List<T>.page(offset: Int, limit: Int): List<T> {
 }
 
 internal fun MinecraftServer.describeRegistries(): RegistryList {
-    val lookups = registryAccess().listRegistries().toList() + reloadableRegistries().lookup()
-        .listRegistries().toList()
+    val lookups =
+        registryAccess().listRegistries().toList() +
+            reloadableRegistries().lookup().listRegistries().toList()
 
     val infos = lookups.map { lookup ->
         registryInfo {
@@ -44,11 +45,13 @@ internal fun MinecraftServer.describeRegistries(): RegistryList {
 internal fun MinecraftServer.readRegistryEntries(
     request: ListRegistryEntriesRequest,
 ): RegistryEntryList {
-    val ids = memberIds(request.registry, request.tag).filter {
-        it.contains(
-            request.filter, ignoreCase = true
-        )
-    }
+    val ids =
+        memberIds(request.registry, request.tag).filter {
+            it.contains(
+                request.filter,
+                ignoreCase = true,
+            )
+        }
 
     return registryEntryList {
         total = ids.size
@@ -57,12 +60,13 @@ internal fun MinecraftServer.readRegistryEntries(
 }
 
 internal fun MinecraftServer.readTags(request: ListTagsRequest): TagList {
-    val tags = taggedRegistry(request.registry).getTags().map { named ->
-        tag {
-            id = named.key().location().toString()
-            entries += named.map { it.registeredName }.sorted()
+    val tags =
+        taggedRegistry(request.registry).getTags().map { named ->
+            tag {
+                id = named.key().location().toString()
+                entries += named.map { it.registeredName }.sorted()
+            }
         }
-    }
 
     return tagList { this.tags += tags.toList().sortedBy { it.id } }
 }
@@ -86,14 +90,17 @@ private fun registryKey(id: String): ResourceKey<Registry<Any>> =
 // Loot tables, predicates and item modifiers are only in the reloadable registries.
 private fun MinecraftServer.anyRegistry(id: String): HolderLookup.RegistryLookup<Any> {
     val key = registryKey(id)
-    return registryAccess().lookup(key).getOrNull() ?: reloadableRegistries().lookup().lookup(key)
-        .getOrNull() ?: notFound("Unknown registry: $id")
+    return registryAccess().lookup(key).getOrNull()
+        ?: reloadableRegistries().lookup().lookup(key).getOrNull()
+        ?: notFound("Unknown registry: $id")
 }
 
 // The reloadable registries are loaded without tags.
 private fun MinecraftServer.taggedRegistry(id: String): Registry<Any> {
     val key = registryKey(id)
-    registryAccess().lookup(key).getOrNull()?.let { return it }
+    registryAccess().lookup(key).getOrNull()?.let {
+        return it
+    }
 
     if (reloadableRegistries().lookup().lookup(key).isPresent) {
         notFound("Registry $id has no tags")

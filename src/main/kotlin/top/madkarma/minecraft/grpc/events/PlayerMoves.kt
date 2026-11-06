@@ -1,5 +1,8 @@
 package top.madkarma.minecraft.grpc.events
 
+import java.util.*
+import kotlin.math.abs
+import kotlin.math.max
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.resources.ResourceKey
@@ -9,9 +12,6 @@ import net.minecraft.util.Mth
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.Vec3
 import top.madkarma.minecraft.grpc.proto.EventType
-import java.util.*
-import kotlin.math.abs
-import kotlin.math.max
 
 data class PlayerMove(
     val dimension: ResourceKey<Level>,
@@ -56,9 +56,14 @@ object PlayerMoves {
     }
 
     private fun publishMove(player: ServerPlayer, subscribers: List<EventSubscription>, tick: Int) {
-        val move = PlayerMove(
-            player.level().dimension(), player.position(), player.yRot, player.xRot, tick
-        )
+        val move =
+            PlayerMove(
+                player.level().dimension(),
+                player.position(),
+                player.yRot,
+                player.xRot,
+                tick,
+            )
 
         val event by lazy {
             EventBus.buildEvent {
@@ -81,11 +86,13 @@ object PlayerMoves {
         if (move.dimension != lastSent.dimension) return true
         if (move.position.distanceTo(lastSent.position) >= moveMinDistance) return true
 
-        val turned = max(
-            Mth.degreesDifferenceAbs(lastSent.yaw, move.yaw),
-            abs(move.pitch - lastSent.pitch),
-        )
+        val turned =
+            max(
+                Mth.degreesDifferenceAbs(lastSent.yaw, move.yaw),
+                abs(move.pitch - lastSent.pitch),
+            )
 
-        return moveMinRotation > 0 && turned >= moveMinRotation || moveHeartbeatTicks > 0 && move.tick - lastSent.tick >= moveHeartbeatTicks
+        return moveMinRotation > 0 && turned >= moveMinRotation ||
+            moveHeartbeatTicks > 0 && move.tick - lastSent.tick >= moveHeartbeatTicks
     }
 }

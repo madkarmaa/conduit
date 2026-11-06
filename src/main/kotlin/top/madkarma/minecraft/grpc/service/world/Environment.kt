@@ -26,12 +26,13 @@ internal fun MinecraftServer.timeOf(request: DimensionRef): TimeInfo {
 }
 
 internal fun MinecraftServer.changeTime(request: SetTimeRequest) {
-    val command = when (request.valueCase) {
-        SetTimeRequest.ValueCase.TIME -> "time set ${request.time}"
-        SetTimeRequest.ValueCase.ADD -> "time add ${request.add}"
-        SetTimeRequest.ValueCase.PRESET -> "time set ${request.preset}"
-        else -> invalidArgument("One of time, add or preset is required")
-    }
+    val command =
+        when (request.valueCase) {
+            SetTimeRequest.ValueCase.TIME -> "time set ${request.time}"
+            SetTimeRequest.ValueCase.ADD -> "time add ${request.add}"
+            SetTimeRequest.ValueCase.PRESET -> "time set ${request.preset}"
+            else -> invalidArgument("One of time, add or preset is required")
+        }
 
     if (request.dimension.isBlank()) {
         runCommandOrFail(command)
@@ -52,11 +53,12 @@ internal fun MinecraftServer.weatherOf(request: DimensionRef): WeatherInfo {
 }
 
 internal fun MinecraftServer.changeWeather(request: SetWeatherRequest) {
-    val name = when (request.weather) {
-        SetWeatherRequest.Weather.WEATHER_RAIN -> "rain"
-        SetWeatherRequest.Weather.WEATHER_THUNDER -> "thunder"
-        else -> "clear"
-    }
+    val name =
+        when (request.weather) {
+            SetWeatherRequest.Weather.WEATHER_RAIN -> "rain"
+            SetWeatherRequest.Weather.WEATHER_THUNDER -> "thunder"
+            else -> "clear"
+        }
 
     val duration = if (request.duration > 0) " ${request.duration}t" else ""
 
@@ -71,17 +73,21 @@ internal fun MinecraftServer.listGameRules(): GameRules {
 }
 
 internal fun MinecraftServer.changeGameRule(request: SetGameRuleRequest) {
-    val rule = gameRules.availableRules()
-        .filter { it.id() == request.name || it.identifier.toString() == request.name }.findFirst()
-        .orElse(null) ?: notFound("Unknown game rule: ${request.name}")
+    val rule =
+        gameRules
+            .availableRules()
+            .filter { it.id() == request.name || it.identifier.toString() == request.name }
+            .findFirst()
+            .orElse(null) ?: notFound("Unknown game rule: ${request.name}")
 
     setRule(rule, request.value)
 }
 
 private fun <T : Any> MinecraftServer.setRule(rule: GameRule<T>, value: String) {
-    val parsed = rule.deserialize(value).getOrThrow {
-        invalidArgument("Invalid value for ${rule.id()}: $it")
-    }
+    val parsed =
+        rule.deserialize(value).getOrThrow {
+            invalidArgument("Invalid value for ${rule.id()}: $it")
+        }
 
     gameRules.set(rule, parsed, this)
 }
@@ -91,12 +97,13 @@ internal fun MinecraftServer.spawnPoint(): SpawnPoint = overworld().respawnData.
 internal fun MinecraftServer.changeSpawnPoint(request: SpawnPoint) {
     level(request.dimension)
 
-    val data = LevelData.RespawnData.of(
-        dimensionKey(request.dimension),
-        request.pos.toMc(),
-        request.yaw,
-        request.pitch,
-    )
+    val data =
+        LevelData.RespawnData.of(
+            dimensionKey(request.dimension),
+            request.pos.toMc(),
+            request.yaw,
+            request.pitch,
+        )
 
     overworld().respawnData = data
 }

@@ -5,10 +5,10 @@ import io.grpc.Server
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
 import io.grpc.protobuf.services.HealthStatusManager
 import io.grpc.protobuf.services.ProtoReflectionServiceV1
-import org.slf4j.LoggerFactory
-import top.madkarma.minecraft.grpc.config.GrpcConfig
 import java.net.InetSocketAddress
 import java.util.concurrent.TimeUnit
+import org.slf4j.LoggerFactory
+import top.madkarma.minecraft.grpc.config.GrpcConfig
 
 object GrpcHost {
     private val LOGGER = LoggerFactory.getLogger("minecraft_grpc")
@@ -39,9 +39,11 @@ object GrpcHost {
 
         val health = HealthStatusManager()
 
-        val builder = NettyServerBuilder.forAddress(InetSocketAddress(config.host, config.port))
-            .intercept(AuthInterceptor(config)).addService(health.healthService)
-            .addService(ProtoReflectionServiceV1.newInstance())
+        val builder =
+            NettyServerBuilder.forAddress(InetSocketAddress(config.host, config.port))
+                .intercept(AuthInterceptor(config))
+                .addService(health.healthService)
+                .addService(ProtoReflectionServiceV1.newInstance())
 
         // Interceptors run in reverse order, so the audit log also sees calls rejected by auth.
         if (config.auditLog) builder.intercept(AuditInterceptor())

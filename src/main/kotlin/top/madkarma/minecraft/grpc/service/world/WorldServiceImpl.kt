@@ -7,8 +7,9 @@ import top.madkarma.minecraft.grpc.proto.*
 private val EMPTY: Empty = Empty.getDefaultInstance()
 
 class WorldServiceImpl : WorldServiceGrpcKt.WorldServiceCoroutineImplBase() {
-    override suspend fun listDimensions(request: Empty): DimensionList =
-        GameServer.run { it.describeDimensions() }
+    override suspend fun listDimensions(request: Empty): DimensionList = GameServer.run {
+        it.describeDimensions()
+    }
 
     override suspend fun getBlock(request: GetBlockRequest): BlockInfo = GameServer.run {
         it.readBlock(request)
@@ -23,19 +24,22 @@ class WorldServiceImpl : WorldServiceGrpcKt.WorldServiceCoroutineImplBase() {
         EMPTY
     }
 
-    override suspend fun setBlocks(request: SetBlocksRequest): SetBlocksResponse =
-        GameServer.run { it.writeBlocks(request) }
+    override suspend fun setBlocks(request: SetBlocksRequest): SetBlocksResponse = GameServer.run {
+        it.writeBlocks(request)
+    }
 
-    override suspend fun fill(request: FillRequest): SetBlocksResponse =
-        GameServer.run { it.fillRegion(request) }
+    override suspend fun fill(request: FillRequest): SetBlocksResponse = GameServer.run {
+        it.fillRegion(request)
+    }
 
     override suspend fun breakBlock(request: BreakBlockRequest): Empty = GameServer.run {
         it.breakBlock(request)
         EMPTY
     }
 
-    override suspend fun getBlockEntity(request: GetBlockRequest): Nbt =
-        GameServer.run { it.readBlockEntity(request) }
+    override suspend fun getBlockEntity(request: GetBlockRequest): Nbt = GameServer.run {
+        it.readBlockEntity(request)
+    }
 
     override suspend fun setBlockEntity(request: SetBlockEntityRequest): Empty = GameServer.run {
         it.mergeBlockEntity(request)
@@ -46,8 +50,9 @@ class WorldServiceImpl : WorldServiceGrpcKt.WorldServiceCoroutineImplBase() {
         it.biomeAt(request)
     }
 
-    override suspend fun getHeight(request: GetHeightRequest): GetHeightResponse =
-        GameServer.run { it.heightAt(request) }
+    override suspend fun getHeight(request: GetHeightRequest): GetHeightResponse = GameServer.run {
+        it.heightAt(request)
+    }
 
     override suspend fun getChunk(request: ChunkRequest): ChunkInfo = GameServer.run {
         it.describeChunk(request)
@@ -97,8 +102,9 @@ class WorldServiceImpl : WorldServiceGrpcKt.WorldServiceCoroutineImplBase() {
         EMPTY
     }
 
-    override suspend fun getWorldBorder(request: DimensionRef): WorldBorderInfo =
-        GameServer.run { it.worldBorderOf(request) }
+    override suspend fun getWorldBorder(request: DimensionRef): WorldBorderInfo = GameServer.run {
+        it.worldBorderOf(request)
+    }
 
     override suspend fun setWorldBorder(request: SetWorldBorderRequest): Empty = GameServer.run {
         it.changeWorldBorder(request)

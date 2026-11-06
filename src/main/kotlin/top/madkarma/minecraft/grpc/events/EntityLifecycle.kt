@@ -51,11 +51,14 @@ object EntityLifecycle {
 
     // The game stops tracking entities as soon as their chunk becomes inaccessible, and only sets
     // UNLOADED_TO_CHUNK later when it saves the chunk, so a missing reason means the same thing.
-    private fun removalReasonOf(entity: Entity): RemovalReason = when (entity.removalReason) {
-        Entity.RemovalReason.KILLED -> RemovalReason.REMOVAL_REASON_KILLED
-        Entity.RemovalReason.DISCARDED -> RemovalReason.REMOVAL_REASON_DISCARDED
-        Entity.RemovalReason.UNLOADED_TO_CHUNK, null -> RemovalReason.REMOVAL_REASON_UNLOADED_TO_CHUNK
-        Entity.RemovalReason.UNLOADED_WITH_PLAYER -> RemovalReason.REMOVAL_REASON_UNLOADED_WITH_PLAYER
-        Entity.RemovalReason.CHANGED_DIMENSION -> RemovalReason.REMOVAL_REASON_CHANGED_DIMENSION
-    }
+    private fun removalReasonOf(entity: Entity): RemovalReason =
+        when (entity.removalReason) {
+            Entity.RemovalReason.KILLED -> RemovalReason.REMOVAL_REASON_KILLED
+            Entity.RemovalReason.DISCARDED -> RemovalReason.REMOVAL_REASON_DISCARDED
+            Entity.RemovalReason.UNLOADED_TO_CHUNK,
+            null -> RemovalReason.REMOVAL_REASON_UNLOADED_TO_CHUNK
+            Entity.RemovalReason.UNLOADED_WITH_PLAYER ->
+                RemovalReason.REMOVAL_REASON_UNLOADED_WITH_PLAYER
+            Entity.RemovalReason.CHANGED_DIMENSION -> RemovalReason.REMOVAL_REASON_CHANGED_DIMENSION
+        }
 }

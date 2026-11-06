@@ -7,15 +7,18 @@ import top.madkarma.minecraft.grpc.proto.*
 private val EMPTY: Empty = Empty.getDefaultInstance()
 
 class ServerServiceImpl : ServerServiceGrpcKt.ServerServiceCoroutineImplBase() {
-    override suspend fun getInfo(request: Empty): ServerInfo =
-        GameServer.run { it.describeServer() }
+    override suspend fun getInfo(request: Empty): ServerInfo = GameServer.run {
+        it.describeServer()
+    }
 
     override suspend fun getPerformance(request: Empty): Performance = GameServer.run {
         it.performance()
     }
 
     override suspend fun executeCommand(request: ExecuteCommandRequest): ExecuteCommandResponse =
-        GameServer.run { it.executeCommand(request) }
+        GameServer.run {
+            it.executeCommand(request)
+        }
 
     override suspend fun broadcast(request: BroadcastRequest): Empty = GameServer.run {
         it.broadcast(request)
@@ -34,8 +37,9 @@ class ServerServiceImpl : ServerServiceGrpcKt.ServerServiceCoroutineImplBase() {
         return EMPTY
     }
 
-    override suspend fun listDatapacks(request: Empty): DatapackList =
-        GameServer.run { it.listDatapacks() }
+    override suspend fun listDatapacks(request: Empty): DatapackList = GameServer.run {
+        it.listDatapacks()
+    }
 
     override suspend fun setDatapackEnabled(request: SetDatapackEnabledRequest): DatapackList =
         changeDatapackEnabled(request)

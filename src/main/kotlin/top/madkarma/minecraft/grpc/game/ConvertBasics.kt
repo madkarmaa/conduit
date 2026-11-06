@@ -2,6 +2,7 @@ package top.madkarma.minecraft.grpc.game
 
 import com.google.gson.JsonParser
 import com.mojang.serialization.JsonOps
+import net.minecraft.core.BlockPos as McBlockPos
 import net.minecraft.core.HolderLookup
 import net.minecraft.core.registries.Registries
 import net.minecraft.network.chat.Component
@@ -10,16 +11,15 @@ import net.minecraft.resources.Identifier
 import net.minecraft.resources.ResourceKey
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.Vec2
+import net.minecraft.world.phys.Vec3 as McVec3
+import top.madkarma.minecraft.grpc.proto.BlockPos as ProtoBlockPos
+import top.madkarma.minecraft.grpc.proto.Rotation as ProtoRotation
 import top.madkarma.minecraft.grpc.proto.Text
+import top.madkarma.minecraft.grpc.proto.Vec3 as ProtoVec3
 import top.madkarma.minecraft.grpc.proto.blockPos
 import top.madkarma.minecraft.grpc.proto.rotation
 import top.madkarma.minecraft.grpc.proto.vec3
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
-import net.minecraft.core.BlockPos as McBlockPos
-import net.minecraft.world.phys.Vec3 as McVec3
-import top.madkarma.minecraft.grpc.proto.BlockPos as ProtoBlockPos
-import top.madkarma.minecraft.grpc.proto.Rotation as ProtoRotation
-import top.madkarma.minecraft.grpc.proto.Vec3 as ProtoVec3
 
 fun McVec3.toProto(): ProtoVec3 = vec3 {
     x = this@toProto.x
@@ -51,16 +51,19 @@ fun parseId(id: String): Identifier =
 fun dimensionKey(id: String): ResourceKey<Level> =
     ResourceKey.create(Registries.DIMENSION, parseId(id.ifBlank { "minecraft:overworld" }))
 
-fun Text.toComponent(registries: HolderLookup.Provider): Component = when (contentCase) {
-    Text.ContentCase.JSON -> ComponentSerialization.CODEC.parse(
-        registries.createSerializationContext(JsonOps.INSTANCE),
-        JsonParser.parseString(json),
-    ).getOrThrow { invalidArgument("Invalid text component: $it") }
+fun Text.toComponent(registries: HolderLookup.Provider): Component =
+    when (contentCase) {
+        Text.ContentCase.JSON ->
+            ComponentSerialization.CODEC.parse(
+                    registries.createSerializationContext(JsonOps.INSTANCE),
+                    JsonParser.parseString(json),
+                )
+                .getOrThrow { invalidArgument("Invalid text component: $it") }
 
-    Text.ContentCase.PLAIN -> Component.literal(plain)
+        Text.ContentCase.PLAIN -> Component.literal(plain)
 
-    else -> Component.empty()
-}
+        else -> Component.empty()
+    }
 
 inline fun <reified E : Enum<E>> enumByName(name: String, default: E, kind: String): E {
     if (name.isBlank()) return default

@@ -1,5 +1,6 @@
 package top.madkarma.minecraft.grpc.service.world
 
+import kotlin.jvm.optionals.getOrNull
 import net.minecraft.core.SectionPos
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.entity.Entity
@@ -10,7 +11,6 @@ import top.madkarma.minecraft.grpc.game.enumByName
 import top.madkarma.minecraft.grpc.game.level
 import top.madkarma.minecraft.grpc.game.toMc
 import top.madkarma.minecraft.grpc.proto.*
-import kotlin.jvm.optionals.getOrNull
 
 internal fun MinecraftServer.describeDimensions(): DimensionList = dimensionList {
     for (level in allLevels) {
@@ -26,8 +26,13 @@ internal fun MinecraftServer.describeDimensions(): DimensionList = dimensionList
 }
 
 internal fun MinecraftServer.biomeAt(request: GetBlockRequest): Biome = biome {
-    id = level(request.dimension).getBiome(request.pos.toMc()).unwrapKey().getOrNull()?.identifier()
-        ?.toString() ?: ""
+    id =
+        level(request.dimension)
+            .getBiome(request.pos.toMc())
+            .unwrapKey()
+            .getOrNull()
+            ?.identifier()
+            ?.toString() ?: ""
 }
 
 internal fun MinecraftServer.heightAt(request: GetHeightRequest): GetHeightResponse {
@@ -46,8 +51,9 @@ internal fun MinecraftServer.describeChunk(request: ChunkRequest): ChunkInfo {
     val level = level(request.dimension)
     val forced = level.forceLoadedChunks.contains(ChunkPos.pack(request.chunkX, request.chunkZ))
 
-    val chunk = level.chunkSource.getChunkNow(request.chunkX, request.chunkZ)
-        ?: return chunkInfo { this.forced = forced }
+    val chunk =
+        level.chunkSource.getChunkNow(request.chunkX, request.chunkZ)
+            ?: return chunkInfo { this.forced = forced }
 
     val minX = request.chunkX * 16.0
     val minZ = request.chunkZ * 16.0
