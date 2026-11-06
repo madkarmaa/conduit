@@ -2,10 +2,10 @@ const { execFileSync } = require("node:child_process");
 const { readFileSync, writeFileSync } = require("node:fs");
 
 const REGISTRY = "https://npm.madkarma.top";
-// In dependency order: the MCP server uses the client, and the bot both.
+// Listed in dependency order. The MCP server uses the client, and the bot uses both.
 const WORKSPACES = ["client", "mcp", "bot"];
 
-// npm version cannot read the workspace: protocol, so the versions are written here and bun
+// npm version cannot read the workspace: protocol, so this plugin writes the versions and bun
 // publishes the packages instead of @semantic-release/npm. Checking the login first stops a
 // release without a registry token before it commits and tags anything.
 exports.verifyConditions = (_, { cwd, env }) => {

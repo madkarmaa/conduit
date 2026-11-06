@@ -58,7 +58,7 @@ internal fun MinecraftServer.changeWorldBorder(request: SetWorldBorderRequest) {
     if (request.hasWarningTimeTicks()) border.warningTime = request.warningTimeTicks
 }
 
-// Everything is checked before the first change, so an invalid request changes nothing.
+// This checks everything before the first change, so an invalid request changes nothing.
 private fun validateWorldBorder(request: SetWorldBorderRequest) {
     if (request.hasCenterX()) requireInRange(request.centerX, CENTER_RANGE, "center_x")
     if (request.hasCenterZ()) requireInRange(request.centerZ, CENTER_RANGE, "center_z")

@@ -57,7 +57,8 @@ function start({ config, connection, mcp, agents }: Setup) {
     const agent = agents.full;
     const clients = connect(connection);
     const files = homeFiles(agent.files, config.files);
-    // The config's variables are expected, while the ones the copied config files read are optional.
+    // A variable that the config lists must be set. A variable that a copied config file reads is
+    // optional.
     const referenced = referencedVariables(files.values()).filter((name) => name in process.env);
     const variables = [...new Set([...config.env, ...referenced])];
 

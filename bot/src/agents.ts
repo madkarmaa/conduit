@@ -19,10 +19,10 @@ export interface Agent {
     readonly env: Readonly<Record<string, string>>;
     readonly image: PresetImage;
     // Login and config files in the host's home, copied to the same place in the agent's home for
-    // each run. Missing ones are skipped.
+    // each run. The bot skips missing ones.
     readonly files: readonly string[];
-    // Logins that the CLI keeps where they cannot be copied, exported on the host and imported in
-    // the container before each run.
+    // Logins that the CLI stores where the bot cannot copy them. The bot exports them on the host
+    // and imports them in the container before each run.
     readonly exportedLogins?: ExportedLogins;
 }
 
@@ -39,8 +39,8 @@ export interface AgentOptions {
     readonly args: readonly string[];
 }
 
-// The container is the real boundary. The flags only keep the agent from wasting turns on tools
-// that cannot work there, and keep each answer on stdout.
+// The container decides what the agent can reach. The flags only stop the agent from trying tools
+// that cannot work there, and make the CLI print nothing but the answer on stdout.
 const AGENTS: Record<AgentName, (options: AgentOptions) => Agent> = {
     claude: ({ model, effort, args }) => {
         const flags = [
@@ -117,7 +117,8 @@ const AGENTS: Record<AgentName, (options: AgentOptions) => Agent> = {
             image: presetImage("opencode", "@opencode/cli"),
             // The config defines custom providers, whose keys it reads from variables.
             files: [".config/opencode/opencode.json", ".config/opencode/opencode.jsonc"],
-            // OpenCode keeps its logins in a database with every session, which stays on the host.
+            // OpenCode stores its logins in the same database as every session. That database stays
+            // on the host, so the bot exports the logins instead.
             exportedLogins: {
                 export: ["opencode", "auth", "export"],
                 import: (file) => ["opencode", "auth", "import", file],

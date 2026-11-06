@@ -7,7 +7,7 @@ import type { StateError } from "../conversations.ts";
 import { errorMessage, log } from "../log.ts";
 import { CONTAINER_HOME } from "./container.ts";
 
-// Where exported logins are written, relative to the agent's home.
+// Where the bot writes exported logins, relative to the agent's home.
 const EXPORTED_LOGINS_FILE = "exported-logins.json";
 
 // Logins go into the agent's home for one run, and refreshed tokens come back to the host even if
@@ -95,7 +95,7 @@ const copyLogins = catchUnwindAsync(
 // Deletes the copies after a run, so no login stays behind in the agent's home. A CLI that
 // refreshed its token saved the new one in its copy. It goes back to the host only if the host file
 // did not change in the meantime, and only as valid JSON, so a broken or outdated copy never
-// replaces a working login. Returns the host files that were updated.
+// replaces a working login. Returns the host files it updated.
 const returnLogins = catchUnwindAsync(
     async (copies: readonly LoginCopy[]): Promise<string[]> => {
         const saved: string[] = [];

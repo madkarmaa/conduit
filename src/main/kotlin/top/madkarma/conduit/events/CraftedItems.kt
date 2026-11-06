@@ -12,7 +12,7 @@ import top.madkarma.conduit.proto.itemCraftEvent
 
 /**
  * Publishes EVENT_TYPE_ITEM_CRAFT and EVENT_TYPE_ITEM_SMELT. Shift-clicking a result slot takes one
- * batch after another within a single click, so batches are added up until the click ends.
+ * batch after another within a single click, so this adds up the batches until the click ends.
  */
 object CraftedItems {
     private class Take(

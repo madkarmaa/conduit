@@ -13,11 +13,12 @@ option java_package = "top.madkarma.conduit.proto";
 // /place template. Dimension fields default to "minecraft:overworld" when empty.
 //
 // Regions and templates larger than the configured maximum structure volume fail with
-// INVALID_ARGUMENT. A structure is placed in a single tick, so very large pastes cause a lag
-// spike. Unloaded target chunks are loaded (and generated if needed) for the placement.
+// INVALID_ARGUMENT. The server places a structure in a single tick, so very large pastes
+// cause a lag spike. It loads unloaded target chunks for the placement and generates them if
+// needed.
 service StructureService {
-    // Streams the structure file in pieces of at most 1 MiB. Entities are only captured from
-    // loaded chunks.
+    // Streams the structure file in pieces of at most 1 MiB. The export only captures
+    // entities in loaded chunks.
     rpc Export(ExportStructureRequest) returns (stream StructureData);
     // The first message carries the placement header, the following ones the structure file in
     // order, in pieces below the 4 MiB message limit. Files from older game versions are

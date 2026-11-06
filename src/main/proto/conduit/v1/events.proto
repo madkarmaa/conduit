@@ -62,7 +62,7 @@ message SubscribeRequest {
     double move_min_distance = 3;
     // Degrees of yaw or pitch turned. 0 means rotation alone does not send an event.
     float move_min_rotation = 4;
-    // Ticks passed, so that players standing still are reported too. 0 means no heartbeat.
+    // Ticks passed, so that the mod also reports players standing still. 0 means no heartbeat.
     int32 move_heartbeat_ticks = 5;
 
     // Only send events about these players, by name or UUID. Empty means all players.
@@ -193,7 +193,8 @@ message DimensionChangeEvent {
     string to = 4;
 }
 
-// A new entity was added to the world. Entities loaded with their chunk are not reported.
+// A new entity was added to the world. The mod does not report entities that load with their
+// chunk.
 message EntitySpawnEvent {
     EntityInfo entity = 1;
     // How a mob or other entity type was created, e.g. "natural", "breeding" or "command". Not set
@@ -236,13 +237,14 @@ message AdvancementEvent {
     // Title and frame are empty for advancements without a display, such as recipes.
     string title = 4;
     AdvancementFrame frame = 5;
-    // The advancement is announced in chat, unless the game rule for advancement messages is off.
+    // The game announces the advancement in chat, unless the game rule for advancement messages
+    // is off.
     bool announced = 6;
 }
 
-// A slot of a player's inventory changed. Inventories are compared once per tick, so several
-// changes to one slot within a tick are combined into one event, and a change that is undone
-// within the same tick is not reported.
+// A slot of a player's inventory changed. The mod compares inventories once per tick, so it
+// combines several changes to one slot within a tick into one event, and does not report a change
+// that is undone within the same tick.
 message InventoryChangeEvent {
     string player = 1;
     string player_uuid = 2;
@@ -264,8 +266,8 @@ message ItemEntityEvent {
     bool death = 5;
 }
 
-// A player took the result out of a crafting grid or a furnace, blast furnace or smoker. Taking
-// several batches with one shift-click is reported as one event with the total.
+// A player took the result out of a crafting grid or a furnace, blast furnace or smoker. The mod
+// reports several batches taken with one shift-click as one event with the total.
 message ItemCraftEvent {
     string player = 1;
     string player_uuid = 2;
@@ -277,7 +279,7 @@ message ItemCraftEvent {
     int32 count = 5;
 }
 
-// A player traded with a villager or another merchant. Every trade is reported on its own, also
+// A player traded with a villager or another merchant. The mod reports every trade on its own, also
 // when one shift-click trades several times.
 message TradeEvent {
     string player = 1;

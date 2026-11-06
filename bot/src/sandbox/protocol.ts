@@ -1,8 +1,8 @@
 // Messages between the bot and the supervisor in the agent's container, one JSON object per line on
-// the container's stdin and stdout. The agent's MCP connections travel through them, so the
-// container needs no network to reach the game.
+// the container's stdin and stdout. They also carry the agent's MCP connections, so the container
+// needs no network to reach the game.
 
-// Where the bot's built files are mounted in the container.
+// Where the container mounts the bot's built files.
 export const ASSETS_MOUNT = "/opt/conduit-bot";
 export const SUPERVISOR_PATH = `${ASSETS_MOUNT}/sandbox/supervisor.mjs`;
 export const RELAY_PATH = `${ASSETS_MOUNT}/sandbox/relay.mjs`;

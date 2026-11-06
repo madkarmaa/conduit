@@ -51,7 +51,7 @@ object Conduit : ModInitializer {
             StructureServiceImpl(),
         )
 
-        // Singleplayer worlds start and stop an integrated server each time they are opened.
+        // Singleplayer worlds start and stop an integrated server each time the player opens one.
         ServerLifecycleEvents.SERVER_STARTING.register { server ->
             GameServer.current = server
             startGrpc()

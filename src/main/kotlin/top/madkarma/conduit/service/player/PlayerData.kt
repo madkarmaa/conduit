@@ -122,8 +122,8 @@ internal fun writeInventory(
     }
     if (!equipment.isEmpty) output.store("equipment", EntityEquipment.CODEC, equipment)
 
-    // Without this check, an item that cannot be saved would be left out of the file without an
-    // error.
+    // Without this check, the game would leave an item it cannot save out of the file without
+    // an error.
     if (!problems.isEmpty) invalidArgument("Item cannot be saved: ${problems.report}")
 
     data.remove("equipment")

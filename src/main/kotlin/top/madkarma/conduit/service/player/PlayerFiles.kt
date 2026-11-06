@@ -78,8 +78,8 @@ internal fun MinecraftServer.requireOffline(id: UUID) {
     if (isJoining(id)) failedPrecondition("Player is joining, try again once they are online")
 }
 
-// A joining player's data is loaded before they are in the player list, and their first save
-// would overwrite any edit made in between.
+// The game loads a joining player's data before the player is in the player list, and their
+// first save would overwrite any edit made in between.
 private fun MinecraftServer.isJoining(id: UUID): Boolean =
     connection.connections.any {
         val listener = it.packetListener as? ServerConfigurationPacketListenerImpl

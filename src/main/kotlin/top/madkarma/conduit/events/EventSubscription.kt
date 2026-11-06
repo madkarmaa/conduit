@@ -76,7 +76,7 @@ private class SequencedEvent(val sequence: Long, val event: Event)
 private val SUBSCRIBABLE: Set<EventType> =
     EventType.entries.toSet() - EventType.EVENT_TYPE_UNSPECIFIED - EventType.UNRECOGNIZED
 
-// High-volume types have to be requested explicitly.
+// A subscription only gets the high-volume types when it names them.
 private val DEFAULT_TYPES: Set<EventType> =
     SUBSCRIBABLE -
         setOf(

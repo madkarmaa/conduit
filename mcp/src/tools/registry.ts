@@ -131,7 +131,7 @@ interface PageQuery {
     limit: number;
 }
 
-// Registries and tags come back whole, so they are filtered and paged here like the entries.
+// Registries and tags come back whole, so this filters and pages them like the entries.
 function page<Item extends { id: string }>(all: Item[], query: PageQuery) {
     const filter = query.filter.toLowerCase();
     const matching = all.filter((item) => item.id.toLowerCase().includes(filter));

@@ -59,7 +59,7 @@ export class Conversations {
         return join(this.stateDirectory, "conversations", key);
     }
 
-    // The marker sits next to the agent's working directory, out of its reach.
+    // The marker is next to the agent's working directory, where the agent cannot change it.
     private marker(key: string): string {
         return `${this.directory(key)}.started`;
     }

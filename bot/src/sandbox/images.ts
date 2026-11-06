@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { Err, Ok, type AsyncResult } from "results-ts";
 import packageJson from "../../package.json" with { type: "json" };
 
-// The agent image only needs Node.js, which also runs the supervisor and the relay, and the CLI.
+// The agent image needs only Node.js and the CLI. Node.js also runs the supervisor and the relay.
 // The slim image has no CA certificates, which CLIs that use the system's store need for HTTPS.
 const DOCKERFILE = `FROM node:24-bookworm-slim
 RUN apt-get update \\
@@ -17,7 +17,7 @@ export interface PresetImage {
     readonly npmPackage: string;
 }
 
-// Tagging images with the bot version rebuilds them, with the latest CLI, when the bot updates.
+// The tag includes the bot version, so a bot update builds new images with the latest CLI.
 export function presetImage(preset: string, npmPackage: string): PresetImage {
     return { name: `conduit-bot-${preset}:${packageJson.version}`, npmPackage };
 }

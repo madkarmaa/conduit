@@ -19,7 +19,8 @@ export interface Container {
     readonly offline: boolean;
     // Host directory mounted as the agent's home, where its CLI keeps the conversation.
     readonly home: string;
-    // Variables for the agent. Their values travel through docker's environment, not its arguments.
+    // Variables for the agent. The bot hands their values to docker through its environment, not
+    // its arguments, so they do not show up in the process list.
     readonly env: Readonly<Record<string, string>>;
     // The bot's built files, which include the supervisor and the relay.
     readonly assets: string;

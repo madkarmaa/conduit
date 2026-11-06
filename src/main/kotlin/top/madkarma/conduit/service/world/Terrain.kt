@@ -39,7 +39,7 @@ internal fun MinecraftServer.heightAt(request: GetHeightRequest): GetHeightRespo
     val type = enumByName(request.heightmap, Heightmap.Types.MOTION_BLOCKING, "heightmap")
     val level = level(request.dimension)
 
-    // Heightmaps of unloaded chunks read as the world bottom, so the chunk is loaded first.
+    // Heightmaps of unloaded chunks read as the world bottom, so this loads the chunk first.
     val chunkX = SectionPos.blockToSectionCoord(request.x)
     val chunkZ = SectionPos.blockToSectionCoord(request.z)
 

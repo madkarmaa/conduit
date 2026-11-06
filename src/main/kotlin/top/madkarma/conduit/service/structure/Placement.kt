@@ -74,9 +74,9 @@ private fun placeSettings(placement: StructurePlacement): StructurePlaceSettings
 }
 
 /**
- * Forcing a chunk keeps it loaded while the structure is placed, and getChunk loads it right away
- * instead of on a later tick. Only the forces added here are released, so chunks that were already
- * forced, e.g. with SetChunkForced, stay forced.
+ * Forcing a chunk keeps it loaded during the placement, and getChunk loads it right away instead of
+ * on a later tick. This only releases the forces it added, so chunks that were already forced, e.g.
+ * with SetChunkForced, stay forced.
  */
 private fun ServerLevel.withChunksForced(box: BoundingBox, placement: () -> Unit) {
     val chunks =

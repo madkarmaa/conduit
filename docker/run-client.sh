@@ -1,5 +1,5 @@
 #!/bin/bash
-# Vanilla client without the mod, so player-related server APIs can be tested against a real player.
+# Vanilla client without the mod, so the server has a real player to test the player APIs against.
 set -euo pipefail
 
 hmc=(java -jar /deployments/quarkus-run.jar)

@@ -9,7 +9,8 @@ on:
     create:
     delete:
     workflow_dispatch:
-    # The release commit and tag are pushed with GITHUB_TOKEN, which starts no push workflows.
+    # The release workflow pushes its commit and tag with GITHUB_TOKEN, which starts no push
+    # workflows, so this workflow also runs when a release finishes.
     workflow_run:
         workflows:
             - Release

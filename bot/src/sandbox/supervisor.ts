@@ -5,7 +5,7 @@ import { createServer, type Socket } from "node:net";
 import { createInterface } from "node:readline";
 import { SOCKET_PATH, type FromContainer, type ToContainer } from "./protocol.ts";
 
-// Only the end of stderr is kept for error reports, since agents can log a lot.
+// The supervisor keeps only the end of stderr for error reports, since agents can log a lot.
 const STDERR_LIMIT = 4000;
 
 const connections = new Map<number, Socket>();

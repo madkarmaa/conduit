@@ -15,7 +15,7 @@ plugins {
 // Libraries bundled into the mod jar via jar-in-jar, together with their transitive dependencies.
 val bundled: Configuration = configurations.create("bundled")
 
-// Already provided at runtime by Minecraft or fabric-language-kotlin.
+// Minecraft or fabric-language-kotlin already provides these at runtime.
 val providedGroups =
     setOf(
         "com.google.guava",
@@ -195,7 +195,7 @@ val installClientDependencies =
         commandLine(bun, "install", "--frozen-lockfile")
     }
 
-// The TypeScript client is generated from the mod's protos, so Gradle rebuilds it with the mod.
+// The TypeScript client's types come from the mod's protos, so Gradle rebuilds it with the mod.
 val buildClient =
     tasks.register<Exec>("buildClient") {
         dependsOn(installClientDependencies)

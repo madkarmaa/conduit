@@ -29,11 +29,11 @@ service PlayerService {
     rpc Kick(KickRequest) returns (google.protobuf.Empty);
     rpc SetOperator(SetOperatorRequest) returns (google.protobuf.Empty);
 
-    // Saved player data, also for players who are offline. A name is resolved through the
-    // server's cache of known players, or as an offline-mode UUID when the server is in offline
-    // mode. Reads of online players return their live data. Edits of online or joining players
-    // fail with FAILED_PRECONDITION. Edits take effect at the player's next login. A player
-    // without saved data is NOT_FOUND, and a corrupt data file is FAILED_PRECONDITION.
+    // Saved player data, also for players who are offline. The server resolves a name through
+    // its cache of known players, or as an offline-mode UUID when the server is in offline mode.
+    // Reads of online players return their live data. Edits of online or joining players fail
+    // with FAILED_PRECONDITION. Edits take effect at the player's next login. A player without
+    // saved data is NOT_FOUND, and a corrupt data file is FAILED_PRECONDITION.
     rpc GetOfflinePlayer(PlayerRef) returns (OfflinePlayerInfo);
     // The full saved data, updated to the current game version.
     rpc GetOfflinePlayerNbt(PlayerRef) returns (Nbt);
@@ -74,7 +74,7 @@ message InventorySlot {
 }
 
 // Player inventory slots: 0-8 hotbar, 9-35 main, 36-39 armor (feet, legs, chest, head), 40 offhand.
-// Only non-empty slots are listed.
+// Lists only the slots that are not empty.
 message Inventory {
     int32 size = 1;
     repeated InventorySlot slots = 2;
@@ -190,8 +190,8 @@ message MergeOfflinePlayerNbtRequest {
 }
 
 message PlayerStats {
-    // "<stat type>:<stat id>" to value, e.g. "minecraft:mined:minecraft:stone". Only non-zero
-    // statistics are listed.
+    // "<stat type>:<stat id>" to value, e.g. "minecraft:mined:minecraft:stone". Lists only the
+    // statistics that are not zero.
     map<string, int32> stats = 1;
 }
 

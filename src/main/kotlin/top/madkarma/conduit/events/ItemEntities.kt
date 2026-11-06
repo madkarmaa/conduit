@@ -27,7 +27,7 @@ object ItemEntities {
         }
     }
 
-    // Called from the player drop and death drop mixins, only when an item entity was created.
+    // The player drop and death drop mixins call this, only when they created an item entity.
     @JvmStatic
     fun onDropped(player: ServerPlayer, itemEntity: ItemEntity, death: Boolean) {
         EventBus.publish(EventType.EVENT_TYPE_ITEM_DROP, accepts = { it.wantsPlayer(player) }) {

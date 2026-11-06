@@ -25,7 +25,8 @@ service ServerService {
     // /datapack.
     rpc SetDatapackEnabled(SetDatapackEnabledRequest) returns (DatapackList);
     // Saves the world and zips it into the backup directory while the server keeps running.
-    // Autosave is paused during the backup. Fails with ABORTED while another backup is running.
+    // The server pauses autosave during the backup. Fails with ABORTED while another backup is
+    // running.
     rpc Backup(BackupRequest) returns (BackupResponse);
     rpc ListBackups(google.protobuf.Empty) returns (BackupList);
 }

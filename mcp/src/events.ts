@@ -63,7 +63,7 @@ export class EventFeed {
         };
     }
 
-    // Completes once a matching event is buffered, the stream failed or the deadline passed.
+    // Completes once the buffer holds a matching event, the stream failed or the deadline passed.
     private settle(query: EventQuery, deadline: number): AsyncResult<undefined, never> {
         return Ok(query).mapAsync(
             (value) =>

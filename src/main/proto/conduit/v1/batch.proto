@@ -15,12 +15,12 @@ option java_package = "top.madkarma.conduit.proto";
 // Runs many operations in one round trip.
 //
 // All operations of a batch run in order within the same server tick, so no other game logic
-// runs between them. A batch is not atomic. Nothing is rolled back, and the operations before a
-// failed one stay applied. Running in the same tick is the only guarantee.
+// runs between them. A batch is not atomic. The server rolls nothing back, and the operations
+// before a failed one stay applied. Running in the same tick is the only guarantee.
 service BatchService {
-    // Fails with INVALID_ARGUMENT for more than 10,000 operations. Failed operations are reported
-    // in their results, and the call itself still succeeds. The whole batch must finish within the
-    // 30 second game thread timeout.
+    // Fails with INVALID_ARGUMENT for more than 10,000 operations. A failed operation reports its
+    // error in its result, and the call itself still succeeds. The whole batch must finish within
+    // the 30 second game thread timeout.
     rpc Execute(BatchRequest) returns (BatchResponse);
 }
 
@@ -33,7 +33,7 @@ message BatchRequest {
 // One call of a WorldService, EntityService, PlayerService or ServerService RPC, with the same
 // request message, validation and limits as the RPC itself.
 message Operation {
-    // Field numbers are grouped by service: 1-99 world, 100-199 entity, 200-299 player and
+    // Field numbers group the operations by service: 1-99 world, 100-199 entity, 200-299 player and
     // 300-399 server.
     oneof operation {
         google.protobuf.Empty list_dimensions = 1;

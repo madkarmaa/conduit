@@ -9,7 +9,7 @@ option java_multiple_files = true;
 option java_package = "top.madkarma.conduit.proto";
 
 // Read-only game data: registries, tags, recipes and loot tables, including datapack content.
-// Lists are sorted by id, so paging with offset and limit is stable.
+// Lists are in id order, so paging with offset and limit is stable.
 service RegistryService {
     rpc ListRegistries(google.protobuf.Empty) returns (RegistryList);
     rpc ListRegistryEntries(ListRegistryEntriesRequest) returns (RegistryEntryList);

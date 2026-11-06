@@ -14,7 +14,7 @@ import top.madkarma.conduit.events.CraftedItems;
 
 /**
  * Shift-click reports each batch through onQuickCraft and then calls onTake with nothing left to
- * count. Other takes only call onTake. The taken stack is counted instead of removeCount, which is
+ * count. Other takes only call onTake. This counts the taken stack instead of removeCount, which is
  * too low after a right-click because the result container always hands out its whole stack.
  */
 @Mixin(ResultSlot.class)

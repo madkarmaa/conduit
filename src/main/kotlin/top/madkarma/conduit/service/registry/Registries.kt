@@ -95,7 +95,7 @@ private fun MinecraftServer.anyRegistry(id: String): HolderLookup.RegistryLookup
         ?: notFound("Unknown registry: $id")
 }
 
-// The reloadable registries are loaded without tags.
+// The game loads the reloadable registries without tags.
 private fun MinecraftServer.taggedRegistry(id: String): Registry<Any> {
     val key = registryKey(id)
     registryAccess().lookup(key).getOrNull()?.let {

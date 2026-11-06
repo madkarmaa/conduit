@@ -1,7 +1,7 @@
 const { readFileSync } = require("node:fs");
 
-// Minecraft release ids have two or three numbers, such as 26.3 or 1.21.11, so the id is used as it
-// is instead of being padded with a patch number.
+// Minecraft release ids have two or three numbers, such as 26.3 or 1.21.11, so the release name
+// uses the id as it is, without adding a patch number.
 const minecraftVersion = readFileSync(`${__dirname}/gradle.properties`, "utf8").match(
     /^minecraft_version=(.+)$/m,
 )?.[1];

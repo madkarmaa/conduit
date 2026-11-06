@@ -1,6 +1,7 @@
 import type { Reply } from "./tool.ts";
 
-// Responses carry every proto default, so empty values are dropped to keep model context small.
+// Responses carry every proto default, so compact drops empty values to keep the model's context
+// small.
 // Keys starting with "_" only name which proto3 optional fields are set.
 export function compact(value: unknown): unknown {
     if (Array.isArray(value)) return value.map(compact);

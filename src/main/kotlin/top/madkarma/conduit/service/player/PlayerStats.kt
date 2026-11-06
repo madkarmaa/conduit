@@ -31,7 +31,7 @@ private fun MinecraftServer.savedStats(id: UUID): StatsCounter {
     return ServerStatsCounter(this, file)
 }
 
-// Every stat that a counter holds a value for is registered in its type when the counter is read.
+// Reading a counter registers every stat it holds a value for in that stat's type.
 private fun <T : Any> collectStats(
     type: StatType<T>,
     counter: StatsCounter,

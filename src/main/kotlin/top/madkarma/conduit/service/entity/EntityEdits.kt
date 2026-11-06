@@ -56,7 +56,7 @@ internal fun MinecraftServer.teleportEntity(request: TeleportRequest): EntityInf
         failedPrecondition("Teleport was rejected")
     }
 
-    // Entities other than players are recreated when they change dimension.
+    // The game recreates entities other than players when they change dimension.
     return entity(request.uuid).toProto()
 }
 
