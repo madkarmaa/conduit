@@ -10,6 +10,14 @@ import type { ProtoGrpcType as RegistryProto } from "./generated/registry";
 import type { ProtoGrpcType as ServerProto } from "./generated/server";
 import type { ProtoGrpcType as StructureProto } from "./generated/structure";
 import type { ProtoGrpcType as WorldProto } from "./generated/world";
+import type { BatchServiceClient } from "./generated/conduit/v1/BatchService";
+import type { EntityServiceClient } from "./generated/conduit/v1/EntityService";
+import type { EventServiceClient } from "./generated/conduit/v1/EventService";
+import type { PlayerServiceClient } from "./generated/conduit/v1/PlayerService";
+import type { RegistryServiceClient } from "./generated/conduit/v1/RegistryService";
+import type { ServerServiceClient } from "./generated/conduit/v1/ServerService";
+import type { StructureServiceClient } from "./generated/conduit/v1/StructureService";
+import type { WorldServiceClient } from "./generated/conduit/v1/WorldService";
 
 type ConduitProto = BatchProto &
     EntityProto &
@@ -43,9 +51,21 @@ export interface ConnectionOptions {
     token?: string;
 }
 
-export type ConduitClients = ReturnType<typeof connect>;
+export interface ConduitClients {
+    batch: BatchServiceClient;
+    entity: EntityServiceClient;
+    events: EventServiceClient;
+    player: PlayerServiceClient;
+    registry: RegistryServiceClient;
+    server: ServerServiceClient;
+    structure: StructureServiceClient;
+    world: WorldServiceClient;
+}
 
-export function connect({ address = "localhost:25585", token }: ConnectionOptions = {}) {
+export function connect({
+    address = "localhost:25585",
+    token,
+}: ConnectionOptions = {}): ConduitClients {
     const protoFiles = readdirSync(`${PROTO_DIRECTORY}/${PACKAGE_DIRECTORY}`)
         .filter((file) => file.endsWith(".proto"))
         .map((file) => `${PACKAGE_DIRECTORY}/${file}`);
@@ -73,7 +93,7 @@ export function connect({ address = "localhost:25585", token }: ConnectionOption
 }
 
 // All clients share one channel, so closing any of them closes the connection.
-export function close(clients: ConduitClients) {
+export function close(clients: ConduitClients): void {
     clients.server.close();
 }
 
