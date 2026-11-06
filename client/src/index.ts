@@ -19,6 +19,8 @@ import type { ServerServiceClient } from "./generated/conduit/v1/ServerService";
 import type { StructureServiceClient } from "./generated/conduit/v1/StructureService";
 import type { WorldServiceClient } from "./generated/conduit/v1/WorldService";
 
+export { call, fromServiceError, type CallError } from "./call";
+
 type ConduitProto = BatchProto &
     EntityProto &
     EventsProto &
