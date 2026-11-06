@@ -16,8 +16,10 @@ export function buildPrompt(
             ? "Several players share this conversation, so each request names its sender."
             : "",
         mode === "chat"
-            ? `${sender.player} has limited access, so your tools only read the game and only ` +
-              "show their own player data. Politely decline anything else."
+            ? `${sender.player} has limited access. Your tools can read the world and the data of ` +
+              `${sender.player}, such as their inventory, health or food, so answer questions ` +
+              "about those with them. Politely decline changes to the game and questions about " +
+              "other players."
             : "",
         "Your final answer is posted in the chat as plain text, so keep it to a few short",
         "sentences and do not use Markdown.",
