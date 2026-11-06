@@ -14,8 +14,8 @@ import top.madkarma.minecraft.grpc.proto.tradeEvent
 object Trades {
     // Called from the merchant result slot mixin, only when the trade went through.
     @JvmStatic
-    fun onTrade(player: Player, merchant: Merchant, offer: MerchantOffer) {
-        if (player !is ServerPlayer) return
+    fun onTrade(player: Player, merchant: Merchant, offer: MerchantOffer?) {
+        if (player !is ServerPlayer || offer == null) return
 
         EventBus.publish(EventType.EVENT_TYPE_TRADE, accepts = { it.wantsPlayer(player) }) {
             trade = tradePayload(player, merchant, offer)

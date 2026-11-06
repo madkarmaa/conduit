@@ -25,6 +25,7 @@ import top.madkarma.minecraft.grpc.proto.OfflinePlayerInfo
 import top.madkarma.minecraft.grpc.proto.offlinePlayerInfo
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 // Saved player data is read with the same keys and codecs the game loads players with.
 
@@ -36,10 +37,12 @@ internal fun MinecraftServer.describePlayerData(
     reporter: ProblemReporter,
 ): OfflinePlayerInfo {
     val input = TagValueInput.create(reporter, registryAccess(), data)
-    val facing = input.read("Rotation", Vec2.CODEC).orElse(Vec2.ZERO)
+    val facing = input.read("Rotation", Vec2.CODEC).getOrNull() ?: Vec2.ZERO
     val food = FoodData().apply { readAdditionalSaveData(input) }
-    val gameType = input.read("playerGameType", GameType.LEGACY_ID_CODEC).orElse(defaultGameType)
-    val effects = input.read("active_effects", MobEffectInstance.CODEC.listOf()).orElse(listOf())
+    val gameType = input.read("playerGameType", GameType.LEGACY_ID_CODEC).getOrNull()
+        ?: defaultGameType
+    val effects = input.read("active_effects", MobEffectInstance.CODEC.listOf()).getOrNull()
+        .orEmpty()
     val enderChest = PlayerEnderChestContainer().apply {
         fromSlots(input.listOrEmpty("EnderItems", ItemStackWithSlot.CODEC))
     }
@@ -50,7 +53,7 @@ internal fun MinecraftServer.describePlayerData(
         lastPlayed = lastPlayed(id)
         online = isOnline(id)
         dimension = input.getStringOr("Dimension", "minecraft:overworld")
-        position = input.read("Pos", Vec3.CODEC).orElse(Vec3.ZERO).toProto()
+        position = (input.read("Pos", Vec3.CODEC).getOrNull() ?: Vec3.ZERO).toProto()
         rotation = rotationOf(facing.x, facing.y)
         gameMode = gameType.serializedName
         health = input.getFloatOr("Health", Player.MAX_HEALTH.toFloat())
@@ -86,7 +89,7 @@ internal fun readInventory(input: ValueInput): SimpleContainer {
         container.setItem(item.slot, item.stack)
     }
 
-    val equipment = input.read("equipment", EntityEquipment.CODEC).orElseGet(::EntityEquipment)
+    val equipment = input.read("equipment", EntityEquipment.CODEC).getOrNull() ?: EntityEquipment()
     for ((slot, equipmentSlot) in Inventory.EQUIPMENT_SLOT_MAPPING) {
         container.setItem(slot, equipment.get(equipmentSlot))
     }

@@ -16,6 +16,7 @@ import top.madkarma.minecraft.grpc.rpc.notFound
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 // Saved player data is read and written on the server thread, each call within one
 // GameServer.run block. Logins load this data on the server thread too, so a login never reads a
@@ -47,7 +48,7 @@ internal fun MinecraftServer.isOnline(id: UUID): Boolean = playerList.getPlayer(
 
 internal fun MinecraftServer.lastKnownName(id: UUID): String =
     playerList.getPlayer(id)?.gameProfile?.name
-        ?: services().nameToIdCache().get(id).map { it.name() }.orElse("")
+        ?: services().nameToIdCache().get(id).getOrNull()?.name().orEmpty()
 
 internal fun MinecraftServer.lastPlayed(id: UUID): Long {
     if (isOnline(id)) return System.currentTimeMillis()
