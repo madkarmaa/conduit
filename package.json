@@ -3,6 +3,7 @@
     "license": "CC0-1.0",
     "private": true,
     "workspaces": [
-        "client"
+        "client",
+        "mcp"
     ]
 }
