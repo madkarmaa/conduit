@@ -5,7 +5,7 @@
 #   MC_VERSION=<version> docker compose up -d server   # server only, gRPC on localhost:25585
 #   MC_VERSION=<version> docker compose up -d          # server + vanilla client joining it
 #
-# The gRPC endpoint uses the bearer token from MINECRAFT_GRPC_TOKEN (default: dev-token).
+# The gRPC endpoint uses the bearer token from CONDUIT_TOKEN (default: dev-token).
 
 x-headlessmc: &headlessmc
     image: 3arthqu4ke/headlessmc:latest
@@ -25,8 +25,8 @@ services:
             - server-data:/home/default
         environment:
             <<: *environment
-            MINECRAFT_GRPC_HOST: 0.0.0.0
-            MINECRAFT_GRPC_TOKEN: ${MINECRAFT_GRPC_TOKEN:-dev-token}
+            CONDUIT_HOST: 0.0.0.0
+            CONDUIT_TOKEN: ${CONDUIT_TOKEN:-dev-token}
         ports:
             - 127.0.0.1:25565:25565
             - 127.0.0.1:25585:25585

@@ -1,0 +1,62 @@
+package top.madkarma.conduit.service.structure
+
+import kotlin.jvm.optionals.getOrNull
+import kotlin.math.max
+import kotlin.math.min
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Vec3i
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.server.MinecraftServer
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate
+import top.madkarma.conduit.Conduit
+import top.madkarma.conduit.game.level
+import top.madkarma.conduit.game.parseId
+import top.madkarma.conduit.proto.BlockPos as ProtoBlockPos
+import top.madkarma.conduit.proto.blockPos
+import top.madkarma.conduit.rpc.invalidArgument
+
+internal fun MinecraftServer.captureStructure(
+    dimension: String,
+    from: ProtoBlockPos,
+    to: ProtoBlockPos,
+    includeEntities: Boolean,
+    ignoreBlock: String,
+): StructureTemplate {
+    val level = level(dimension)
+    val ignoredBlocks = ignoredBlocks(ignoreBlock)
+    val min = BlockPos(min(from.x, to.x), min(from.y, to.y), min(from.z, to.z))
+    val max = BlockPos(max(from.x, to.x), max(from.y, to.y), max(from.z, to.z))
+
+    // Spans are computed as longs, since opposite ends of the world overflow an int.
+    checkVolume((max.x - min.x + 1L) * (max.y - min.y + 1L) * (max.z - min.z + 1L))
+
+    val size = Vec3i(max.x - min.x + 1, max.y - min.y + 1, max.z - min.z + 1)
+    val template = StructureTemplate()
+
+    // The template holds copies of the blocks and entities, so it can be turned into NBT off the
+    // server thread.
+    template.fillFromWorld(level, min, size, includeEntities, ignoredBlocks)
+    return template
+}
+
+internal fun checkVolume(volume: Long) {
+    val limit = Conduit.config.maxStructureVolume
+    if (volume > limit) invalidArgument("Structure of $volume blocks exceeds the limit of $limit")
+}
+
+internal val Vec3i.volume: Long
+    get() = x.toLong() * y * z
+
+internal fun Vec3i.toProto(): ProtoBlockPos = blockPos {
+    x = this@toProto.x
+    y = this@toProto.y
+    z = this@toProto.z
+}
+
+private fun ignoredBlocks(id: String): List<Block> {
+    if (id.isBlank()) return emptyList()
+
+    val block = BuiltInRegistries.BLOCK.getOptional(parseId(id)).getOrNull()
+    return listOf(block ?: invalidArgument("Unknown block: $id"))
+}

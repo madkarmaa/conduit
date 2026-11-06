@@ -1,0 +1,26 @@
+{
+    "required": true,
+    "package": "top.madkarma.conduit.mixin",
+    "compatibilityLevel": "JAVA_25",
+    "mixins": [
+        "AbstractContainerMenuMixin",
+        "BlockItemMixin",
+        "CommandsMixin",
+        "FurnaceResultSlotMixin",
+        "ItemEntityMixin",
+        "LivingEntityMixin",
+        "MerchantResultSlotMixin",
+        "PlayerAdvancementsMixin",
+        "ResultSlotMixin",
+        "ServerGamePacketListenerImplMixin",
+        "ServerLevelMixin",
+        "ServerPlayerMixin",
+        "StructureTemplateAccessor"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "overwrites": {
+        "requireAnnotations": true
+    }
+}

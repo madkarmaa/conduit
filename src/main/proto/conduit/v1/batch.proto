@@ -1,0 +1,155 @@
+syntax = "proto3";
+
+package conduit.v1;
+
+import "google/protobuf/empty.proto";
+import "conduit/v1/common.proto";
+import "conduit/v1/entity.proto";
+import "conduit/v1/player.proto";
+import "conduit/v1/server.proto";
+import "conduit/v1/world.proto";
+
+option java_multiple_files = true;
+option java_package = "top.madkarma.conduit.proto";
+
+// Runs many operations in one round trip.
+//
+// All operations of a batch run in order within the same server tick, so no other game logic
+// runs between them. A batch is not atomic: there is no rollback, and the operations before a
+// failed one stay applied. Running in the same tick is the only guarantee.
+service BatchService {
+    // Fails with INVALID_ARGUMENT for more than 10,000 operations. Failed operations are reported
+    // in their results; the call itself still succeeds. The whole batch must finish within the
+    // 30 second game thread timeout.
+    rpc Execute(BatchRequest) returns (BatchResponse);
+}
+
+message BatchRequest {
+    repeated Operation operations = 1;
+    // Stop at the first failed operation; the remaining ones are reported as skipped.
+    bool stop_on_error = 2;
+}
+
+// One call of a WorldService, EntityService, PlayerService or ServerService RPC, with the same
+// request message, validation and limits as the RPC itself.
+message Operation {
+    // Field numbers are grouped by service: 1-99 world, 100-199 entity, 200-299 player and
+    // 300-399 server.
+    oneof operation {
+        google.protobuf.Empty list_dimensions = 1;
+        GetBlockRequest get_block = 2;
+        GetBlocksRequest get_blocks = 3;
+        SetBlockRequest set_block = 4;
+        SetBlocksRequest set_blocks = 5;
+        FillRequest fill = 6;
+        BreakBlockRequest break_block = 7;
+        GetBlockRequest get_block_entity = 8;
+        SetBlockEntityRequest set_block_entity = 9;
+        GetBlockRequest get_biome = 10;
+        GetHeightRequest get_height = 11;
+        ChunkRequest get_chunk = 12;
+        SetChunkForcedRequest set_chunk_forced = 13;
+        DimensionRef get_time = 14;
+        SetTimeRequest set_time = 15;
+        DimensionRef get_weather = 16;
+        SetWeatherRequest set_weather = 17;
+        google.protobuf.Empty get_game_rules = 18;
+        SetGameRuleRequest set_game_rule = 19;
+        google.protobuf.Empty get_spawn = 20;
+        SpawnPoint set_spawn = 21;
+        ExplodeRequest explode = 22;
+        DimensionRef get_world_border = 23;
+        SetWorldBorderRequest set_world_border = 24;
+
+        ListEntitiesRequest list_entities = 100;
+        EntityRef get_entity = 101;
+        SpawnEntityRequest spawn_entity = 102;
+        RemoveEntityRequest remove_entity = 103;
+        TeleportRequest teleport = 104;
+        SetVelocityRequest set_velocity = 105;
+        SetRotationRequest set_rotation = 106;
+        EntityRef get_nbt = 107;
+        MergeNbtRequest merge_nbt = 108;
+        SetCustomNameRequest set_custom_name = 109;
+        SetTagsRequest set_tags = 110;
+        DamageRequest damage = 111;
+        SetHealthRequest set_health = 112;
+        EntityRef get_effects = 113;
+        AddEffectRequest add_effect = 114;
+        RemoveEffectRequest remove_effect = 115;
+        EntityRef get_attributes = 116;
+        SetAttributeBaseRequest set_attribute_base = 117;
+        MountRequest mount = 118;
+        EntityRef dismount = 119;
+
+        google.protobuf.Empty list_players = 200;
+        PlayerRef get_player = 201;
+        PlayerRef get_inventory = 202;
+        SetInventorySlotRequest set_inventory_slot = 203;
+        GiveItemRequest give_item = 204;
+        PlayerRef clear_inventory = 205;
+        SetSelectedSlotRequest set_selected_slot = 206;
+        PlayerRef get_ender_chest = 207;
+        SetGameModeRequest set_game_mode = 208;
+        SetFoodRequest set_food = 209;
+        SetExperienceRequest set_experience = 210;
+        SendMessageRequest send_message = 211;
+        SendTitleRequest send_title = 212;
+        PlaySoundRequest play_sound = 213;
+        KickRequest kick = 214;
+        SetOperatorRequest set_operator = 215;
+        PlayerRef get_offline_player = 216;
+        PlayerRef get_offline_player_nbt = 217;
+        MergeOfflinePlayerNbtRequest merge_offline_player_nbt = 218;
+        SetInventorySlotRequest set_offline_inventory_slot = 219;
+        PlayerRef get_player_stats = 220;
+        google.protobuf.Empty list_known_players = 221;
+
+        ExecuteCommandRequest execute_command = 300;
+        BroadcastRequest broadcast = 301;
+    }
+}
+
+message BatchResponse {
+    // One result per operation, in the same order as the operations.
+    repeated OperationResult results = 1;
+}
+
+message OperationResult {
+    // google.rpc.Code value, the status the RPC would have returned (0 = OK). Skipped operations
+    // report CANCELLED (1). An operation that is not set, or not known to this server version,
+    // reports INVALID_ARGUMENT.
+    int32 code = 1;
+    // Error description, if the operation failed.
+    string message = 2;
+    // Not run, because an earlier operation failed and stop_on_error was set.
+    bool skipped = 3;
+    // The RPC's response, unless it returns google.protobuf.Empty or the operation failed.
+    oneof response {
+        DimensionList dimensions = 4;
+        BlockInfo block = 5;
+        BlockRegion blocks = 6;
+        SetBlocksResponse set_blocks = 7;
+        Nbt nbt = 8;
+        Biome biome = 9;
+        GetHeightResponse height = 10;
+        ChunkInfo chunk = 11;
+        TimeInfo time = 12;
+        WeatherInfo weather = 13;
+        GameRules game_rules = 14;
+        SpawnPoint spawn = 15;
+        EntityList entities = 16;
+        EntityInfo entity = 17;
+        EffectList effects = 18;
+        AttributeList attributes = 19;
+        PlayerList players = 20;
+        PlayerInfo player = 21;
+        Inventory inventory = 22;
+        GiveItemResponse give_item = 23;
+        ExecuteCommandResponse execute_command = 24;
+        WorldBorderInfo world_border = 25;
+        OfflinePlayerInfo offline_player = 26;
+        PlayerStats player_stats = 27;
+        KnownPlayerList known_players = 28;
+    }
+}

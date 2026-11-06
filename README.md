@@ -1,4 +1,7 @@
-# Minecraft gRPC
+<div align="center">
+    <img src="docs/conduit.gif" alt="Conduit" />
+    <h1>Conduit</h1>
+</div>
 
 A server-side Fabric mod that runs a gRPC server inside Minecraft, so external programs can control
 the world, entities and players, run any command and stream live events. It runs on dedicated
@@ -17,11 +20,11 @@ servers and in singleplayer worlds; players do not need the mod to join.
 ./gradlew build
 ```
 
-The mod jar is written to `build/libs/minecraft_grpc-<mod version>+<minecraft version>.jar`.
+The mod jar is written to `build/libs/conduit-<mod version>+<minecraft version>.jar`.
 
 ## Configuration
 
-On first start the mod writes `config/minecraft-grpc.json`:
+On first start the mod writes `config/conduit.json`:
 
 | Setting                   | Default                        | Description                         |
 | ------------------------- | ------------------------------ | ----------------------------------- |
@@ -40,20 +43,19 @@ On first start the mod writes `config/minecraft-grpc.json`:
 | `maxStructureUploadBytes` | `67108864` (64 MiB)            | Largest structure file that can be  |
 |                           |                                | imported                            |
 
-Each setting can be overridden with an environment variable: `MINECRAFT_GRPC_ENABLED`,
-`MINECRAFT_GRPC_HOST`, `MINECRAFT_GRPC_PORT`, `MINECRAFT_GRPC_REQUIRE_AUTH`,
-`MINECRAFT_GRPC_TOKEN`, `MINECRAFT_GRPC_AUDIT_LOG`, `MINECRAFT_GRPC_BACKUP_DIRECTORY`,
-`MINECRAFT_GRPC_MAX_STRUCTURE_VOLUME` and `MINECRAFT_GRPC_MAX_STRUCTURE_UPLOAD_BYTES`.
+Each setting can be overridden with an environment variable: `CONDUIT_ENABLED`, `CONDUIT_HOST`,
+`CONDUIT_PORT`, `CONDUIT_REQUIRE_AUTH`, `CONDUIT_TOKEN`, `CONDUIT_AUDIT_LOG`,
+`CONDUIT_BACKUP_DIRECTORY`, `CONDUIT_MAX_STRUCTURE_VOLUME` and `CONDUIT_MAX_STRUCTURE_UPLOAD_BYTES`.
 
 The audit log records every call that is not read-only, and every call rejected for a missing or
-wrong token, through the `minecraft_grpc/audit` logger, so it can be routed to its own file.
+wrong token, through the `conduit/audit` logger, so it can be routed to its own file.
 
 Every call except the standard health check needs `authorization: Bearer <token>`.
 
 ## API
 
 The service definitions live in
-[`src/main/proto/minecraft/grpc/v1`](src/main/proto/minecraft/grpc/v1). Server reflection is
+[`src/main/proto/conduit/v1`](src/main/proto/conduit/v1). Server reflection is
 enabled, so tools like `grpcurl` can discover them.
 
 | Service            | Scope                                                                 |
@@ -87,9 +89,9 @@ any state it tracks.
 
 ```sh
 grpcurl -plaintext -H "authorization: Bearer $TOKEN" localhost:25585 \
-    minecraft.grpc.v1.ServerService/GetInfo
+    conduit.v1.ServerService/GetInfo
 grpcurl -plaintext -H "authorization: Bearer $TOKEN" -d '{"command": "time set day"}' \
-    localhost:25585 minecraft.grpc.v1.ServerService/ExecuteCommand
+    localhost:25585 conduit.v1.ServerService/ExecuteCommand
 ```
 
 ## TypeScript client
@@ -106,7 +108,7 @@ bun run build
 ```
 
 ```ts
-import { close, connect } from "minecraft-grpc-client";
+import { close, connect } from "conduit-client";
 
 const clients = connect({ address: "localhost:25585", token: process.env.TOKEN });
 clients.server.executeCommand({ command: "time set day" }, (error, response) => {
@@ -130,7 +132,7 @@ MC_VERSION=<minecraft version> docker compose up -d server   # server, gRPC on l
 MC_VERSION=<minecraft version> docker compose up -d          # server and a client joining it
 ```
 
-The gRPC endpoint uses the token `dev-token` unless `MINECRAFT_GRPC_TOKEN` is set. Game data is
+The gRPC endpoint uses the token `dev-token` unless `CONDUIT_TOKEN` is set. Game data is
 kept in Docker volumes between runs. The client uses the preconfigured
 [`docker/options.txt`](./docker/options.txt), so it skips the first-start onboarding and joins the
 server directly.

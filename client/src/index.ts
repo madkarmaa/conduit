@@ -11,7 +11,7 @@ import type { ProtoGrpcType as ServerProto } from "./generated/server";
 import type { ProtoGrpcType as StructureProto } from "./generated/structure";
 import type { ProtoGrpcType as WorldProto } from "./generated/world";
 
-type MinecraftProto = BatchProto &
+type ConduitProto = BatchProto &
     EntityProto &
     EventsProto &
     PlayerProto &
@@ -22,7 +22,7 @@ type MinecraftProto = BatchProto &
 
 // Resolves the same way from src and dist, so the client always loads the mod's own protos.
 const PROTO_DIRECTORY = fileURLToPath(new URL("../../src/main/proto", import.meta.url));
-const PACKAGE_DIRECTORY = "minecraft/grpc/v1";
+const PACKAGE_DIRECTORY = "conduit/v1";
 
 // Must match the flags of the generate script, or the generated types describe other shapes.
 const LOADER_OPTIONS = {
@@ -38,15 +38,15 @@ export interface ConnectionOptions {
     token?: string;
 }
 
-export type MinecraftClients = ReturnType<typeof connect>;
+export type ConduitClients = ReturnType<typeof connect>;
 
 export function connect({ address = "localhost:25585", token }: ConnectionOptions = {}) {
     const protoFiles = readdirSync(`${PROTO_DIRECTORY}/${PACKAGE_DIRECTORY}`)
         .filter((file) => file.endsWith(".proto"))
         .map((file) => `${PACKAGE_DIRECTORY}/${file}`);
     const packageDefinition = protoLoader.loadSync(protoFiles, LOADER_OPTIONS);
-    const proto = grpc.loadPackageDefinition(packageDefinition) as unknown as MinecraftProto;
-    const services = proto.minecraft.grpc.v1;
+    const proto = grpc.loadPackageDefinition(packageDefinition) as unknown as ConduitProto;
+    const services = proto.conduit.v1;
 
     const credentials = grpc.credentials.createInsecure();
     const channel = new grpc.Channel(address, credentials, {});
@@ -68,7 +68,7 @@ export function connect({ address = "localhost:25585", token }: ConnectionOption
 }
 
 // All clients share one channel, so closing any of them closes the connection.
-export function close(clients: MinecraftClients) {
+export function close(clients: ConduitClients) {
     clients.server.close();
 }
 

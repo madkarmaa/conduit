@@ -1,12 +1,12 @@
 {
-    "name": "minecraft-grpc-client",
+    "name": "conduit-client",
     "version": "1.0.0",
-    "description": "Typed Node.js client for the Minecraft gRPC mod",
+    "description": "Typed Node.js client for the Conduit mod",
     "license": "CC0-1.0",
     "private": true,
     "type": "module",
     "scripts": {
-        "prebuild": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --includeComments --grpcLib=@grpc/grpc-js -I ../src/main/proto -O src/generated minecraft/grpc/v1/batch.proto minecraft/grpc/v1/common.proto minecraft/grpc/v1/entity.proto minecraft/grpc/v1/events.proto minecraft/grpc/v1/player.proto minecraft/grpc/v1/registry.proto minecraft/grpc/v1/server.proto minecraft/grpc/v1/structure.proto minecraft/grpc/v1/world.proto",
+        "prebuild": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --includeComments --grpcLib=@grpc/grpc-js -I ../src/main/proto -O src/generated conduit/v1/batch.proto conduit/v1/common.proto conduit/v1/entity.proto conduit/v1/events.proto conduit/v1/player.proto conduit/v1/registry.proto conduit/v1/server.proto conduit/v1/structure.proto conduit/v1/world.proto",
         "build": "tsdown",
         "typecheck": "tsc"
     },

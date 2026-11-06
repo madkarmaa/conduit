@@ -1,23 +1,23 @@
 {
     "schemaVersion": 1,
-    "id": "minecraft_grpc",
+    "id": "conduit",
     "version": "${version}",
-    "name": "Minecraft gRPC",
+    "name": "Conduit",
     "description": "A gRPC server that allows any kind of interaction with Minecraft.",
     "authors": ["madkarma"],
     "contact": {},
     "license": "CC0-1.0",
-    "icon": "assets/minecraft_grpc/icon.png",
+    "icon": "assets/conduit/icon.png",
     "environment": "*",
     "entrypoints": {
         "main": [
             {
-                "value": "top.madkarma.minecraft.grpc.MinecraftGRPC",
+                "value": "top.madkarma.conduit.Conduit",
                 "adapter": "kotlin"
             }
         ]
     },
-    "mixins": ["minecraft_grpc.mixins.json"],
+    "mixins": ["conduit.mixins.json"],
     "depends": {
         "fabricloader": ">=${loader_version}",
         "minecraft": "~${minecraft_version}",
