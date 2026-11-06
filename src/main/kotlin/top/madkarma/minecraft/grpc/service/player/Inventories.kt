@@ -52,7 +52,7 @@ internal fun MinecraftServer.selectHotbarSlot(request: SetSelectedSlotRequest) {
     player.connection.send(ClientboundSetHeldSlotPacket(request.slot))
 }
 
-private fun MinecraftServer.contents(container: Container, selected: Int): Inventory {
+internal fun MinecraftServer.contents(container: Container, selected: Int): Inventory {
     val registries = registryAccess()
 
     return inventory {

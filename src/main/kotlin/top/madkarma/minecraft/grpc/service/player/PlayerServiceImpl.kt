@@ -80,4 +80,28 @@ class PlayerServiceImpl : PlayerServiceGrpcKt.PlayerServiceCoroutineImplBase() {
         it.changeOperator(request)
         EMPTY
     }
+
+    override suspend fun getOfflinePlayer(request: PlayerRef): OfflinePlayerInfo =
+        GameServer.run { it.offlinePlayer(request) }
+
+    override suspend fun getOfflinePlayerNbt(request: PlayerRef): Nbt =
+        GameServer.run { it.offlinePlayerNbt(request) }
+
+    override suspend fun mergeOfflinePlayerNbt(request: MergeOfflinePlayerNbtRequest): Empty =
+        GameServer.run {
+            it.mergeOfflinePlayerNbt(request)
+            EMPTY
+        }
+
+    override suspend fun setOfflineInventorySlot(request: SetInventorySlotRequest): Empty =
+        GameServer.run {
+            it.changeOfflineInventorySlot(request)
+            EMPTY
+        }
+
+    override suspend fun getPlayerStats(request: PlayerRef): PlayerStats =
+        GameServer.run { it.playerStats(request) }
+
+    override suspend fun listKnownPlayers(request: Empty): KnownPlayerList =
+        GameServer.run { it.listKnownPlayers() }
 }

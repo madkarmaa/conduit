@@ -4,11 +4,13 @@ package minecraft.grpc.v1;
 
 import "google/protobuf/empty.proto";
 import "minecraft/grpc/v1/common.proto";
+import "minecraft/grpc/v1/world.proto";
 
 option java_multiple_files = true;
 option java_package = "top.madkarma.minecraft.grpc.proto";
 
-// Online players, addressed by name or UUID. Use EntityService for position, effects, NBT, etc.
+// Players, addressed by name or UUID. Most RPCs need the player to be online; use EntityService
+// for their position, effects, NBT, etc. The offline RPCs work on saved player data.
 service PlayerService {
     rpc ListPlayers(google.protobuf.Empty) returns (PlayerList);
     rpc GetPlayer(PlayerRef) returns (PlayerInfo);
@@ -26,6 +28,23 @@ service PlayerService {
     rpc PlaySound(PlaySoundRequest) returns (google.protobuf.Empty);
     rpc Kick(KickRequest) returns (google.protobuf.Empty);
     rpc SetOperator(SetOperatorRequest) returns (google.protobuf.Empty);
+
+    // Saved player data, also for players who are offline. A name is resolved through the
+    // server's cache of known players, or as an offline-mode UUID when the server is in offline
+    // mode. Reads of online players return their live data. Edits of online or joining players
+    // fail with FAILED_PRECONDITION; edits take effect at the player's next login. A player
+    // without saved data is NOT_FOUND, and a corrupt data file is FAILED_PRECONDITION.
+    rpc GetOfflinePlayer(PlayerRef) returns (OfflinePlayerInfo);
+    // The full saved data, updated to the current game version.
+    rpc GetOfflinePlayerNbt(PlayerRef) returns (Nbt);
+    // Merges SNBT into the saved data, like /data merge.
+    rpc MergeOfflinePlayerNbt(MergeOfflinePlayerNbtRequest) returns (google.protobuf.Empty);
+    // Same slot numbers as SetInventorySlot.
+    rpc SetOfflineInventorySlot(SetInventorySlotRequest) returns (google.protobuf.Empty);
+    // Statistics of an online or offline player.
+    rpc GetPlayerStats(PlayerRef) returns (PlayerStats);
+    // Every player with saved data.
+    rpc ListKnownPlayers(google.protobuf.Empty) returns (KnownPlayerList);
 }
 
 message PlayerInfo {
@@ -139,4 +158,52 @@ message KickRequest {
 message SetOperatorRequest {
     string player = 1;
     bool operator = 2;
+}
+
+message OfflinePlayerInfo {
+    string uuid = 1;
+    // Last known name, empty if the server does not know it.
+    string name = 2;
+    // Unix milliseconds of the last save; the current time for online players.
+    int64 last_played = 3;
+    bool online = 4;
+    string dimension = 5;
+    Vec3 position = 6;
+    Rotation rotation = 7;
+    string game_mode = 8;
+    float health = 9;
+    int32 food_level = 10;
+    float saturation = 11;
+    int32 experience_level = 12;
+    float experience_progress = 13;
+    int32 total_experience = 14;
+    Inventory inventory = 15;
+    Inventory ender_chest = 16;
+    repeated StatusEffect effects = 17;
+    // Bed or respawn anchor; unset when the player has none.
+    SpawnPoint spawn_point = 18;
+}
+
+message MergeOfflinePlayerNbtRequest {
+    string player = 1;
+    string snbt = 2;
+}
+
+message PlayerStats {
+    // "<stat type>:<stat id>" to value, e.g. "minecraft:mined:minecraft:stone". Only non-zero
+    // statistics are listed.
+    map<string, int32> stats = 1;
+}
+
+message KnownPlayer {
+    string uuid = 1;
+    // Last known name, empty if the server does not know it.
+    string name = 2;
+    // Unix milliseconds of the last save; the current time for online players.
+    int64 last_played = 3;
+    bool online = 4;
+}
+
+message KnownPlayerList {
+    repeated KnownPlayer players = 1;
 }
