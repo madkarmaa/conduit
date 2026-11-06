@@ -7,7 +7,14 @@ A server-side Fabric mod that runs a gRPC server inside Minecraft, so external p
 the world, entities and players, run any command and stream live events. It runs on dedicated
 servers and in singleplayer worlds. Players do not need the mod to join.
 
-Each [GitHub release](https://github.com/madkarmaa/conduit/releases) has the mod jar.
+Each [GitHub release](https://github.com/madkarmaa/conduit/releases) has the mod jar. Releases also
+publish the [TypeScript client](#typescript-client), the [MCP server](#mcp-server) and the
+[chat bot](#chat-bot) to `https://npm.madkarma.top`, so npm needs that registry for the `@conduit`
+scope:
+
+```sh
+npm config set @conduit:registry https://npm.madkarma.top
+```
 
 ## Requirements
 
@@ -25,8 +32,15 @@ Building needs JDK 25 and [Bun](https://bun.sh) on the `PATH`.
 ```
 
 The build writes the mod jar to `build/libs/conduit-<mod version>+<minecraft version>.jar`. It also
-installs the Bun workspace and builds the [TypeScript client](#typescript-client), the
-[MCP server](#mcp-server) and the [chat bot](#chat-bot).
+installs the Bun workspace and builds the client, the MCP server and the chat bot. To build only
+those, build the client first, since the other two use it:
+
+```sh
+bun install
+bun run --cwd client build
+bun run --cwd mcp build
+bun run --cwd bot build
+```
 
 ## Configuration
 
@@ -57,7 +71,8 @@ The audit log records every call that is not read-only, and every call rejected 
 wrong token. It writes through the `conduit/audit` logger, so a logging configuration can route it
 to its own file.
 
-Every call except the standard health check needs `authorization: Bearer <token>`.
+While `requireAuth` is on, every call except the standard gRPC health check needs
+`authorization: Bearer <token>`.
 
 ## API
 
@@ -76,9 +91,11 @@ has reflection enabled, so tools like `grpcurl` can discover the services.
 | `PlayerService`    | Inventories, items, game mode, hunger, experience, messages, titles,  |
 |                    | sounds, kick, operator status, statistics, saved data of offline      |
 |                    | players                                                               |
-| `EventService`     | Live stream of chat, joins, movement, block, combat, command, tick,   |
-|                    | entity spawn and removal, chunk, advancement, inventory, item pickup, |
-|                    | drop, craft, smelt and trade events                                   |
+| `EventService`     | Live stream of chat, player join, leave, respawn, movement and        |
+|                    | dimension change, block break, place and use, damage, death and       |
+|                    | attack, command, server tick, start and stop, entity spawn and        |
+|                    | removal, chunk load and unload, advancement, inventory change, item   |
+|                    | pickup, drop, craft and smelt, and trade events                       |
 | `RegistryService`  | Registries and their entries, tags, recipes, loot tables              |
 | `BatchService`     | Many world, entity, player and command operations in one call and one |
 |                    | server tick                                                           |
@@ -106,8 +123,7 @@ grpcurl -plaintext -H "authorization: Bearer $TOKEN" -d '{"command": "time set d
 [`client/`](./client) is a typed Node.js client built with the official
 [`@grpc/grpc-js`](https://www.npmjs.com/package/@grpc/grpc-js) and
 [`@grpc/proto-loader`](https://www.npmjs.com/package/@grpc/proto-loader) packages. Its types come
-from the mod's protos, and `./gradlew build` regenerates them. It needs Node.js 24 or later. Each
-release publishes it as `@conduit/client` to the same registry as the [MCP server](#mcp-server).
+from the mod's protos, and `./gradlew build` regenerates them. It needs Node.js 24 or later.
 
 ```sh
 npm install @conduit/client
@@ -123,23 +139,10 @@ clients.server.executeCommand({ command: "time set day" }, (error, response) => 
 });
 ```
 
-To build only the client from this checkout:
-
-```sh
-bun install
-cd client
-bun run build
-```
-
 ## MCP server
 
 [`mcp/`](./mcp) is an [MCP](https://modelcontextprotocol.io) server over stdio that lets AI agents
-control the game through the mod. It needs Node.js 24 or later. Each release publishes it as
-`@conduit/mcp` to `https://npm.madkarma.top`, so npm needs that registry for the `@conduit` scope:
-
-```sh
-npm config set @conduit:registry https://npm.madkarma.top
-```
+control the game through the mod. It needs Node.js 24 or later.
 
 | Variable                 | Default     | Description                                          |
 | ------------------------ | ----------- | ---------------------------------------------------- |
@@ -183,22 +186,13 @@ To add the server to an MCP host:
 }
 ```
 
-`./gradlew build` also builds the MCP server from this checkout. To build only the MCP server:
-
-```sh
-bun install
-cd mcp
-bun run build
-```
-
 ## Chat bot
 
 [`bot/`](./bot) lets players talk to an AI agent in the game chat. A message that mentions
 `@conduit`, such as `@conduit build a small house next to me`, goes to an agent CLI that controls
 the game through the [MCP server](#mcp-server). The bot posts the agent's answer in the chat, with
 colors and styles if the agent uses Minecraft's `§` codes. It needs Node.js 24 or later and
-[Docker](https://www.docker.com). Each release publishes it as `@conduit/bot` to the same registry
-as the MCP server.
+[Docker](https://www.docker.com).
 
 ```sh
 CONDUIT_TOKEN=<token> npx @conduit/bot [config file]
@@ -249,8 +243,8 @@ With `shared` memory, full mode answers go to everyone.
 Chat mode lets every other player ask questions. The `chat` section turns it on, and its `model`
 and `effort` are required. In chat mode the agent can only read the game. The player tools only
 show the asking player's own data, such as their inventory, position and statistics, and never
-another player's data or an IP address. Chat mode never shares a conversation, with other players
-or with full mode, and only the asking player sees its answers.
+another player's data or an IP address. Each player has a chat mode conversation of their own,
+separate from full mode, and only that player sees its answers.
 
 | Key            | Default | Description                                                  |
 | -------------- | ------- | ------------------------------------------------------------ |
@@ -337,8 +331,6 @@ them, and the effort is one of the model's variants.
     "chat": { "model": "opencode-go/glm-5.3-flash", "effort": "low" }
 }
 ```
-
-`./gradlew build` also builds the bot from this checkout.
 
 ## Test environment
 
