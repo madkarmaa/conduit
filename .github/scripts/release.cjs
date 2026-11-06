@@ -10,11 +10,14 @@ exports.verifyConditions = (_, { env }) => {
     throw new Error("NPM_CONFIG_TOKEN is not set, so bun cannot publish @conduit/mcp.");
 };
 
-// The mod and the MCP server share one version.
+// The mod, the client and the MCP server share one version.
 exports.prepare = (_, { nextRelease, cwd, env }) => {
     const { version } = nextRelease;
     replaceInFile(`${cwd}/gradle.properties`, /^version=.*$/m, `version=${version}`);
-    replaceInFile(`${cwd}/mcp/package.json`, /"version": "[^"]*"/, `"version": "${version}"`);
+    for (const workspace of ["client", "mcp"]) {
+        const manifest = `${cwd}/${workspace}/package.json`;
+        replaceInFile(manifest, /"version": "[^"]*"/, `"version": "${version}"`);
+    }
 
     const options = { cwd, env, stdio: "inherit" };
     // The lockfile records the workspace versions, and the build installs with a frozen lockfile.
