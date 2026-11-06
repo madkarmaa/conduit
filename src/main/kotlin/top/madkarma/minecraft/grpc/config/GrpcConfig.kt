@@ -17,6 +17,8 @@ data class GrpcConfig(
     var token: String = "",
     var auditLog: Boolean = true,
     var backupDirectory: String = "backups",
+    var maxStructureVolume: Long = 8_000_000,
+    var maxStructureUploadBytes: Int = 64 * 1024 * 1024,
 ) {
     companion object {
         private val LOGGER = LoggerFactory.getLogger("minecraft_grpc")
@@ -58,6 +60,10 @@ data class GrpcConfig(
             env("REQUIRE_AUTH")?.let { config.requireAuth = it.toBoolean() }
             env("AUDIT_LOG")?.let { config.auditLog = it.toBoolean() }
             env("BACKUP_DIRECTORY")?.let { config.backupDirectory = it }
+            env("MAX_STRUCTURE_VOLUME")?.toLongOrNull()?.let { config.maxStructureVolume = it }
+            env("MAX_STRUCTURE_UPLOAD_BYTES")?.toIntOrNull()?.let {
+                config.maxStructureUploadBytes = it
+            }
         }
 
         private fun env(name: String): String? =

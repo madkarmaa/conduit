@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+package minecraft.grpc.v1;
+
+import "google/protobuf/empty.proto";
+import "minecraft/grpc/v1/common.proto";
+
+option java_multiple_files = true;
+option java_package = "top.madkarma.minecraft.grpc.proto";
+
+// Copies and pastes regions with their block entities and entities. Structures use the vanilla
+// structure file format (gzipped NBT), so files also work with structure blocks and
+// /place template. Dimension fields default to "minecraft:overworld" when empty.
+//
+// Regions and templates larger than the configured maximum structure volume fail with
+// INVALID_ARGUMENT. A structure is placed in a single tick, so very large pastes cause a lag
+// spike. Unloaded target chunks are loaded (and generated if needed) for the placement.
+service StructureService {
+    // Streams the structure file in pieces of at most 1 MiB. Entities are only captured from
+    // loaded chunks.
+    rpc Export(ExportStructureRequest) returns (stream StructureData);
+    // The first message carries the placement header, the following ones the structure file in
+    // order, in pieces below the 4 MiB message limit. Files from older game versions are
+    // upgraded. Fails with INVALID_ARGUMENT when the header or the data is missing, the data is
+    // corrupt or larger than the configured maximum upload size.
+    rpc Import(stream ImportStructureRequest) returns (ImportStructureResponse);
+    // Saves a region to the world's structure storage, the same storage structure blocks use
+    // (generated/<namespace>/structure/<path>.nbt in the world folder).
+    rpc Save(SaveStructureRequest) returns (google.protobuf.Empty);
+    // Places a stored template: one saved in the world or one from a datapack, including vanilla
+    // templates such as "minecraft:village/plains/houses/plains_small_house_1". Fails with
+    // NOT_FOUND for an unknown id.
+    rpc Place(PlaceStructureRequest) returns (ImportStructureResponse);
+    // Ids of every stored template: those saved in the world and those from enabled datapacks,
+    // including the vanilla ones, sorted.
+    rpc List(google.protobuf.Empty) returns (StructureList);
+}
+
+enum StructureRotation {
+    // Treated as none.
+    STRUCTURE_ROTATION_UNSPECIFIED = 0;
+    STRUCTURE_ROTATION_NONE = 1;
+    STRUCTURE_ROTATION_CLOCKWISE_90 = 2;
+    STRUCTURE_ROTATION_CLOCKWISE_180 = 3;
+    STRUCTURE_ROTATION_COUNTERCLOCKWISE_90 = 4;
+}
+
+enum StructureMirror {
+    // Treated as none.
+    STRUCTURE_MIRROR_UNSPECIFIED = 0;
+    STRUCTURE_MIRROR_NONE = 1;
+    STRUCTURE_MIRROR_LEFT_RIGHT = 2;
+    STRUCTURE_MIRROR_FRONT_BACK = 3;
+}
+
+message ExportStructureRequest {
+    string dimension = 1;
+    // Opposite corners of the region, both inclusive.
+    BlockPos from = 2;
+    BlockPos to = 3;
+    bool include_entities = 4;
+    // Block left out of the structure, e.g. "minecraft:structure_void". Placing the structure
+    // keeps the existing blocks at those positions. Empty means none.
+    string ignore_block = 5;
+}
+
+message StructureData {
+    bytes data = 1;
+    // Size of the structure; only set in the first message.
+    BlockPos size = 2;
+}
+
+message StructurePlacement {
+    string dimension = 1;
+    // Where the structure's lowest corner goes; rotation and mirroring pivot around it, like
+    // /place template.
+    BlockPos origin = 2;
+    StructureRotation rotation = 3;
+    StructureMirror mirror = 4;
+    bool include_entities = 5;
+    // Chance between 0 and 1 that each block is placed. Unset means 1.
+    optional float integrity = 6;
+    // Skip neighbor updates and physics, like /place template with strict.
+    bool no_updates = 7;
+}
+
+message ImportStructureRequest {
+    oneof content {
+        StructurePlacement header = 1;
+        // A piece of the structure file.
+        bytes data = 2;
+    }
+}
+
+message ImportStructureResponse {
+    // Size of the placed structure, after rotation.
+    BlockPos size = 1;
+    // Blocks in the structure, including air; with an integrity below 1 fewer are placed.
+    int32 block_count = 2;
+    // Entities in the structure; 0 when include_entities is false.
+    int32 entity_count = 3;
+}
+
+message SaveStructureRequest {
+    // Template id, e.g. "minecraft:my_house" or "builds:houses/small".
+    string id = 1;
+    string dimension = 2;
+    // Opposite corners of the region, both inclusive.
+    BlockPos from = 3;
+    BlockPos to = 4;
+    bool include_entities = 5;
+    // Block left out of the structure, e.g. "minecraft:structure_void". Empty means none.
+    string ignore_block = 6;
+}
+
+message PlaceStructureRequest {
+    // Template id, e.g. "minecraft:village/plains/houses/plains_small_house_1".
+    string id = 1;
+    StructurePlacement placement = 2;
+}
+
+message StructureList {
+    repeated string ids = 1;
+}
