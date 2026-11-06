@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { catchUnwindAsync, type AsyncResult } from "results-ts";
+import type { Mode } from "./access.ts";
 import type { ChatMessage } from "./chat.ts";
 import type { Memory } from "./config.ts";
 
@@ -13,7 +14,8 @@ export interface Conversation {
     readonly started: boolean;
 }
 
-// Agent CLIs keep their conversations per working directory, so each conversation gets its own.
+// Agent CLIs keep their conversations in their home and per working directory, so each
+// conversation gets its own directory, mounted as the agent's home.
 export class Conversations {
     private readonly queues = new Map<string, Promise<void>>();
 
@@ -22,7 +24,10 @@ export class Conversations {
         private readonly memory: Memory,
     ) {}
 
-    key(sender: ChatMessage): string {
+    // Chat mode never shares a conversation, with other players or with full mode, since it holds
+    // the player's own data.
+    key(sender: ChatMessage, mode: Mode): string {
+        if (mode === "chat") return `chat-${sender.playerUuid}`;
         return this.memory === "shared" ? "shared" : sender.playerUuid;
     }
 

@@ -1,30 +1,48 @@
 import type { CallError, ConduitClients } from "@conduit/client";
-import { mayAsk } from "./access.ts";
+import { accessMode, toolPolicy, type Mode } from "./access.ts";
 import { fill, type AgentCommand } from "./agents.ts";
 import { findRequest, type ChatMessage } from "./chat.ts";
 import type { Config } from "./config.ts";
 import type { Conversation, Conversations, StateError } from "./conversations.ts";
 import { buildPrompt } from "./prompt.ts";
 import { say, showStatus, toChatText, type Speaker } from "./replies.ts";
-import { run, type RunError } from "./runner.ts";
+import {
+    runInContainer,
+    type Container,
+    type McpHost,
+    type RunError,
+} from "./sandbox/container.ts";
+import { copyLogins, returnLogins } from "./sandbox/logins.ts";
 
 export interface Bot {
     readonly clients: ConduitClients;
     readonly config: Config;
-    readonly agent: AgentCommand;
+    readonly agents: Readonly<Record<Mode, AgentCommand>>;
     readonly conversations: Conversations;
-    readonly env: NodeJS.ProcessEnv;
+    // Every container setting except the home, which depends on the conversation.
+    readonly container: Omit<Container, "home">;
+    readonly mcp: McpHost;
+    // Login files in the host's home, by their path relative to it.
+    readonly logins: ReadonlyMap<string, string>;
+}
+
+interface Request {
+    readonly sender: ChatMessage;
+    readonly text: string;
+    readonly mode: Mode;
+    // The conversation it continues.
+    readonly key: string;
 }
 
 export function handleChat(bot: Bot, sender: ChatMessage) {
-    findRequest(sender.message, bot.config.keyword).inspect((request) => {
-        void mayAsk(bot.clients.player, bot.config, sender).match({
-            Ok: (allowed) => {
-                if (!allowed) return tell(bot, sender, "You are not allowed to ask me.");
-                if (request.length === 0)
+    findRequest(sender.message, bot.config.keyword).inspect((text) => {
+        void accessMode(bot.clients.player, bot.config, sender).match({
+            Ok: (mode) => {
+                if (!mode) return tell(bot, sender, "You are not allowed to ask me.");
+                if (text.length === 0)
                     return tell(bot, sender, "Write your request after the mention.");
 
-                queue(bot, sender, request);
+                queue(bot, { sender, text, mode, key: bot.conversations.key(sender, mode) });
             },
             Err: (error) =>
                 log(`Could not check ${sender.player}'s access: ${describeCall(error)}`),
@@ -32,22 +50,19 @@ export function handleChat(bot: Bot, sender: ChatMessage) {
     });
 }
 
-function queue(bot: Bot, sender: ChatMessage, request: string) {
-    const key = bot.conversations.key(sender);
-    const waiting = bot.conversations.enqueue(key, () => answer(bot, sender, request, key));
-
-    if (waiting) status(bot, sender, "Waiting for your previous request…");
+function queue(bot: Bot, request: Request) {
+    const waiting = bot.conversations.enqueue(request.key, () => answer(bot, request));
+    if (waiting) status(bot, request.sender, "Waiting for your previous request…");
 }
 
-function answer(bot: Bot, sender: ChatMessage, request: string, key: string): PromiseLike<void> {
-    log(`${sender.player} asks: ${request}`);
+function answer(bot: Bot, request: Request): PromiseLike<void> {
+    const { sender, key } = request;
+    log(`${sender.player} asks in ${request.mode} mode: ${request.text}`);
     status(bot, sender, "Thinking…");
 
     return bot.conversations
         .open(key)
-        .andThenAsync((conversation) =>
-            ask(bot, conversation, buildPrompt(bot.config, sender, request)),
-        )
+        .andThenAsync((conversation) => ask(bot, conversation, request))
         .inspect(() => {
             void bot.conversations
                 .markStarted(key)
@@ -57,12 +72,12 @@ function answer(bot: Bot, sender: ChatMessage, request: string, key: string): Pr
         })
         .match({
             Ok: (reply) => {
-                const audience = bot.config.memory === "shared" ? "everyone" : sender.playerUuid;
-                void say(
-                    speaker(bot),
-                    audience,
-                    toChatText(reply, bot.config.maxReplyLength),
-                ).inspectErr((error) => log(`Could not post the answer: ${describeCall(error)}`));
+                // Only full mode shares conversations, so only its answers are for everyone.
+                const shared = request.mode === "full" && bot.config.memory === "shared";
+                const text = toChatText(reply, bot.config.maxReplyLength);
+                void say(speaker(bot), shared ? "everyone" : sender.playerUuid, text).inspectErr(
+                    (error) => log(`Could not post the answer: ${describeCall(error)}`),
+                );
             },
             Err: (error) => {
                 log(`The agent failed for ${sender.player}: ${describeFailure(error)}`);
@@ -71,13 +86,24 @@ function answer(bot: Bot, sender: ChatMessage, request: string, key: string): Pr
         });
 }
 
-function ask(bot: Bot, conversation: Conversation, prompt: string) {
-    const template = (conversation.started && bot.agent.resume) || bot.agent.start;
+function ask(bot: Bot, conversation: Conversation, request: Request) {
+    const agent = bot.agents[request.mode];
+    const template = (conversation.started && agent.resume) || agent.start;
+    const prompt = buildPrompt(bot.config, request.sender, request.text, request.mode);
+    const command = template.map((part) => fill(part, { prompt }));
+    const container = { ...bot.container, home: conversation.directory };
+    const policy = toolPolicy(bot.config, request.mode, request.sender);
+    const mcp = { ...bot.mcp, env: { ...bot.mcp.env, ...policy } };
 
-    return run(
-        template.map((part) => fill(part, { prompt })),
-        { cwd: conversation.directory, env: bot.env, timeoutSeconds: bot.config.timeoutSeconds },
-    ).map((output) => output.trim() || "Done.");
+    // Logins go into the agent's home for the run, and refreshed tokens come back even if it failed.
+    return copyLogins(conversation.directory, bot.logins).andThenAsync(async (copies) => {
+        const answer = await runInContainer(container, mcp, command);
+        await returnLogins(copies).match({
+            Ok: (saved) => saved.forEach((file) => log(`Saved the refreshed login in ${file}`)),
+            Err: (error) => log(`Could not save a refreshed login: ${error.message}`),
+        });
+        return answer.map((output) => output.trim() || "Done.");
+    });
 }
 
 function tell(bot: Bot, sender: ChatMessage, text: string) {

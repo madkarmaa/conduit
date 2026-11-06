@@ -191,7 +191,7 @@ A local build runs with `node mcp/dist/index.mjs` and loads its dependencies fro
 [`bot`](./bot) lets players talk to an AI agent in the game chat. A message that mentions
 `@conduit`, such as `@conduit build a small house next to me`, goes to an agent CLI that controls the
 game through the [MCP server](#mcp-server). The bot posts the agent's answer in the chat. It needs
-Node.js 20 or later and one of the supported agent CLIs, logged in. Each release publishes it as
+Node.js 20 or later and [Docker](https://www.docker.com). Each release publishes it as
 `@conduit/bot` to the same registry as the MCP server.
 
 ```sh
@@ -203,47 +203,99 @@ The config file defaults to `conduit-bot.json` in the working directory. `CONDUI
 
 ```json
 {
-    "agent": "claude",
-    "memory": "player",
-    "allow": ["Steve"]
+    "agent": { "preset": "claude", "model": "sonnet" },
+    "allow": ["Steve"],
+    "chat": { "enabled": true, "model": "haiku" }
 }
 ```
 
 | Key              | Default        | Description                                                      |
 | ---------------- | -------------- | ---------------------------------------------------------------- |
-| `agent`          |                | Agent CLI to run, see below                                      |
+| `agent`          |                | Agent CLI, model and effort, see [Agents](#agents)               |
 | `keyword`        | `conduit`      | Word that players mention with `@`                               |
 | `memory`         | `player`       | `player` keeps one conversation per player, `shared` one for all |
 |                  |                | players, and `none` starts a new one for every request           |
-| `operators`      | `true`         | Server operators may ask                                         |
-| `allow`          | `[]`           | Players who may ask, by name or UUID                             |
-| `readOnly`       | `false`        | Only give the agent tools that read state                        |
+| `operators`      | `true`         | Server operators get full mode                                   |
+| `allow`          | `[]`           | Players who get full mode, by name or UUID                       |
+| `readOnly`       | `false`        | Only give full mode tools that read state                        |
+| `chat`           |                | Chat mode for everyone else, see below                           |
+| `offline`        | `false`        | Cut the agent's container off from every network                 |
+| `files`          | `[]`           | More login files to copy into the agent's home, relative to `~`  |
+| `env`            | `[]`           | Names of variables to pass to the agent, such as API keys        |
 | `instructions`   |                | Extra instructions for the agent                                 |
 | `timeoutSeconds` | `300`          | Time limit for one request                                       |
 | `maxReplyLength` | `1000`         | Longer answers are cut off                                       |
 | `stateDirectory` | `.conduit-bot` | Where conversations are kept, relative to the config file        |
 
-Anyone who may ask controls the agent and every tool it has, so keep the list of players short or
-turn on `readOnly`. Answers go to the player who asked, or to everyone with `shared` memory.
+### Modes
+
+Operators and the players in `allow` get full mode, where the agent controls the game. Anyone in
+full mode controls the agent and every tool it has, so keep the list short or turn on `readOnly`.
+With `shared` memory, full mode answers go to everyone.
+
+Chat mode lets every other player ask questions. It is off unless `chat.enabled` is `true`. The
+agent can only read the game, and the player tools only show the asking player's own data: their
+inventory, position and statistics, but nobody else's and no IP addresses. Chat mode conversations
+are never shared, with other players or with full mode, and their answers only go to the asking
+player.
+
+| Key            | Default | Description                                                  |
+| -------------- | ------- | ------------------------------------------------------------ |
+| `chat.enabled` | `false` | Answer players who do not get full mode                      |
+| `chat.allow`   |         | Only these tools. Defaults to a list of safe read tools      |
+| `chat.deny`    | `[]`    | Never these tools. On its own, every other read tool applies |
+| `chat.model`   |         | Model for chat mode, instead of the agent's                  |
+| `chat.effort`  |         | Effort for chat mode, instead of the agent's                 |
+
+The default tools are `server_info`, `world_info`, `game_rules`, `get_block`, `get_region`,
+`terrain`, `registry`, `recipes`, `structures` and `get_player`. Tools that list other players or
+entities are never available in chat mode.
+
+### Isolation
+
+Every request runs the agent in a new Docker container. The container sees only the agent's own
+home, with the conversation, and a copy of its login files. It cannot see the host's files, other
+processes or the Docker socket, and its root filesystem is read-only. The Conduit MCP server runs in
+the bot, outside the container, and the agent reaches it through the container's input and output.
+The gRPC token never enters the container, and `readOnly` holds even against an agent that tries to
+work around it.
+
+The container can reach the internet, which the agent needs for its model's API, unless `offline`
+is on. Services that only listen on the host's loopback interface, such as the mod's gRPC server
+by default, stay out of reach.
+
+The login files are copied into the agent's home before each run and deleted after it. A token that
+the agent's CLI refreshed during the run is copied back, unless the host file changed in the
+meantime.
+
+### Agents
 
 `agent` is one of the presets `claude` ([Claude Code](https://claude.com/claude-code)), `codex`
 ([Codex CLI](https://github.com/openai/codex)) and `opencode` ([OpenCode](https://opencode.ai)).
-Each preset gives the agent the Conduit tools. To pass extra arguments, such as a model, use an
-object:
+The bot builds an image with the latest version of the CLI the first time it runs, and again after
+each bot update. Log in to the CLI on the host first, or pass an API key through `env`. Each preset
+copies the CLI's usual login file and turns off the CLI's own tools, so the agent only uses the
+Conduit tools. An object sets the model, the effort and extra arguments, which go to the CLI as
+given:
 
 ```json
-{ "agent": { "preset": "claude", "args": ["--model", "sonnet"] } }
+{ "agent": { "preset": "codex", "model": "gpt-6.1-sol", "effort": "high", "args": [] } }
 ```
 
-Any other agent CLI works through a command that prints the answer on stdout. `resume` continues
-the latest conversation in the working directory, which the bot keeps separate per conversation.
-Without it, every request starts a new conversation.
+OpenCode takes the model as `provider/model` and the effort as one of the model's variants, so it
+needs a model to set the effort.
+
+Any other agent CLI works through a command that prints the answer on stdout, in an image that has
+the CLI and Node.js. `resume` continues the latest conversation in the working directory, which is
+separate for every conversation. Without it, every request starts a new conversation.
 
 ```json
 {
     "agent": {
         "command": ["my-agent", "--mcp-config", "{mcp_config}", "{prompt}"],
-        "resume": ["my-agent", "--continue", "--mcp-config", "{mcp_config}", "{prompt}"]
+        "resume": ["my-agent", "--continue", "--mcp-config", "{mcp_config}", "{prompt}"],
+        "image": "my-agent-image",
+        "model": "my-model"
     }
 }
 ```
@@ -255,9 +307,7 @@ Without it, every request starts a new conversation.
 | `{mcp_command}` | Executable that starts the Conduit MCP server                      |
 | `{mcp_script}`  | Script to pass to `{mcp_command}`                                  |
 
-The agent gets `CONDUIT_ADDRESS`, `CONDUIT_TOKEN` and `CONDUIT_MCP_READ_ONLY` in its environment and
-passes them on to the MCP server, which most agent CLIs do by default. `./gradlew build` also builds
-the bot from this checkout.
+`./gradlew build` also builds the bot from this checkout.
 
 ## Test environment
 

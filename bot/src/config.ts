@@ -6,20 +6,34 @@ import { PRESET_NAMES } from "./agents.ts";
 
 const presetName = z.enum(PRESET_NAMES);
 
+// Passed on as given, since every CLI has its own model names and effort levels.
+const modelChoice = {
+    model: z.string().min(1).optional(),
+    effort: z.string().min(1).optional(),
+};
+
 const agentSchema = z.union(
     [
-        presetName.transform((preset) => ({ preset, args: [] })),
+        presetName.transform((preset) => ({
+            preset,
+            args: [] as string[],
+            model: undefined,
+            effort: undefined,
+        })),
         z.strictObject({
             preset: presetName,
             args: z.array(z.string()).default([]),
+            ...modelChoice,
         }),
         z.strictObject({
             command: z.array(z.string()).min(1),
             resume: z.array(z.string()).min(1).optional(),
+            image: z.string().min(1),
+            ...modelChoice,
         }),
     ],
     {
-        error: `Use a preset (${PRESET_NAMES.join(", ")}), { "preset", "args" } or { "command", "resume" }`,
+        error: `Use a preset (${PRESET_NAMES.join(", ")}), { "preset", "args" } or { "command", "resume", "image" }`,
     },
 );
 
@@ -33,6 +47,18 @@ const configSchema = z.strictObject({
     operators: z.boolean().default(true),
     allow: z.array(z.string()).default([]),
     readOnly: z.boolean().default(false),
+    chat: z
+        .strictObject({
+            enabled: z.boolean().default(false),
+            allow: z.array(z.string()).optional(),
+            deny: z.array(z.string()).default([]),
+            // Overrides the agent's model and effort, such as a cheaper model for chat mode.
+            ...modelChoice,
+        })
+        .default({ enabled: false, deny: [] }),
+    offline: z.boolean().default(false),
+    files: z.array(z.string()).default([]),
+    env: z.array(z.string().regex(/^\w+$/, "Use a variable name")).default([]),
     instructions: z.string().default(""),
     timeoutSeconds: z.number().int().positive().default(300),
     maxReplyLength: z.number().int().positive().default(1000),
