@@ -36,6 +36,8 @@ enum EventType {
     EVENT_TYPE_CHUNK_UNLOAD = 20;
     EVENT_TYPE_ADVANCEMENT = 21;
     EVENT_TYPE_INVENTORY_CHANGE = 22;
+    EVENT_TYPE_ITEM_PICKUP = 23;
+    EVENT_TYPE_ITEM_DROP = 24;
 }
 
 message SubscribeRequest {
@@ -59,7 +61,8 @@ message SubscribeRequest {
     int32 move_heartbeat_ticks = 5;
 
     // Only send events about these players, by name or UUID. Empty means all players.
-    // Applies to EVENT_TYPE_PLAYER_MOVE, EVENT_TYPE_ADVANCEMENT and EVENT_TYPE_INVENTORY_CHANGE.
+    // Applies to EVENT_TYPE_PLAYER_MOVE, EVENT_TYPE_ADVANCEMENT, EVENT_TYPE_INVENTORY_CHANGE,
+    // EVENT_TYPE_ITEM_PICKUP and EVENT_TYPE_ITEM_DROP.
     repeated string players = 6;
 
     // Only send EVENT_TYPE_ENTITY_SPAWN and EVENT_TYPE_ENTITY_REMOVE for these entity types, e.g.
@@ -99,6 +102,8 @@ message Event {
         ChunkEvent chunk_unload = 29;
         AdvancementEvent advancement = 30;
         InventoryChangeEvent inventory_change = 31;
+        ItemEntityEvent item_pickup = 32;
+        ItemEntityEvent item_drop = 33;
     }
 }
 
@@ -223,6 +228,15 @@ message InventoryChangeEvent {
     int32 slot = 3;
     ItemStack old_item = 4;
     ItemStack new_item = 5;
+}
+
+// A player picked up or dropped an item entity.
+message ItemEntityEvent {
+    string player = 1;
+    string player_uuid = 2;
+    // For pickups, only the part that fit into the inventory.
+    ItemStack item = 3;
+    string item_entity_uuid = 4;
 }
 
 message CommandEvent {

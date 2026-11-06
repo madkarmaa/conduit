@@ -5,9 +5,11 @@
     "mixins": [
         "BlockItemMixin",
         "CommandsMixin",
+        "ItemEntityMixin",
         "PlayerAdvancementsMixin",
         "ServerGamePacketListenerImplMixin",
         "ServerLevelMixin",
+        "ServerPlayerMixin",
         "StructureTemplateAccessor"
     ],
     "injectors": {
