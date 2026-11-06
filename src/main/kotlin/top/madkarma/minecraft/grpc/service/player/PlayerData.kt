@@ -39,10 +39,14 @@ internal fun MinecraftServer.describePlayerData(
     val input = TagValueInput.create(reporter, registryAccess(), data)
     val facing = input.read("Rotation", Vec2.CODEC).getOrNull() ?: Vec2.ZERO
     val food = FoodData().apply { readAdditionalSaveData(input) }
-    val gameType = input.read("playerGameType", GameType.LEGACY_ID_CODEC).getOrNull()
-        ?: defaultGameType
-    val effects = input.read("active_effects", MobEffectInstance.CODEC.listOf()).getOrNull()
-        .orEmpty()
+
+    // The game still saves the mode as its numeric id, which only the deprecated codec reads.
+    val gameType =
+        input.getInt("playerGameType").getOrNull()?.let(GameType::byId) ?: defaultGameType
+
+    val effects =
+        input.read("active_effects", MobEffectInstance.CODEC.listOf()).getOrNull().orEmpty()
+
     val enderChest = PlayerEnderChestContainer().apply {
         fromSlots(input.listOrEmpty("EnderItems", ItemStackWithSlot.CODEC))
     }
