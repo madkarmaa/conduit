@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { catchUnwind, catchUnwindAsync, Err, Ok, type AsyncResult, type Result } from "results-ts";
 import type { ExportedLogins } from "../agents.ts";
 import type { StateError } from "../conversations.ts";
-import { log } from "../log.ts";
+import { errorMessage, log } from "../log.ts";
 import { CONTAINER_HOME } from "./container.ts";
 
 // Where exported logins are written, relative to the agent's home.
@@ -58,7 +58,7 @@ export interface LoginCopy {
 }
 
 function stateError(thrown: unknown): StateError {
-    return { kind: "state", message: thrown instanceof Error ? thrown.message : String(thrown) };
+    return { kind: "state", message: errorMessage(thrown) };
 }
 
 // Node reports file system failures only by rejecting.

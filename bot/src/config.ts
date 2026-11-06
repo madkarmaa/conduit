@@ -3,6 +3,7 @@ import { dirname, resolve } from "node:path";
 import { catchUnwind, Err, Ok, type Result } from "results-ts";
 import * as z from "zod";
 import { AGENT_NAMES } from "./agents.ts";
+import { errorMessage } from "./log.ts";
 
 // Passed on as given, since every CLI has its own model names and effort levels.
 const model = z.string().min(1).optional();
@@ -51,7 +52,7 @@ export function loadConfig(path: string): Result<Config, ConfigError> {
     const fail = (message: string): ConfigError => ({ path, message });
 
     return readJson(path)
-        .mapErr((thrown) => fail(thrown instanceof Error ? thrown.message : String(thrown)))
+        .mapErr((thrown) => fail(errorMessage(thrown)))
         .andThen((json) => {
             const parsed = configSchema.safeParse(json);
             if (!parsed.success) return Err(fail(z.prettifyError(parsed.error)));

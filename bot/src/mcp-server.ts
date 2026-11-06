@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { catchUnwind, Err, Ok, type Result } from "results-ts";
 import * as z from "zod";
 import type { McpServer } from "./agents.ts";
+import { errorMessage } from "./log.ts";
 
 const manifestSchema = z.object({ bin: z.record(z.string(), z.string()) });
 
@@ -12,7 +13,7 @@ const require = createRequire(import.meta.url);
 // require reports a missing package by throwing.
 const findManifest = catchUnwind(
     (packageName: string): string => require.resolve(`${packageName}/package.json`),
-    (thrown) => (thrown instanceof Error ? thrown.message : String(thrown)),
+    errorMessage,
 );
 
 // The script behind a binary of an installed package.

@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { catchUnwind } from "results-ts";
 import { log } from "../log.ts";
 
@@ -52,9 +51,9 @@ export function passedVariables(names: readonly string[]): Record<string, string
 // The directory with the built bot, which the container mounts for the supervisor and the relay.
 // From source, that is dist.
 export function builtFiles(): string {
-    const bundled = fileURLToPath(new URL(".", import.meta.url));
-    if (existsSync(join(bundled, "sandbox", "supervisor.mjs"))) return bundled;
-    return fileURLToPath(new URL("../../dist", import.meta.url));
+    if (existsSync(join(import.meta.dirname, "sandbox", "supervisor.mjs")))
+        return import.meta.dirname;
+    return join(import.meta.dirname, "../../dist");
 }
 
 // Reading a file can only report failures by throwing.

@@ -5,6 +5,7 @@ import { catchUnwindAsync, type AsyncResult } from "results-ts";
 import type { Mode } from "./access.ts";
 import type { ChatMessage } from "./chat.ts";
 import type { Memory } from "./config.ts";
+import { errorMessage } from "./log.ts";
 
 export type StateError = { readonly kind: "state"; readonly message: string };
 
@@ -65,7 +66,7 @@ export class Conversations {
 }
 
 function stateError(thrown: unknown): StateError {
-    return { kind: "state", message: thrown instanceof Error ? thrown.message : String(thrown) };
+    return { kind: "state", message: errorMessage(thrown) };
 }
 
 // Node reports file system failures only by rejecting.
