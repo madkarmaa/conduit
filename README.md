@@ -278,22 +278,60 @@ meantime.
 
 ### Agents
 
-`agent` is `claude` ([Claude Code](https://claude.com/claude-code)), `codex`
-([Codex CLI](https://github.com/openai/codex)) or `opencode` ([OpenCode](https://opencode.ai)). To
-use another agent CLI, open an issue. The bot builds an image with the latest version of the CLI the
-first time it runs, and again after each bot update. Log in to the CLI on the host first, or pass an
-API key through `env`. The bot copies the CLI's login files, and for OpenCode its config file with
-the variables that the config reads through `{env:NAME}`. It also turns off the CLI's own tools, so
-the agent only uses the Conduit tools.
+`agent` is `claude`, `codex` or `opencode`. To use another agent CLI, open an issue. The bot builds
+an image with the latest version of the CLI the first time it runs, and again after each bot update.
+It copies the CLI's login files from the host into the container, so log in on the host first, and
+turns off the CLI's own tools, so the agent only uses the Conduit tools.
 
-`model` and `effort` go to the CLI as given, in its own names, and `args` adds extra arguments:
+`model` and `effort` go to the CLI as given, in its own names, and `args` adds extra arguments for
+the CLI. `chat.model` and `chat.effort` override them in chat mode, such as with a cheaper model.
+
+#### Claude Code
+
+[Claude Code](https://claude.com/claude-code) logs in with `claude` on the host. Where it keeps the
+login in the system keychain instead of `~/.claude/.credentials.json`, as on macOS, pass an API key
+or a token from `claude setup-token` with `"env": ["ANTHROPIC_API_KEY"]` or
+`"env": ["CLAUDE_CODE_OAUTH_TOKEN"]`.
 
 ```json
-{ "agent": "codex", "model": "gpt-6.1-sol", "effort": "high", "args": [] }
+{
+    "agent": "claude",
+    "model": "sonnet",
+    "effort": "high",
+    "chat": { "enabled": true, "model": "haiku", "effort": "low" }
+}
 ```
 
-OpenCode takes the model as `provider/model` and the effort as one of the model's variants, so it
-needs a model to set the effort.
+#### Codex
+
+[Codex CLI](https://github.com/openai/codex) logs in with `codex login` on the host.
+
+```json
+{
+    "agent": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "high",
+    "chat": { "enabled": true, "model": "gpt-6-luna", "effort": "low" }
+}
+```
+
+#### OpenCode
+
+[OpenCode](https://opencode.ai) logs in with `opencode auth login` on the host. It keeps those logins
+in a database with every session, so the bot exports them with `opencode auth export` before each
+run and imports them in the container instead. Without a login, the free models such as
+`opencode/beam-free` work too. The bot also copies OpenCode's config file, so custom providers work,
+and passes the variables that the config reads through `{env:NAME}`. The model is `provider/model`,
+as `opencode models` lists them. The effort is one of the model's variants, so it needs a model too.
+
+```json
+{
+    "agent": "opencode",
+    "model": "opencode-go/glm-5.3",
+    "effort": "high",
+    "chat": { "enabled": true, "model": "opencode-go/glm-5.3-flash", "effort": "low" }
+}
+```
 
 `./gradlew build` also builds the bot from this checkout.
 
