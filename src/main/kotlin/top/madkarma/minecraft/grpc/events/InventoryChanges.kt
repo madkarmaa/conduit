@@ -49,6 +49,7 @@ object InventoryChanges {
         for (slot in 0 until SLOT_COUNT) {
             val oldItem = snapshot[slot]
             val newItem = player.inventory.getItem(slot)
+
             if (ItemStack.matches(oldItem, newItem)) continue
 
             snapshot[slot] = newItem.copy()

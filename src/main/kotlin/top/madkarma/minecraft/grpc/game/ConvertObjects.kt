@@ -14,12 +14,7 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.storage.LevelData
-import top.madkarma.minecraft.grpc.proto.SpawnPoint
-import top.madkarma.minecraft.grpc.proto.blockState
-import top.madkarma.minecraft.grpc.proto.entityInfo
-import top.madkarma.minecraft.grpc.proto.itemStack
-import top.madkarma.minecraft.grpc.proto.spawnPoint
-import top.madkarma.minecraft.grpc.proto.statusEffect
+import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import kotlin.jvm.optionals.getOrNull
 import top.madkarma.minecraft.grpc.proto.BlockState as ProtoBlockState

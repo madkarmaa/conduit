@@ -22,8 +22,9 @@ object CraftedItems {
         val recipeId: String?,
     ) {
         fun continues(other: Take): Boolean =
-            type == other.type && player == other.player && recipeId == other.recipeId &&
-                ItemStack.isSameItemSameComponents(result, other.result)
+            type == other.type && player == other.player && recipeId == other.recipeId && ItemStack.isSameItemSameComponents(
+                result, other.result
+            )
     }
 
     // Only touched on the server thread.

@@ -5,11 +5,7 @@ import net.minecraft.resources.Identifier
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager
 import top.madkarma.minecraft.grpc.game.GameServer
 import top.madkarma.minecraft.grpc.game.parseId
-import top.madkarma.minecraft.grpc.proto.ImportStructureResponse
-import top.madkarma.minecraft.grpc.proto.PlaceStructureRequest
-import top.madkarma.minecraft.grpc.proto.SaveStructureRequest
-import top.madkarma.minecraft.grpc.proto.StructureList
-import top.madkarma.minecraft.grpc.proto.structureList
+import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import top.madkarma.minecraft.grpc.rpc.notFound
 import top.madkarma.minecraft.grpc.rpc.runInWorkerThread

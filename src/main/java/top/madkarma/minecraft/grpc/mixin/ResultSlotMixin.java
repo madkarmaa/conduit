@@ -29,16 +29,16 @@ public abstract class ResultSlotMixin {
     private int removeCount;
 
     @Inject(method = "onQuickCraft(Lnet/minecraft/world/item/ItemStack;I)V", at = @At("HEAD"))
-    private void minecraftGrpc$onQuickCraft(ItemStack result, int amount, CallbackInfo info) {
-        CraftedItems.onCrafted(player, result, amount, ((Slot) (Object) this).container);
+    private void minecraftGrpc$onQuickCraft(ItemStack picked, int count, CallbackInfo info) {
+        CraftedItems.onCrafted(player, picked, count, ((Slot) (Object) this).container);
     }
 
     @Inject(method = "onTake", at = @At("HEAD"))
-    private void minecraftGrpc$onTake(Player taker, ItemStack taken, CallbackInfo info) {
+    private void minecraftGrpc$onTake(Player player, ItemStack carried, CallbackInfo info) {
         if (removeCount == 0) {
             return;
         }
 
-        CraftedItems.onCrafted(taker, taken, taken.getCount(), ((Slot) (Object) this).container);
+        CraftedItems.onCrafted(player, carried, carried.getCount(), ((Slot) (Object) this).container);
     }
 }

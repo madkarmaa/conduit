@@ -29,7 +29,7 @@ public abstract class MerchantResultSlotMixin {
     private Merchant merchant;
 
     @Inject(method = "onTake", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/trading/Merchant;notifyTrade(Lnet/minecraft/world/item/trading/MerchantOffer;)V"))
-    private void minecraftGrpc$onTrade(Player player, ItemStack result, CallbackInfo info) {
+    private void minecraftGrpc$onTrade(Player player, ItemStack carried, CallbackInfo info) {
         Trades.onTrade(player, merchant, slots.getActiveOffer());
     }
 }

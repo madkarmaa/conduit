@@ -27,16 +27,16 @@ public abstract class FurnaceResultSlotMixin {
     private int removeCount;
 
     @Inject(method = "onQuickCraft(Lnet/minecraft/world/item/ItemStack;I)V", at = @At("HEAD"))
-    private void minecraftGrpc$onQuickCraft(ItemStack result, int amount, CallbackInfo info) {
-        CraftedItems.onSmelted(player, result, amount);
+    private void minecraftGrpc$onQuickCraft(ItemStack picked, int count, CallbackInfo info) {
+        CraftedItems.onSmelted(player, picked, count);
     }
 
     @Inject(method = "onTake", at = @At("HEAD"))
-    private void minecraftGrpc$onTake(Player taker, ItemStack taken, CallbackInfo info) {
+    private void minecraftGrpc$onTake(Player player, ItemStack carried, CallbackInfo info) {
         if (removeCount == 0) {
             return;
         }
 
-        CraftedItems.onSmelted(taker, taken, taken.getCount());
+        CraftedItems.onSmelted(player, carried, carried.getCount());
     }
 }

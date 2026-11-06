@@ -15,11 +15,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import top.madkarma.minecraft.grpc.game.level
 import top.madkarma.minecraft.grpc.game.toMc
 import top.madkarma.minecraft.grpc.mixin.StructureTemplateAccessor
-import top.madkarma.minecraft.grpc.proto.ImportStructureResponse
-import top.madkarma.minecraft.grpc.proto.StructureMirror
-import top.madkarma.minecraft.grpc.proto.StructurePlacement
-import top.madkarma.minecraft.grpc.proto.StructureRotation
-import top.madkarma.minecraft.grpc.proto.importStructureResponse
+import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.failedPrecondition
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 
@@ -99,9 +95,7 @@ private fun BoundingBox.minCorner(): BlockPos = BlockPos(minX(), minY(), minZ())
 private fun BoundingBox.maxCorner(): BlockPos = BlockPos(maxX(), maxY(), maxZ())
 
 private fun StructureRotation.toMc(): Rotation = when (this) {
-    StructureRotation.STRUCTURE_ROTATION_UNSPECIFIED, StructureRotation.STRUCTURE_ROTATION_NONE ->
-        Rotation.NONE
-
+    StructureRotation.STRUCTURE_ROTATION_UNSPECIFIED, StructureRotation.STRUCTURE_ROTATION_NONE -> Rotation.NONE
     StructureRotation.STRUCTURE_ROTATION_CLOCKWISE_90 -> Rotation.CLOCKWISE_90
     StructureRotation.STRUCTURE_ROTATION_CLOCKWISE_180 -> Rotation.CLOCKWISE_180
     StructureRotation.STRUCTURE_ROTATION_COUNTERCLOCKWISE_90 -> Rotation.COUNTERCLOCKWISE_90
@@ -109,9 +103,7 @@ private fun StructureRotation.toMc(): Rotation = when (this) {
 }
 
 private fun StructureMirror.toMc(): Mirror = when (this) {
-    StructureMirror.STRUCTURE_MIRROR_UNSPECIFIED, StructureMirror.STRUCTURE_MIRROR_NONE ->
-        Mirror.NONE
-
+    StructureMirror.STRUCTURE_MIRROR_UNSPECIFIED, StructureMirror.STRUCTURE_MIRROR_NONE -> Mirror.NONE
     StructureMirror.STRUCTURE_MIRROR_LEFT_RIGHT -> Mirror.LEFT_RIGHT
     StructureMirror.STRUCTURE_MIRROR_FRONT_BACK -> Mirror.FRONT_BACK
     StructureMirror.UNRECOGNIZED -> invalidArgument("Unknown mirror")

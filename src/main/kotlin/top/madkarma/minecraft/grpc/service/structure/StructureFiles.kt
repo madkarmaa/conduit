@@ -56,8 +56,8 @@ private fun MinecraftServer.readTemplate(data: ByteArray): StructureTemplate {
     val nbt = NbtIo.readCompressed(ByteArrayInputStream(data), NbtAccounter.unlimitedHeap())
     val version = NbtUtils.getDataVersion(nbt, UNVERSIONED_DATA_VERSION)
     val upgraded = DataFixTypes.STRUCTURE.updateToCurrentVersion(fixerUpper, nbt, version)
-    val blocks = registryAccess().lookupOrThrow(Registries.BLOCK)
-        .filterFeatures(worldData.enabledFeatures())
+    val blocks =
+        registryAccess().lookupOrThrow(Registries.BLOCK).filterFeatures(worldData.enabledFeatures())
 
     val template = StructureTemplate()
     template.load(blocks, upgraded)

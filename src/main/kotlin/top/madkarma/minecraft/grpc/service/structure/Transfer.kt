@@ -5,12 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import top.madkarma.minecraft.grpc.MinecraftGRPC
 import top.madkarma.minecraft.grpc.game.GameServer
-import top.madkarma.minecraft.grpc.proto.ExportStructureRequest
-import top.madkarma.minecraft.grpc.proto.ImportStructureRequest
-import top.madkarma.minecraft.grpc.proto.ImportStructureResponse
-import top.madkarma.minecraft.grpc.proto.StructureData
-import top.madkarma.minecraft.grpc.proto.StructurePlacement
-import top.madkarma.minecraft.grpc.proto.structureData
+import top.madkarma.minecraft.grpc.proto.*
 import top.madkarma.minecraft.grpc.rpc.invalidArgument
 import top.madkarma.minecraft.grpc.rpc.runInWorkerThread
 import java.io.ByteArrayOutputStream

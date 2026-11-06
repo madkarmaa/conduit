@@ -41,6 +41,7 @@ object ItemEntities {
     ): ItemEntityEvent = itemEntityEvent {
         this.player = player.gameProfile.name
         playerUuid = player.stringUUID
+
         this.item = item.toProto(player.registryAccess())
         itemEntityUuid = itemEntity.stringUUID
     }

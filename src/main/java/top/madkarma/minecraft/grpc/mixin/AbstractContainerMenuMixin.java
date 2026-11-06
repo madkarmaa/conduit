@@ -18,12 +18,12 @@ import top.madkarma.minecraft.grpc.events.CraftedItems;
 @Mixin(AbstractContainerMenu.class)
 public abstract class AbstractContainerMenuMixin {
     @Inject(method = "clicked", at = @At("HEAD"))
-    private void minecraftGrpc$beforeClick(int slotIndex, int button, ContainerInput input, Player player, CallbackInfo info) {
+    private void minecraftGrpc$beforeClick(int slotIndex, int buttonNum, ContainerInput containerInput, Player player, CallbackInfo info) {
         CraftedItems.onClickStarted(player);
     }
 
     @Inject(method = "clicked", at = @At("RETURN"))
-    private void minecraftGrpc$afterClick(int slotIndex, int button, ContainerInput input, Player player, CallbackInfo info) {
+    private void minecraftGrpc$afterClick(int slotIndex, int buttonNum, ContainerInput containerInput, Player player, CallbackInfo info) {
         CraftedItems.onClickFinished(player);
     }
 }
