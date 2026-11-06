@@ -65,7 +65,8 @@ enabled, so tools like `grpcurl` can discover them.
 | `EntityService`    | Query (filters or selectors), spawn, remove, teleport, NBT, effects,   |
 |                    | attributes, damage, riding                                             |
 | `PlayerService`    | Inventories, items, game mode, hunger, experience, messages, titles,   |
-|                    | sounds, kick, operator status                                          |
+|                    | sounds, kick, operator status, statistics, saved data of offline       |
+|                    | players                                                                |
 | `EventService`     | Live stream of chat, joins, movement, block, combat, command, tick,    |
 |                    | entity spawn and removal, chunk, advancement, inventory, item pickup,  |
 |                    | drop, craft, smelt and trade events                                    |
