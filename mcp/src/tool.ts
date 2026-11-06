@@ -1,6 +1,6 @@
 import type { CallToolResult, McpServer } from "@modelcontextprotocol/server";
 import { Err, Ok, type AsyncResult, type Result } from "results-ts";
-import { z } from "zod";
+import * as z from "zod";
 import { invalidInput, type ToolError } from "./grpc.ts";
 import { checkPlayers, offers, redact, type ToolPolicy } from "./policy.ts";
 

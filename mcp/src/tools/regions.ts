@@ -1,6 +1,6 @@
 import type { ConduitClients } from "@conduit/client";
 import { Err, Ok } from "results-ts";
-import { z } from "zod";
+import * as z from "zod";
 import { call, invalidInput } from "../grpc.ts";
 import { drawRegion, paletteFits, summarizeRegion } from "../region.ts";
 import { blockPos, dimension } from "../schemas.ts";

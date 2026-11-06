@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { catchUnwind, Err, Ok, type Result } from "results-ts";
-import { z } from "zod";
+import * as z from "zod";
 import { AGENT_NAMES } from "./agents.ts";
 
 // Passed on as given, since every CLI has its own model names and effort levels.

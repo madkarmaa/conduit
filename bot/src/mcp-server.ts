@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { catchUnwind, Err, Ok, type Result } from "results-ts";
-import { z } from "zod";
+import * as z from "zod";
 import type { McpServer } from "./agents.ts";
 
 const manifestSchema = z.object({ bin: z.record(z.string(), z.string()) });

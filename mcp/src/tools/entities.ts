@@ -1,5 +1,5 @@
 import type { ConduitClients } from "@conduit/client";
-import { z } from "zod";
+import * as z from "zod";
 import { compact, done, json, lines, position, round } from "../format.ts";
 import { call } from "../grpc.ts";
 import { dimension, limit, rotation, snbt, uuid, vec3 } from "../schemas.ts";

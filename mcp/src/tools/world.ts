@@ -1,6 +1,6 @@
 import type { ConduitClients } from "@conduit/client";
 import { Err, Ok } from "results-ts";
-import { z } from "zod";
+import * as z from "zod";
 import { done, json } from "../format.ts";
 import { call, invalidInput } from "../grpc.ts";
 import { blockPos, dimension } from "../schemas.ts";

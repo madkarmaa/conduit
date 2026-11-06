@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { EVENT_NAMES, payloadOf } from "../event-types.ts";
 import type { EventFeed } from "../events.ts";
 import { compact, lines } from "../format.ts";
