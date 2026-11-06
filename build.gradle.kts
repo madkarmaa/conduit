@@ -9,15 +9,6 @@ plugins {
     id("com.diffplug.spotless") version "8.11.0"
 }
 
-repositories {
-    // Add repositories to retrieve artifacts from in here.
-    // You should only use this when depending on other mods because
-    // Loom adds the essential maven repositories to download Minecraft and libraries from
-    // automatically.
-    // See https://docs.gradle.org/current/userguide/declaring_repositories.html
-    // for more information about repositories.
-}
-
 // Libraries bundled into the mod jar via jar-in-jar, together with their transitive dependencies.
 val bundled: Configuration = configurations.create("bundled")
 
@@ -35,30 +26,22 @@ val providedGroups =
 
 configurations.implementation { extendsFrom(bundled) }
 
+val minecraftVersion = providers.gradleProperty("minecraft_version").get()
+val loaderVersion = providers.gradleProperty("loader_version").get()
+val fabricApiVersion = providers.gradleProperty("fabric_api_version").get()
+val fabricKotlinVersion = providers.gradleProperty("fabric_kotlin_version").get()
 val grpcVersion = providers.gradleProperty("grpc_version").get()
 val grpcKotlinVersion = providers.gradleProperty("grpc_kotlin_version").get()
 val protobufVersion = providers.gradleProperty("protobuf_version").get()
 
 dependencies {
     // To change the versions see the gradle.properties file
-    minecraft("com.mojang:minecraft:${providers.gradleProperty("minecraft_version").get()}")
-    implementation("net.fabricmc:fabric-loader:${providers.gradleProperty("loader_version").get()}")
+    minecraft("com.mojang:minecraft:$minecraftVersion")
+    implementation("net.fabricmc:fabric-loader:$loaderVersion")
 
     // Fabric API. This is technically optional, but you probably want it anyway.
-    implementation(
-        "net.fabricmc.fabric-api:fabric-api:${
-            providers.gradleProperty(
-                "fabric_api_version",
-            ).get()
-        }",
-    )
-    implementation(
-        "net.fabricmc:fabric-language-kotlin:${
-            providers.gradleProperty(
-                "fabric_kotlin_version",
-            ).get()
-        }",
-    )
+    implementation("net.fabricmc.fabric-api:fabric-api:$fabricApiVersion")
+    implementation("net.fabricmc:fabric-language-kotlin:$fabricKotlinVersion")
 
     bundled("io.grpc:grpc-netty-shaded:$grpcVersion")
     bundled("io.grpc:grpc-protobuf:$grpcVersion")
@@ -95,9 +78,6 @@ protobuf {
         }
     }
 }
-
-val minecraftVersion = providers.gradleProperty("minecraft_version").get()
-val loaderVersion = providers.gradleProperty("loader_version").get()
 
 tasks.processResources {
     val properties =
@@ -193,14 +173,5 @@ publishing {
         register<MavenPublication>("mavenJava") {
             from(components["java"])
         }
-    }
-
-    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how
-    // to set up publishing.
-    repositories {
-        // Add repositories to publish to here.
-        // Notice: This block does NOT have the same function as the block in the top level.
-        // The repositories here will be used for publishing your artifact, not for
-        // retrieving dependencies.
     }
 }
