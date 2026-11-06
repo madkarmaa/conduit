@@ -135,8 +135,8 @@ bun run build
 | `CONDUIT_TOKEN`         |                   | Bearer token of the mod          |
 | `CONDUIT_MCP_READ_ONLY` | `false`           | Only offer tools that read state |
 
-Tools that cannot be undone or that grant privileges are marked as destructive, so MCP hosts ask
-before running them. To add the server to an MCP host such as Claude Code:
+Tools that only read are marked as read-only, so MCP hosts can run them without asking. To add the
+server to an MCP host such as Claude Code:
 
 ```json
 {

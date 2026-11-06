@@ -48,7 +48,7 @@ export function worldTools({ world }: ConduitClients) {
             },
             actions: {
                 explode: {
-                    access: "destructive",
+                    access: "write",
                     run: (input) => call(world, "explode", input).map(() => done("Exploded")),
                 },
             },

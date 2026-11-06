@@ -52,7 +52,7 @@ export function serverTools({ server }: ConduitClients) {
             },
             actions: {
                 run: {
-                    access: "destructive",
+                    access: "write",
                     run: (input) =>
                         call(server, "executeCommand", {
                             ...input,
@@ -107,7 +107,7 @@ export function serverTools({ server }: ConduitClients) {
             input: {},
             actions: {
                 stop: {
-                    access: "destructive",
+                    access: "write",
                     run: () => call(server, "stop", {}).map(() => done("Server stopping")),
                 },
             },
@@ -128,7 +128,7 @@ export function serverTools({ server }: ConduitClients) {
             actions: {
                 list: { access: "read", run: () => call(server, "listDatapacks", {}).map(json) },
                 set_enabled: {
-                    access: "destructive",
+                    access: "write",
                     run: (input) =>
                         required(input.id, "id")
                             .andThen((id) =>

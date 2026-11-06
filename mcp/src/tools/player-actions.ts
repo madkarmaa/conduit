@@ -46,7 +46,7 @@ export function playerActionTools({ player: players }: ConduitClients) {
                         call(players, "setExperience", input).map(() => done("Experience updated")),
                 },
                 operator: {
-                    access: "destructive",
+                    access: "write",
                     run: (input) =>
                         required(input.operator, "operator").andThenAsync((operator) =>
                             call(players, "setOperator", { player: input.player, operator }).map(
@@ -119,7 +119,7 @@ export function playerActionTools({ player: players }: ConduitClients) {
             input: { player, reason: text.default("Kicked by an operator") },
             actions: {
                 kick: {
-                    access: "destructive",
+                    access: "write",
                     run: (input) =>
                         call(players, "kick", {
                             player: input.player,

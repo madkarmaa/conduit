@@ -40,7 +40,7 @@ export function batchTools({ batch }: ConduitClients) {
             },
             actions: {
                 run: {
-                    access: "destructive",
+                    access: "write",
                     run: (input) => {
                         // The server validates every operation and reports unknown ones per result.
                         const request = {

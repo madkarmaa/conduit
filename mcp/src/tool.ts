@@ -3,8 +3,7 @@ import { Err, Ok, type AsyncResult, type Result } from "results-ts";
 import { z } from "zod";
 import { invalidInput, type ToolError } from "./grpc.ts";
 
-// Destructive actions are irreversible or privileged, so hosts ask before running them.
-export type Access = "read" | "write" | "destructive";
+export type Access = "read" | "write";
 
 export interface Reply {
     readonly text: string;
@@ -84,7 +83,6 @@ function selectAction<Input>(
 function annotations(accesses: Access[]): ToolAnnotations {
     return {
         readOnlyHint: accesses.every((access) => access === "read"),
-        destructiveHint: accesses.includes("destructive"),
         openWorldHint: false,
     };
 }

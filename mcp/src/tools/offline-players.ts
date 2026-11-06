@@ -59,7 +59,7 @@ export function offlinePlayerTools({ player: players }: ConduitClients) {
                         ),
                 },
                 merge_nbt: {
-                    access: "destructive",
+                    access: "write",
                     run: (input) =>
                         required(input.player, "player")
                             .andThen((name) =>

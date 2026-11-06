@@ -112,7 +112,7 @@ export function playerTools({ player: players }: ConduitClients) {
                         ),
                 },
                 clear: {
-                    access: "destructive",
+                    access: "write",
                     run: (input) =>
                         call(players, "clearInventory", input).map(() => done("Inventory cleared")),
                 },

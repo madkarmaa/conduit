@@ -55,7 +55,7 @@ export function entityEditTools({ entity }: ConduitClients) {
                         ),
                 },
                 damage: {
-                    access: "destructive",
+                    access: "write",
                     run: (input) =>
                         required(input.amount, "amount").andThenAsync((amount) =>
                             call(entity, "damage", {
@@ -67,7 +67,7 @@ export function entityEditTools({ entity }: ConduitClients) {
                         ),
                 },
                 nbt: {
-                    access: "destructive",
+                    access: "write",
                     run: (input) =>
                         required(input.snbt, "snbt").andThenAsync((data) =>
                             call(entity, "mergeNbt", { uuid: input.uuid, snbt: data }).map(() =>
