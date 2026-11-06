@@ -27,7 +27,7 @@ export function accessMode(
     config: Pick<Config, "allow" | "operators" | "chat">,
     sender: ChatMessage,
 ): AsyncResult<Mode | undefined, CallError> {
-    const fallback: Mode | undefined = config.chat.enabled ? "chat" : undefined;
+    const fallback: Mode | undefined = config.chat?.enabled ? "chat" : undefined;
 
     const listed = config.allow.some(
         (entry) =>
@@ -51,7 +51,7 @@ export function toolPolicy(
     mode: Mode,
     sender: ChatMessage,
 ): Record<string, string> {
-    if (mode === "full") return { CONDUIT_MCP_READ_ONLY: String(config.readOnly) };
+    if (mode === "full" || !config.chat) return { CONDUIT_MCP_READ_ONLY: String(config.readOnly) };
 
     const { allow, deny } = config.chat;
     // A deny list on its own allows every other tool, otherwise the default list applies.

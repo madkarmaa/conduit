@@ -1,4 +1,3 @@
-import { Err, Ok, type Result } from "results-ts";
 import { presetImage, type PresetImage } from "./sandbox/images.ts";
 import { RELAY_PATH } from "./sandbox/protocol.ts";
 
@@ -34,8 +33,8 @@ export interface ExportedLogins {
 
 // Each CLI names its model and reasoning effort its own way, so the agents translate them.
 export interface AgentOptions {
-    readonly model: string | undefined;
-    readonly effort: string | undefined;
+    readonly model: string;
+    readonly effort: string;
     // Passed to the CLI as given.
     readonly args: readonly string[];
 }
@@ -48,8 +47,7 @@ const AGENTS: Record<AgentName, (options: AgentOptions) => Agent> = {
             ["--output-format", "text"],
             ["--mcp-config", mcpConfig(RELAY), "--strict-mcp-config"],
             ["--tools", "", "--allowedTools", "mcp__conduit"],
-            model ? ["--model", model] : [],
-            effort ? ["--effort", effort] : [],
+            ["--model", model, "--effort", effort],
             args,
         ].flat();
 
@@ -84,8 +82,7 @@ const AGENTS: Record<AgentName, (options: AgentOptions) => Agent> = {
             ...disabled.flatMap((feature) => ["--disable", feature]),
             ...["-c", `mcp_servers.conduit.command=${JSON.stringify(RELAY.command)}`],
             ...["-c", `mcp_servers.conduit.args=${JSON.stringify([RELAY.script])}`],
-            ...(model ? ["--model", model] : []),
-            ...(effort ? ["-c", `model_reasoning_effort=${JSON.stringify(effort)}`] : []),
+            ...["--model", model, "-c", `model_reasoning_effort=${JSON.stringify(effort)}`],
             ...args,
         ];
 
@@ -102,7 +99,7 @@ const AGENTS: Record<AgentName, (options: AgentOptions) => Agent> = {
     },
     opencode: ({ model, effort, args }) => {
         // OpenCode picks the effort as a variant of the model, in the form provider/model#variant.
-        const models = model ? ["--model", effort ? `${model}#${effort}` : model] : [];
+        const models = ["--model", `${model}#${effort}`];
         const config = {
             mcp: { conduit: { type: "local", command: [RELAY.command, RELAY.script] } },
             permission: { "*": "deny", "conduit_*": "allow" },
@@ -129,11 +126,8 @@ const AGENTS: Record<AgentName, (options: AgentOptions) => Agent> = {
     },
 };
 
-export function createAgent(name: AgentName, options: AgentOptions): Result<Agent, string> {
-    if (name === "opencode" && options.effort && !options.model) {
-        return Err("OpenCode sets the effort as a variant of the model, so it needs a model too");
-    }
-    return Ok(AGENTS[name](options));
+export function createAgent(name: AgentName, options: AgentOptions): Agent {
+    return AGENTS[name](options);
 }
 
 // The mcpServers format that Claude Code reads.

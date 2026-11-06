@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { resolve } from "node:path";
 import { call, close, connect } from "@conduit/client";
-import type { AsyncResult, Result } from "results-ts";
+import type { AsyncResult } from "results-ts";
 import type { Mode } from "./access.ts";
 import { createAgent, type Agent, type McpServer } from "./agents.ts";
 import { describeCall, handleChat, type Bot } from "./bot.ts";
@@ -22,7 +22,7 @@ void loadConfig(configPath)
             .mapErr((message) => `Cannot find the Conduit MCP server: ${message}`)
             .map((mcp) => ({ config, mcp })),
     )
-    .andThen((setup) => agentsFor(setup.config).map((agents) => ({ ...setup, agents })))
+    .map((setup) => ({ ...setup, agents: agentsFor(setup.config) }))
     .andThenAsync((setup) => prepareImage(setup.agents.full).map(() => setup))
     .match({
         Ok: ({ config, mcp, agents }) => start(config, mcp, agents),
@@ -33,13 +33,11 @@ void loadConfig(configPath)
     });
 
 // Chat mode can use another model or effort, but always the same agent CLI and image.
-function agentsFor(config: Config): Result<Record<Mode, Agent>, string> {
+function agentsFor(config: Config): Record<Mode, Agent> {
     const { agent, model, effort, args } = config;
-    const chat = { model: config.chat.model ?? model, effort: config.chat.effort ?? effort, args };
-
-    return createAgent(agent, { model, effort, args })
-        .andThen((full) => createAgent(agent, chat).map((chatAgent) => ({ full, chat: chatAgent })))
-        .mapErr((message) => `Invalid agent: ${message}`);
+    const full = createAgent(agent, { model, effort, args });
+    const chat = config.chat && createAgent(agent, { ...config.chat, args });
+    return { full, chat: chat ?? full };
 }
 
 function prepareImage({ image }: Agent): AsyncResult<undefined, string> {

@@ -5,9 +5,10 @@ import * as z from "zod";
 import { AGENT_NAMES } from "./agents.ts";
 import { errorMessage } from "./log.ts";
 
-// Passed on as given, since every CLI has its own model names and effort levels.
-const model = z.string().min(1).optional();
-const effort = z.string().min(1).optional();
+// The bot passes both to the CLI as given, since every CLI names models and effort levels its own
+// way. Both are required, so a CLI default never decides what a request costs.
+const model = z.string({ error: "Set the model, as the agent CLI names it" }).min(1);
+const effort = z.string({ error: "Set the reasoning effort, as the agent CLI names it" }).min(1);
 
 const configSchema = z.strictObject({
     agent: z.enum(AGENT_NAMES, { error: `Use one of ${AGENT_NAMES.join(", ")}` }),
@@ -23,16 +24,16 @@ const configSchema = z.strictObject({
     operators: z.boolean().default(true),
     allow: z.array(z.string()).default([]),
     readOnly: z.boolean().default(false),
+    // Chat mode is off without this section.
     chat: z
         .strictObject({
-            enabled: z.boolean().default(false),
+            enabled: z.boolean().default(true),
             allow: z.array(z.string()).optional(),
             deny: z.array(z.string()).default([]),
-            // Overrides the agent's model and effort, such as a cheaper model for chat mode.
             model,
             effort,
         })
-        .default({ enabled: false, deny: [] }),
+        .optional(),
     offline: z.boolean().default(false),
     files: z.array(z.string()).default([]),
     env: z.array(z.string().regex(/^\w+$/, "Use a variable name")).default([]),
