@@ -190,12 +190,14 @@ val bun: String =
         .firstOrNull { it.canExecute() }
         ?.path ?: "${System.getProperty("user.home")}/.bun/bin/bun"
 
-val installClientDependencies by
-    tasks.registering(Exec::class) { commandLine(bun, "install", "--frozen-lockfile") }
+val installClientDependencies =
+    tasks.register<Exec>("installClientDependencies") {
+        commandLine(bun, "install", "--frozen-lockfile")
+    }
 
 // The TypeScript client is generated from the mod's protos, so Gradle rebuilds it with the mod.
-val buildClient by
-    tasks.registering(Exec::class) {
+val buildClient =
+    tasks.register<Exec>("buildClient") {
         dependsOn(installClientDependencies)
         workingDir("client")
         commandLine(bun, "run", "build")
@@ -206,8 +208,8 @@ val buildClient by
         outputs.dir("client/dist")
     }
 
-val buildMcp by
-    tasks.registering(Exec::class) {
+val buildMcp =
+    tasks.register<Exec>("buildMcp") {
         dependsOn(buildClient)
         workingDir("mcp")
         commandLine(bun, "run", "build")
@@ -221,11 +223,12 @@ val buildMcp by
 
 tasks.build { finalizedBy(buildClient, buildMcp) }
 
-val formatWithBun by tasks.registering(Exec::class) { commandLine(bun, "fmt") }
+val formatWithBun = tasks.register<Exec>("formatWithBun") { commandLine(bun, "fmt") }
 
 tasks.spotlessApply { finalizedBy(formatWithBun) }
 
-val checkFormatWithBun by tasks.registering(Exec::class) { commandLine(bun, "fmt", "--check") }
+val checkFormatWithBun =
+    tasks.register<Exec>("checkFormatWithBun") { commandLine(bun, "fmt", "--check") }
 
 tasks.spotlessCheck { finalizedBy(checkFormatWithBun) }
 
