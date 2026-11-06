@@ -13,6 +13,7 @@ import net.minecraft.server.commands.SummonCommand
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import top.madkarma.conduit.game.*
@@ -63,6 +64,11 @@ internal fun MinecraftServer.spawnEntity(request: SpawnEntityRequest): EntityInf
         )
 
     if (request.hasRotation()) rotate(entity, request.rotation.yaw, request.rotation.pitch)
+
+    // Spawn setup can lower the max health (horses roll theirs) without lowering the health; the
+    // entity's first tick would clamp it, so the reply shows that state right away.
+    if (entity is LivingEntity && entity.health > entity.maxHealth) entity.health = entity.maxHealth
+
     return entity.toProto()
 }
 
