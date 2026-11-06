@@ -47,6 +47,10 @@ export function defineTool<Shape extends z.ZodRawShape>(tool: Tool<Shape>): Regi
                 inputSchema: advertised,
                 annotations: {
                     readOnlyHint: allowed.every(([, action]) => action.access === "read"),
+                    // MCP assumes every tool that writes is destructive unless told otherwise.
+                    // Controlling the game is the purpose of this server, so no tool is singled
+                    // out for extra confirmation; read-only mode is the safeguard instead.
+                    destructiveHint: false,
                     openWorldHint: false,
                 },
             },
