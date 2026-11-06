@@ -10,6 +10,7 @@ import io.grpc.reflection.v1.ServerReflectionGrpc
 import org.slf4j.LoggerFactory
 import top.madkarma.minecraft.grpc.proto.BatchRequest
 import top.madkarma.minecraft.grpc.proto.EventServiceGrpc
+import top.madkarma.minecraft.grpc.proto.ImportStructureRequest
 import java.util.concurrent.TimeUnit
 
 private val AUDIT_LOGGER = LoggerFactory.getLogger("minecraft_grpc/audit")
@@ -40,8 +41,10 @@ class AuditInterceptor : ServerInterceptor {
         val listener = next.startCall(auditedCall, headers)
 
         return object : SimpleForwardingServerCallListener<ReqT>(listener) {
+            // Client streams such as structure imports start with a header that describes the
+            // call; the messages after it can carry megabytes of data.
             override fun onMessage(message: ReqT) {
-                auditedCall.request = message
+                if (auditedCall.request == null) auditedCall.request = message
                 super.onMessage(message)
             }
         }
@@ -85,6 +88,10 @@ private class AuditedCall<ReqT, RespT>(call: ServerCall<ReqT, RespT>) :
 
 private fun describe(request: Any?): String {
     val message = request as? MessageOrBuilder ?: return ""
+    if (message is ImportStructureRequest && message.hasData()) {
+        return "${message.data.size()} bytes of structure data"
+    }
+
     val body = truncate(REQUEST_PRINTER.printToString(message))
 
     if (message is BatchRequest) return "${message.operationsCount} operations: $body"
