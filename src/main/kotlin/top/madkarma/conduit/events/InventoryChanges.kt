@@ -29,13 +29,9 @@ object InventoryChanges {
         ServerPlayerEvents.LEAVE.register { player -> snapshots.remove(player.uuid) }
     }
 
+    // Snapshots stay current even without subscribers: a new subscription then sees every change
+    // from its first tick, instead of one tick being taken as the starting point.
     private fun publishChanges(server: MinecraftServer) {
-        if (!EventBus.wants(EventType.EVENT_TYPE_INVENTORY_CHANGE)) {
-            // A later subscription starts from the inventories at that time, not from stale ones.
-            snapshots.clear()
-            return
-        }
-
         for (player in server.playerList.players) publishChanges(player)
     }
 
