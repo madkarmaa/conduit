@@ -52,6 +52,7 @@ export function entityStateTools({ entity }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "entity_attributes",
             title: "Entity attributes",
@@ -87,6 +88,7 @@ export function entityStateTools({ entity }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "ride",
             title: "Ride",

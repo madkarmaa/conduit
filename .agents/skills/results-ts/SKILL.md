@@ -37,22 +37,20 @@ Return Result or AsyncResult for operations that can fail. Code you control must
 Avoid `catchUnwind` and `catchUnwindAsync`. Use them only when a dependency throws or rejects, you cannot change that behavior, and no suitable nonthrowing or Result-returning API exists. Some Node APIs require this exception. Do not use these adapters for routine failures, general try/catch, or creating an AsyncResult.
 
 ```typescript
-import { Err, Ok, type Result } from 'results-ts';
+import { Err, Ok, type Result } from "results-ts";
 
-type IdError = { readonly code: 'INVALID_ID'; readonly input: string };
+type IdError = { readonly code: "INVALID_ID"; readonly input: string };
 
 const parseId = (input: string): Result<number, IdError> => {
     const id = Number(input);
-    return Number.isSafeInteger(id) && id > 0
-        ? Ok(id)
-        : Err({ code: 'INVALID_ID', input });
+    return Number.isSafeInteger(id) && id > 0 ? Ok(id) : Err({ code: "INVALID_ID", input });
 };
 
-const message = parseId('42')
+const message = parseId("42")
     .map((id) => id + 1)
     .match({
         Ok: (id) => `ID: ${id}`,
-        Err: (error) => `Invalid ID: ${error.input}`
+        Err: (error) => `Invalid ID: ${error.input}`,
     });
 // message is 'ID: 43'.
 ```

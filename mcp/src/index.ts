@@ -58,6 +58,7 @@ serveStdio(() => {
         { name: "conduit", version: "1.0.0" },
         { instructions: INSTRUCTIONS },
     );
+
     for (const register of registrations) register(server, readOnly);
     return server;
 });

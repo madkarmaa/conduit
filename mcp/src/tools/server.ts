@@ -30,6 +30,7 @@ export function serverTools({ server }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "run_command",
             title: "Run command",
@@ -66,6 +67,7 @@ export function serverTools({ server }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "broadcast",
             title: "Broadcast",
@@ -82,6 +84,7 @@ export function serverTools({ server }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "save",
             title: "Save world",
@@ -96,6 +99,7 @@ export function serverTools({ server }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "stop",
             title: "Stop server",
@@ -108,6 +112,7 @@ export function serverTools({ server }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "datapacks",
             title: "Datapacks",
@@ -138,6 +143,7 @@ export function serverTools({ server }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "backups",
             title: "Backups",

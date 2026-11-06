@@ -13,13 +13,16 @@ const AIR = new Set(["minecraft:air", "minecraft:cave_air", "minecraft:void_air"
 
 export function summarizeRegion(region: Region): Reply {
     const counts = new Map<number, number>();
+
     for (const index of region.blocks) counts.set(index, (counts.get(index) ?? 0) + 1);
 
     const sorted = [...counts.entries()]
         .sort(([, first], [, second]) => second - first)
         .map(([index, count]) => [stateName(region, index), count] as const);
+
     const rows = sorted.map(([state, count]) => `${count} ${state}`);
     const data = { min: region.min, size: region.size, counts: Object.fromEntries(sorted) };
+
     return { text: [header(region), ...rows].join("\n"), data };
 }
 
@@ -33,11 +36,13 @@ export function drawRegion(region: Region): Reply {
     const layers: string[] = [];
     for (let y = 0; y < size.y; y++) {
         const rows: string[] = [];
+
         for (let z = 0; z < size.z; z++) {
             const start = (y * size.z + z) * size.x;
             const row = region.blocks.slice(start, start + size.x);
             rows.push(row.map((index) => symbols[index] ?? "?").join(""));
         }
+
         layers.push(`y=${(region.min?.y ?? 0) + y}\n${rows.join("\n")}`);
     }
 

@@ -57,6 +57,7 @@ export function playerActionTools({ player: players }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "notify_player",
             title: "Notify player",
@@ -110,6 +111,7 @@ export function playerActionTools({ player: players }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "kick",
             title: "Kick player",

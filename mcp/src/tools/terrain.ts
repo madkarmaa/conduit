@@ -16,6 +16,7 @@ export function terrainTools({ world }: ConduitClients) {
                 list: { access: "read", run: () => call(world, "listDimensions", {}).map(json) },
             },
         }),
+
         defineTool({
             name: "get_biome",
             title: "Get biome",
@@ -28,6 +29,7 @@ export function terrainTools({ world }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "get_height",
             title: "Get height",
@@ -53,6 +55,7 @@ export function terrainTools({ world }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "chunk",
             title: "Chunk",

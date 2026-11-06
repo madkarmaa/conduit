@@ -46,6 +46,7 @@ export function environmentTools({ world }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "weather",
             title: "Weather",
@@ -73,6 +74,7 @@ export function environmentTools({ world }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "game_rules",
             title: "Game rules",

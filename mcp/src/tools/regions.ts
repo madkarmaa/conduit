@@ -49,6 +49,7 @@ export function regionTools({ world }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "fill",
             title: "Fill region",

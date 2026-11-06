@@ -16,17 +16,15 @@ Return `AsyncResult<T, E>` or `AsyncOption<T>` so callers can chain methods befo
 Awaiting `AsyncResult<T, E>` yields `Result<T, E>`. Awaiting `AsyncOption<T>` yields `Option<T>`. Methods that transform values return wrappers you can keep chaining. Methods such as `match`, `unwrapOr`, and `isOk` return native promises. Await them to get their values. Async predicates do not narrow the container's type. Await the container first if you need synchronous type narrowing.
 
 ```typescript
-import { Err, Ok, type AsyncResult, type Result } from 'results-ts';
+import { Err, Ok, type AsyncResult, type Result } from "results-ts";
 
 type User = { readonly id: number; readonly name: string };
-type LoadError = { readonly code: 'NOT_FOUND'; readonly id: number };
+type LoadError = { readonly code: "NOT_FOUND"; readonly id: number };
 
 const loadUser = (id: number): AsyncResult<User, LoadError> =>
     Ok(id).andThenAsync(async (value) => {
         const result: Result<User, LoadError> =
-            value === 1
-                ? Ok({ id: value, name: 'Ada' })
-                : Err({ code: 'NOT_FOUND', id: value });
+            value === 1 ? Ok({ id: value, name: "Ada" }) : Err({ code: "NOT_FOUND", id: value });
         return result;
     });
 
@@ -35,7 +33,7 @@ const name = await Ok(1)
     .map((user) => user.name)
     .match({
         Ok: (value) => value,
-        Err: (error) => `Missing user ${error.id}`
+        Err: (error) => `Missing user ${error.id}`,
     });
 // name is 'Ada'.
 ```

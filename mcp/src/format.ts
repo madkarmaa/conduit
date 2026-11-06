@@ -10,6 +10,7 @@ export function compact(value: unknown): unknown {
         .filter(([key]) => !key.startsWith("_"))
         .map(([key, field]) => [key, compact(field)] as const)
         .filter(([, field]) => !isEmpty(field));
+
     return Object.fromEntries(entries);
 }
 

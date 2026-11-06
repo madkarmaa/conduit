@@ -46,7 +46,9 @@ export class EventFeed {
             const matching = this.buffer.filter((buffered) => matches(buffered, query));
             if (matching.length > 0 || Date.now() >= deadline)
                 return Ok(this.page(query, matching));
+
             if (this.failure) return Err(this.failure);
+
             await this.nextChange(deadline - Date.now());
         }
     }
@@ -54,6 +56,7 @@ export class EventFeed {
     private page(query: EventQuery, matching: BufferedEvent[]): EventPage {
         const events = matching.slice(0, query.limit);
         const oldest = this.buffer[0]?.cursor ?? this.lastCursor + 1;
+
         return {
             events,
             nextCursor: events.at(-1)?.cursor ?? this.lastCursor,
@@ -68,7 +71,9 @@ export class EventFeed {
                 this.listeners.delete(finish);
                 resolve();
             };
+
             const timer = setTimeout(finish, timeoutMs);
+
             this.listeners.add(finish);
         });
     }
@@ -76,11 +81,15 @@ export class EventFeed {
     private subscribe() {
         if (this.stream) return;
         this.failure = undefined;
+
         const stream = this.client.subscribe({ types: [...SUBSCRIBED_TYPES] });
+
         stream.on("data", (event: GameEvent) => this.add(event));
+
         stream.on("error", (error: grpc.ServiceError) =>
             this.fail(stream, fromServiceError(error)),
         );
+
         stream.on("end", () =>
             this.fail(stream, {
                 kind: "grpc",
@@ -88,6 +97,7 @@ export class EventFeed {
                 details: "Event stream ended",
             }),
         );
+
         this.stream = stream;
     }
 
@@ -100,6 +110,7 @@ export class EventFeed {
 
     private fail(stream: EventStream, error: ToolError) {
         if (this.stream !== stream) return;
+
         this.stream = undefined;
         this.failure ??= error;
         this.notify();

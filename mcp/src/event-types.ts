@@ -58,12 +58,14 @@ export function matches(buffered: BufferedEvent, query: EventQuery): boolean {
 function involvesPlayer(buffered: BufferedEvent, players: string[]): boolean {
     const payload = payloadOf(buffered.event);
     const wanted = players.map((player) => player.toLowerCase());
+
     const candidates = [
         payload.player,
         payload.playerUuid,
         payload.entity?.name,
         payload.entity?.uuid,
     ];
+
     return candidates.some(
         (candidate) => typeof candidate === "string" && wanted.includes(candidate.toLowerCase()),
     );

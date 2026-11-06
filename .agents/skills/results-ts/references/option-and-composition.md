@@ -5,15 +5,15 @@
 Call `None()` to create an absent value. Use `None<T>()` to give an empty Option a type for later operations. `Some(null)` and `Some(undefined)` are present values. Constructors do not convert nullish input to None.
 
 ```typescript
-import { None, Some, type Option } from 'results-ts';
+import { None, Some, type Option } from "results-ts";
 
 const fromNullable = <T>(value: T | null | undefined): Option<T> =>
     value === null || value === undefined ? None<T>() : Some(value);
 
-const label = fromNullable('  Ada  ')
+const label = fromNullable("  Ada  ")
     .map((value) => value.trim())
     .filter((value) => value.length > 0)
-    .unwrapOr('anonymous');
+    .unwrapOr("anonymous");
 // label is 'Ada'. Falsy values such as 0 and false are still present.
 ```
 
@@ -24,16 +24,16 @@ Convert absence to a domain error with `okOr` or `okOrElse`. `okOrElse` computes
 Return `AsyncOption<T>` from async Option APIs so callers can chain before awaiting:
 
 ```typescript
-import { None, Some, type AsyncOption } from 'results-ts';
+import { None, Some, type AsyncOption } from "results-ts";
 
 const normalizeName = (input: string): AsyncOption<string> =>
     Some(input)
         .mapAsync(async (value) => value.trim())
         .andThen((value) => (value.length > 0 ? Some(value) : None<string>()));
 
-const displayName = await normalizeName('  Ada  ')
+const displayName = await normalizeName("  Ada  ")
     .map((value) => value.toUpperCase())
-    .unwrapOr('anonymous');
+    .unwrapOr("anonymous");
 // displayName is 'ADA'.
 ```
 
@@ -54,7 +54,7 @@ These synchronous Option methods mutate the receiver:
 Aliases to the same Option see these mutations. `const` prevents variable reassignment but does not prevent Option mutation. Result methods may return the original container. The library does not deep-clone payload objects, so a transformation does not guarantee a copy.
 
 ```typescript
-import { None } from 'results-ts';
+import { None } from "results-ts";
 
 const cached = None<number>();
 const initial = cached.getOrInsertWith(() => 42); // Returns 42 and sets cached to Some(42).
@@ -84,9 +84,9 @@ Call these methods only on containers with the required nesting. Do not cast a c
 `Option.zip(other)` returns Some containing a tuple only when both values are present. `unzip()` requires an Option containing a two-element tuple and returns two Options. Specify the tuple type if TypeScript would otherwise infer an array.
 
 ```typescript
-import { None, Some, type Option, type Result } from 'results-ts';
+import { None, Some, type Option, type Result } from "results-ts";
 
-const combined = Some(1).zip(Some('Ada')); // Option<[number, string]>.
+const combined = Some(1).zip(Some("Ada")); // Option<[number, string]>.
 const parts = combined.unzip(); // [Option<number>, Option<string>].
 const absent: Option<Result<number, string>> = None();
 const transposed: Result<Option<number>, string> = absent.transpose();

@@ -31,6 +31,7 @@ export function worldTools({ world }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "explode",
             title: "Explode",
@@ -52,6 +53,7 @@ export function worldTools({ world }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "world_border",
             title: "World border",

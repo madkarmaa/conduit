@@ -38,6 +38,7 @@ export function playerTools({ player: players }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "get_player",
             title: "Get player",
@@ -67,6 +68,7 @@ export function playerTools({ player: players }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "inventory",
             title: "Inventory",
@@ -125,6 +127,7 @@ export function playerTools({ player: players }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "give_item",
             title: "Give item",

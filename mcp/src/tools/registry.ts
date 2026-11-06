@@ -71,6 +71,7 @@ export function registryTools({ registry }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "recipes",
             title: "Recipes",
@@ -112,6 +113,7 @@ export function registryTools({ registry }: ConduitClients) {
                 },
             },
         }),
+
         defineTool({
             name: "get_loot_table",
             title: "Loot table",
@@ -138,6 +140,7 @@ interface PageQuery {
 function page<Item extends { id: string }>(all: Item[], query: PageQuery) {
     const filter = query.filter.toLowerCase();
     const matching = all.filter((item) => item.id.toLowerCase().includes(filter));
+
     return {
         total: matching.length,
         items: matching.slice(query.offset, query.offset + query.limit),
