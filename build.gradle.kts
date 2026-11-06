@@ -146,7 +146,8 @@ spotless {
 
     kotlin {
         target("**/*.kt")
-        targetExclude("**/build/**")
+        // Eclipse-based tooling such as jdtls copies the generated proto sources into bin.
+        targetExclude("**/build/**", "**/bin/**")
 
         ktfmt().configure {
             it.setMaxWidth(100)
