@@ -67,7 +67,8 @@ enabled, so tools like `grpcurl` can discover them.
 | `PlayerService`    | Inventories, items, game mode, hunger, experience, messages, titles,   |
 |                    | sounds, kick, operator status                                          |
 | `EventService`     | Live stream of chat, joins, movement, block, combat, command, tick,    |
-|                    | entity spawn and removal, chunk and advancement events                 |
+|                    | entity spawn and removal, chunk, advancement, inventory, item pickup,  |
+|                    | drop, craft, smelt and trade events                                    |
 | `RegistryService`  | Registries and their entries, tags, recipes, loot tables               |
 | `BatchService`     | Many world, entity, player and command operations in one call and one  |
 |                    | server tick                                                            |
