@@ -21,7 +21,8 @@ service ServerService {
     rpc ListDatapacks(google.protobuf.Empty) returns (DatapackList);
     // Enables or disables a datapack and reloads the server's data, like /datapack, then returns
     // the new list. Fails with NOT_FOUND for an unknown pack, FAILED_PRECONDITION for a pack that
-    // cannot be changed and ABORTED while another reload from this API is running.
+    // cannot be changed and ABORTED while any datapack reload is running, including /reload and
+    // /datapack.
     rpc SetDatapackEnabled(SetDatapackEnabledRequest) returns (DatapackList);
     // Saves the world and zips it into the backup directory while the server keeps running.
     // Autosave is paused during the backup. Fails with ABORTED while another backup is running.

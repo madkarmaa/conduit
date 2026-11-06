@@ -2,6 +2,7 @@ package top.madkarma.minecraft.grpc.service.server
 
 import io.grpc.Status
 import kotlinx.coroutines.future.await
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.packs.repository.Pack
 import net.minecraft.server.packs.repository.PackSource
@@ -11,9 +12,21 @@ import top.madkarma.minecraft.grpc.rpc.aborted
 import top.madkarma.minecraft.grpc.rpc.failedPrecondition
 import top.madkarma.minecraft.grpc.rpc.notFound
 import java.util.concurrent.CancellationException
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
-private val reloadInProgress = AtomicBoolean(false)
+// A count, not a flag: /reload can start while another reload still runs, and the API holds one
+// extra slot from its check until its own reload ends, so two API calls cannot both start one.
+private val reloadsInProgress = AtomicInteger(0)
+
+// The events fire for every MinecraftServer.reloadResources call: /reload, /datapack and the API.
+internal fun trackDatapackReloads() {
+    ServerLifecycleEvents.START_DATA_PACK_RELOAD.register { _, _ ->
+        reloadsInProgress.incrementAndGet()
+    }
+    ServerLifecycleEvents.END_DATA_PACK_RELOAD.register { _, _, _ ->
+        reloadsInProgress.decrementAndGet()
+    }
+}
 
 internal fun MinecraftServer.listDatapacks(): DatapackList {
     packRepository.reload()
@@ -34,7 +47,7 @@ internal fun MinecraftServer.listDatapacks(): DatapackList {
 }
 
 internal suspend fun changeDatapackEnabled(request: SetDatapackEnabledRequest): DatapackList {
-    if (!reloadInProgress.compareAndSet(false, true)) {
+    if (!reloadsInProgress.compareAndSet(0, 1)) {
         aborted("A datapack reload is already in progress")
     }
 
@@ -42,7 +55,7 @@ internal suspend fun changeDatapackEnabled(request: SetDatapackEnabledRequest): 
         val selection = GameServer.run { it.selectionWith(request) }
         if (selection != null) reload(GameServer.require(), selection)
     } finally {
-        reloadInProgress.set(false)
+        reloadsInProgress.decrementAndGet()
     }
 
     return GameServer.run { it.listDatapacks() }

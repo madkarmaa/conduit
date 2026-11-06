@@ -15,6 +15,7 @@ import top.madkarma.minecraft.grpc.service.events.EventServiceImpl
 import top.madkarma.minecraft.grpc.service.player.PlayerServiceImpl
 import top.madkarma.minecraft.grpc.service.registry.RegistryServiceImpl
 import top.madkarma.minecraft.grpc.service.server.ServerServiceImpl
+import top.madkarma.minecraft.grpc.service.server.trackDatapackReloads
 import top.madkarma.minecraft.grpc.service.structure.StructureServiceImpl
 import top.madkarma.minecraft.grpc.service.world.WorldServiceImpl
 import kotlin.jvm.optionals.getOrNull
@@ -33,6 +34,7 @@ object MinecraftGRPC : ModInitializer {
 
     override fun onInitialize() {
         GameEvents.register()
+        trackDatapackReloads()
 
         GrpcHost.register(
             ServerServiceImpl(),
