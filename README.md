@@ -7,6 +7,8 @@ A server-side Fabric mod that runs a gRPC server inside Minecraft, so external p
 the world, entities and players, run any command and stream live events. It runs on dedicated
 servers and in singleplayer worlds. Players do not need the mod to join.
 
+Each [GitHub release](https://github.com/madkarmaa/conduit/releases) has the mod jar.
+
 ## Requirements
 
 - The Minecraft and Fabric Loader versions set in [`gradle.properties`](./gradle.properties), and
@@ -125,17 +127,12 @@ clients.server.executeCommand({ command: "time set day" }, (error, response) => 
 ## MCP server
 
 [`mcp`](./mcp) is an [MCP](https://modelcontextprotocol.io) server over stdio that lets AI agents
-control the game through the mod. It needs Node.js 20 or later. `./gradlew build` builds it with
-the mod. To build only the MCP server:
+control the game through the mod. It needs Node.js 20 or later. Each release publishes it as
+`@conduit/mcp` to `https://npm.madkarma.top`, so npm needs that registry for the `@conduit` scope:
 
 ```sh
-bun install
-cd mcp
-bun run build
+npm config set @conduit:registry https://npm.madkarma.top
 ```
-
-`mcp/dist/index.mjs` loads the client and its other dependencies from the repository's
-`node_modules`, so run it from this checkout after `bun install`.
 
 | Variable                | Default           | Description                      |
 | ----------------------- | ----------------- | -------------------------------- |
@@ -164,13 +161,24 @@ To add the server to an MCP host:
 {
     "mcpServers": {
         "conduit": {
-            "command": "node",
-            "args": ["/path/to/conduit/mcp/dist/index.mjs"],
+            "command": "npx",
+            "args": ["-y", "@conduit/mcp"],
             "env": { "CONDUIT_TOKEN": "<token>" }
         }
     }
 }
 ```
+
+`./gradlew build` also builds the MCP server from this checkout. To build only the MCP server:
+
+```sh
+bun install
+cd mcp
+bun run build
+```
+
+A local build runs with `node mcp/dist/index.mjs` and loads its dependencies from the repository's
+`node_modules`.
 
 ## Test environment
 

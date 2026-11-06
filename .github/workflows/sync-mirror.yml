@@ -9,6 +9,12 @@ on:
     create:
     delete:
     workflow_dispatch:
+    # The release commit and tag are pushed with GITHUB_TOKEN, which starts no push workflows.
+    workflow_run:
+        workflows:
+            - Release
+        types:
+            - completed
 
 permissions:
     contents: read
