@@ -1,4 +1,4 @@
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as grpc from "@grpc/grpc-js";
 import * as protoLoader from "@grpc/proto-loader";
@@ -20,8 +20,12 @@ type ConduitProto = BatchProto &
     StructureProto &
     WorldProto;
 
-// Resolves the same way from src and dist, so the client always loads the mod's own protos.
-const PROTO_DIRECTORY = fileURLToPath(new URL("../../src/main/proto", import.meta.url));
+// A bundle that ships the protos next to itself, such as the published MCP server, loads those.
+// Otherwise the client loads the mod's own protos, which resolve the same way from src and dist.
+const BUNDLED_PROTO_DIRECTORY = fileURLToPath(new URL("./proto", import.meta.url));
+const PROTO_DIRECTORY = existsSync(BUNDLED_PROTO_DIRECTORY)
+    ? BUNDLED_PROTO_DIRECTORY
+    : fileURLToPath(new URL("../../src/main/proto", import.meta.url));
 const PACKAGE_DIRECTORY = "conduit/v1";
 
 // These must match the flags of the prebuild script, or the generated types will not match the

@@ -2,6 +2,7 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import { close, connect } from "@conduit/client";
+import packageJson from "../package.json" with { type: "json" };
 import { EventFeed } from "./events.ts";
 import { batchTools } from "./tools/batch.ts";
 import { blockTools } from "./tools/blocks.ts";
@@ -53,7 +54,7 @@ const registrations = [
 
 serveStdio(() => {
     const server = new McpServer(
-        { name: "conduit", version: "1.0.0" },
+        { name: "conduit", version: packageJson.version },
         { instructions: INSTRUCTIONS },
     );
 

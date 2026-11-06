@@ -1,12 +1,22 @@
 {
-    "name": "conduit-mcp",
+    "name": "@conduit/mcp",
     "version": "1.0.0",
     "description": "MCP server that lets AI agents control Minecraft through the Conduit mod",
     "license": "CC0-1.0",
-    "private": true,
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/madkarmaa/conduit.git",
+        "directory": "mcp"
+    },
     "type": "module",
     "bin": {
         "conduit-mcp": "./dist/index.mjs"
+    },
+    "files": [
+        "dist"
+    ],
+    "engines": {
+        "node": ">=20"
     },
     "scripts": {
         "build": "tsdown",
@@ -14,13 +24,14 @@
     },
     "devDependencies": {
         "@types/node": "^24.19.2",
+        "@conduit/client": "workspace:*",
         "tsdown": "^0.23.7",
         "typescript": "^7.0.2"
     },
     "dependencies": {
         "@grpc/grpc-js": "^1.14.7",
+        "@grpc/proto-loader": "^0.8.1",
         "@modelcontextprotocol/server": "^2.4.0",
-        "@conduit/client": "workspace:*",
         "results-ts": "^4.4.0",
         "zod": "^4.6.7"
     }

@@ -212,6 +212,8 @@ val buildMcp by
         workingDir("mcp")
         commandLine(bun, "run", "build")
 
+        // The MCP server bundles the client and ships a copy of the protos.
+        inputs.dir("src/main/proto")
         inputs.files("mcp/package.json", "mcp/tsconfig.json", "mcp/tsdown.config.ts")
         inputs.dir("mcp/src")
         outputs.dir("mcp/dist")
