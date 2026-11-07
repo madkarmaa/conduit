@@ -12,28 +12,20 @@ import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withTimeout
 import net.minecraft.util.thread.BlockableEventLoop
 import org.slf4j.LoggerFactory
+import top.madkarma.conduit.game.ConduitError
 
 private val LOGGER = LoggerFactory.getLogger("conduit")
 
 private const val GAME_THREAD_TIMEOUT_MS = 30_000L
 
-fun invalidArgument(message: String): Nothing =
-    throw Status.INVALID_ARGUMENT.withDescription(message).asException()
-
-fun notFound(message: String): Nothing =
-    throw Status.NOT_FOUND.withDescription(message).asException()
-
-fun failedPrecondition(message: String): Nothing =
-    throw Status.FAILED_PRECONDITION.withDescription(message).asException()
-
-fun aborted(message: String): Nothing = throw Status.ABORTED.withDescription(message).asException()
-
-fun unavailable(message: String): Nothing =
-    throw Status.UNAVAILABLE.withDescription(message).asException()
-
 fun Throwable.toStatusException(): StatusException {
     val cause = (this as? CompletionException)?.cause ?: this
     if (cause is StatusException) return cause
+    if (cause is ConduitError) {
+        return Status.fromCode(Status.Code.valueOf(cause.code))
+            .withDescription(cause.message)
+            .asException()
+    }
 
     // Checked before IllegalStateException, which it extends.
     if (cause is TimeoutCancellationException) {

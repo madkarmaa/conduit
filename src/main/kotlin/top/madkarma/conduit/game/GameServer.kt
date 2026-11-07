@@ -11,9 +11,6 @@ import net.minecraft.server.permissions.LevelBasedPermissionSet
 import net.minecraft.server.permissions.PermissionLevel
 import net.minecraft.world.entity.Entity
 import top.madkarma.conduit.rpc.call
-import top.madkarma.conduit.rpc.invalidArgument
-import top.madkarma.conduit.rpc.notFound
-import top.madkarma.conduit.rpc.unavailable
 
 object GameServer {
     @Volatile var current: MinecraftServer? = null
@@ -31,7 +28,7 @@ fun MinecraftServer.level(dimension: String): ServerLevel =
     getLevel(dimensionKey(dimension)) ?: notFound("Unknown dimension: $dimension")
 
 fun MinecraftServer.player(ref: String): ServerPlayer {
-    if (ref.isBlank()) invalidArgument("A player name or UUID is required")
+    if (ref.isBlank()) invalidInput("A player name or UUID is required")
 
     val byUuid = runCatching { UUID.fromString(ref) }.getOrNull()?.let { playerList.getPlayer(it) }
     return byUuid ?: playerList.getPlayerByName(ref) ?: notFound("Player not online: $ref")
@@ -39,7 +36,7 @@ fun MinecraftServer.player(ref: String): ServerPlayer {
 
 fun MinecraftServer.entity(uuid: String): Entity {
     val id =
-        runCatching { UUID.fromString(uuid) }.getOrNull() ?: invalidArgument("Invalid UUID: $uuid")
+        runCatching { UUID.fromString(uuid) }.getOrNull() ?: invalidInput("Invalid UUID: $uuid")
 
     for (level in allLevels) {
         level.getEntity(id)?.let {
@@ -56,7 +53,7 @@ fun MinecraftServer.entityOrPlayer(ref: String): Entity {
 }
 
 fun permissionSet(level: Int): LevelBasedPermissionSet {
-    if (level !in 0..4) invalidArgument("Permission level must be between 0 and 4")
+    if (level !in 0..4) invalidInput("Permission level must be between 0 and 4")
     return LevelBasedPermissionSet.forLevel(PermissionLevel.byId(level))
 }
 
@@ -97,7 +94,7 @@ fun MinecraftServer.runCommandOrFail(command: String): CommandResult {
     val result = runCommand(command, createCommandSourceStack().withSuppressedOutput())
 
     if (!result.success) {
-        invalidArgument(
+        invalidInput(
             "Command failed: /$command: ${result.output.joinToString("; ")}",
         )
     }

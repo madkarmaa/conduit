@@ -14,9 +14,9 @@ import net.minecraft.server.network.ServerConfigurationPacketListenerImpl
 import net.minecraft.util.Util
 import net.minecraft.util.datafix.DataFixTypes
 import net.minecraft.world.level.storage.LevelResource
-import top.madkarma.conduit.rpc.failedPrecondition
-import top.madkarma.conduit.rpc.invalidArgument
-import top.madkarma.conduit.rpc.notFound
+import top.madkarma.conduit.game.failedPrecondition
+import top.madkarma.conduit.game.invalidInput
+import top.madkarma.conduit.game.notFound
 
 // Saved player data is read and written on the server thread, each call within one
 // GameServer.run block. Logins load this data on the server thread too, so a login never reads a
@@ -30,7 +30,7 @@ private fun MinecraftServer.dataDirectory(): Path = getWorldPath(LevelResource.P
 private fun MinecraftServer.dataFile(id: UUID): Path = dataDirectory().resolve("$id$DATA_SUFFIX")
 
 internal fun MinecraftServer.resolvePlayerId(ref: String): UUID {
-    if (ref.isBlank()) invalidArgument("A player name or UUID is required")
+    if (ref.isBlank()) invalidInput("A player name or UUID is required")
 
     runCatching { UUID.fromString(ref) }
         .getOrNull()

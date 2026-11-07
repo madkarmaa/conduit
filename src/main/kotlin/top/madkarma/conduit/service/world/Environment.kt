@@ -5,9 +5,9 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.gamerules.GameRule
 import net.minecraft.world.level.storage.LevelData
 import top.madkarma.conduit.game.*
+import top.madkarma.conduit.game.invalidInput
+import top.madkarma.conduit.game.notFound
 import top.madkarma.conduit.proto.*
-import top.madkarma.conduit.rpc.invalidArgument
-import top.madkarma.conduit.rpc.notFound
 
 // Time and weather changes go through the vanilla commands, which keep world clocks and clients
 // in sync.
@@ -31,7 +31,7 @@ internal fun MinecraftServer.changeTime(request: SetTimeRequest) {
             SetTimeRequest.ValueCase.TIME -> "time set ${request.time}"
             SetTimeRequest.ValueCase.ADD -> "time add ${request.add}"
             SetTimeRequest.ValueCase.PRESET -> "time set ${request.preset}"
-            else -> invalidArgument("One of time, add or preset is required")
+            else -> invalidInput("One of time, add or preset is required")
         }
 
     if (request.dimension.isBlank()) {
@@ -86,7 +86,7 @@ internal fun MinecraftServer.changeGameRule(request: SetGameRuleRequest) {
 private fun <T : Any> MinecraftServer.setRule(rule: GameRule<T>, value: String) {
     val parsed =
         rule.deserialize(value).getOrThrow {
-            invalidArgument("Invalid value for ${rule.id()}: $it")
+            invalidInput("Invalid value for ${rule.id()}: $it")
         }
 
     gameRules.set(rule, parsed, this)

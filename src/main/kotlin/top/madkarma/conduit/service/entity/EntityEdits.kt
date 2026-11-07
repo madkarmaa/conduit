@@ -13,8 +13,8 @@ import net.minecraft.world.entity.Relative
 import net.minecraft.world.level.storage.TagValueInput
 import net.minecraft.world.level.storage.TagValueOutput
 import top.madkarma.conduit.game.*
+import top.madkarma.conduit.game.failedPrecondition
 import top.madkarma.conduit.proto.*
-import top.madkarma.conduit.rpc.failedPrecondition
 
 internal fun MinecraftServer.removeEntity(request: RemoveEntityRequest) {
     val entity = entity(request.uuid)

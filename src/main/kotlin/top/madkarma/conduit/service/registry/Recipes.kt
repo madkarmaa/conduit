@@ -13,13 +13,13 @@ import net.minecraft.world.item.crafting.BrewingRecipe
 import net.minecraft.world.item.crafting.Recipe
 import net.minecraft.world.item.crafting.RecipeHolder
 import net.minecraft.world.item.crafting.display.SlotDisplay
+import top.madkarma.conduit.game.notFound
 import top.madkarma.conduit.game.toProto
 import top.madkarma.conduit.proto.ListRecipesRequest
 import top.madkarma.conduit.proto.Recipe as ProtoRecipe
 import top.madkarma.conduit.proto.RecipeList
 import top.madkarma.conduit.proto.recipe
 import top.madkarma.conduit.proto.recipeList
-import top.madkarma.conduit.rpc.notFound
 
 internal fun MinecraftServer.readRecipes(request: ListRecipesRequest): RecipeList {
     val serializer =

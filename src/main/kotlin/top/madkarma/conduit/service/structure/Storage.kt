@@ -6,10 +6,10 @@ import net.minecraft.IdentifierException
 import net.minecraft.resources.Identifier
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager
 import top.madkarma.conduit.game.GameServer
+import top.madkarma.conduit.game.invalidInput
+import top.madkarma.conduit.game.notFound
 import top.madkarma.conduit.game.parseId
 import top.madkarma.conduit.proto.*
-import top.madkarma.conduit.rpc.invalidArgument
-import top.madkarma.conduit.rpc.notFound
 import top.madkarma.conduit.rpc.runInWorkerThread
 
 internal suspend fun saveStructure(request: SaveStructureRequest) {
@@ -63,5 +63,5 @@ private fun worldStructurePath(manager: StructureTemplateManager, id: Identifier
             .worldTemplates()
             .createAndValidatePathToStructure(id, StructureTemplateManager.WORLD_STRUCTURE_LISTER)
     } catch (exception: IdentifierException) {
-        invalidArgument("Invalid structure id: ${exception.message}")
+        invalidInput("Invalid structure id: ${exception.message}")
     }

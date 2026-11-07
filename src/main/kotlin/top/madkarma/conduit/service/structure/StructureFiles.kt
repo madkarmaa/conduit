@@ -13,7 +13,7 @@ import net.minecraft.nbt.NbtUtils
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.datafix.DataFixTypes
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate
-import top.madkarma.conduit.rpc.invalidArgument
+import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.rpc.toStatusException
 
 // The game's template loader assumes this version for files saved before DataVersion existed.
@@ -35,11 +35,11 @@ internal fun MinecraftServer.decodeStructure(data: ByteArray): StructureTemplate
         try {
             readTemplate(data)
         } catch (exception: Exception) {
-            invalidArgument("Invalid structure data: ${exception.message}")
+            invalidInput("Invalid structure data: ${exception.message}")
         }
 
     val size = template.size
-    if (size.x < 1 || size.y < 1 || size.z < 1) invalidArgument("The data is not a structure")
+    if (size.x < 1 || size.y < 1 || size.z < 1) invalidInput("The data is not a structure")
 
     return template
 }

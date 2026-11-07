@@ -8,10 +8,10 @@ import net.minecraft.stats.ServerStatsCounter
 import net.minecraft.stats.StatType
 import net.minecraft.stats.StatsCounter
 import net.minecraft.world.level.storage.LevelResource
+import top.madkarma.conduit.game.notFound
 import top.madkarma.conduit.proto.PlayerRef
 import top.madkarma.conduit.proto.PlayerStats
 import top.madkarma.conduit.proto.playerStats
-import top.madkarma.conduit.rpc.notFound
 
 internal fun MinecraftServer.playerStats(request: PlayerRef): PlayerStats {
     val id = resolvePlayerId(request.player)

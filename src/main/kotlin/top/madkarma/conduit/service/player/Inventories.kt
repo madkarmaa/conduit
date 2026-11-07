@@ -4,11 +4,11 @@ import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Prediction
 import net.minecraft.world.Container
+import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.player
 import top.madkarma.conduit.game.toMc
 import top.madkarma.conduit.game.toProto
 import top.madkarma.conduit.proto.*
-import top.madkarma.conduit.rpc.invalidArgument
 
 internal fun MinecraftServer.inventoryOf(ref: String): Inventory {
     val inventory = player(ref).inventory
@@ -22,7 +22,7 @@ internal fun MinecraftServer.changeInventorySlot(request: SetInventorySlotReques
     val inventory = player(request.player).inventory
 
     if (request.slot !in 0 until inventory.containerSize) {
-        invalidArgument("Slot ${request.slot} is out of range")
+        invalidInput("Slot ${request.slot} is out of range")
     }
 
     inventory.setItem(request.slot, request.item.toMc(registryAccess()))
@@ -45,7 +45,7 @@ internal fun MinecraftServer.clearInventory(request: PlayerRef) {
 }
 
 internal fun MinecraftServer.selectHotbarSlot(request: SetSelectedSlotRequest) {
-    if (request.slot !in 0..8) invalidArgument("Hotbar slot must be between 0 and 8")
+    if (request.slot !in 0..8) invalidInput("Hotbar slot must be between 0 and 8")
     val player = player(request.player)
 
     player.inventory.selectedSlot = request.slot

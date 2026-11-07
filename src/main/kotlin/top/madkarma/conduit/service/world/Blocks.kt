@@ -10,10 +10,10 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.storage.TagValueInput
 import top.madkarma.conduit.game.*
+import top.madkarma.conduit.game.invalidInput
+import top.madkarma.conduit.game.notFound
 import top.madkarma.conduit.proto.*
 import top.madkarma.conduit.proto.BlockPos as ProtoBlockPos
-import top.madkarma.conduit.rpc.invalidArgument
-import top.madkarma.conduit.rpc.notFound
 
 internal fun MinecraftServer.readBlock(request: GetBlockRequest): BlockInfo {
     val level = level(request.dimension)
@@ -79,7 +79,7 @@ internal fun MinecraftServer.place(
             position,
         )
     ) {
-        invalidArgument("Position ${position.x} ${position.y} ${position.z} is outside the world")
+        invalidInput("Position ${position.x} ${position.y} ${position.z} is outside the world")
     }
 
     val changed = level.setBlock(position, block.state, flags)
@@ -87,7 +87,7 @@ internal fun MinecraftServer.place(
 
     val blockEntity =
         level.getBlockEntity(position)
-            ?: invalidArgument("${block.state.block} has no block entity data")
+            ?: invalidInput("${block.state.block} has no block entity data")
 
     loadBlockEntity(level, blockEntity, nbt)
     return true

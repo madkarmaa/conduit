@@ -3,11 +3,11 @@ package top.madkarma.conduit.service.player
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.GameType
+import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.player
 import top.madkarma.conduit.game.toComponent
 import top.madkarma.conduit.game.toProto
 import top.madkarma.conduit.proto.*
-import top.madkarma.conduit.rpc.invalidArgument
 
 internal fun MinecraftServer.listPlayers(): PlayerList {
     val online = playerList.players
@@ -41,7 +41,7 @@ internal fun MinecraftServer.describePlayer(player: ServerPlayer): PlayerInfo {
 internal fun MinecraftServer.changeGameMode(request: SetGameModeRequest) {
     val mode =
         GameType.byName(request.gameMode.lowercase(), null)
-            ?: invalidArgument("Unknown game mode: ${request.gameMode}")
+            ?: invalidInput("Unknown game mode: ${request.gameMode}")
 
     player(request.player).setGameMode(mode)
 }

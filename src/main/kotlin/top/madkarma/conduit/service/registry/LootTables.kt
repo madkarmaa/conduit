@@ -6,9 +6,9 @@ import net.minecraft.core.registries.Registries
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.storage.loot.LootTable
+import top.madkarma.conduit.game.notFound
 import top.madkarma.conduit.proto.LootTable as ProtoLootTable
 import top.madkarma.conduit.proto.lootTable
-import top.madkarma.conduit.rpc.notFound
 
 // ReloadableServerRegistries.Holder.getLootTable returns an empty table for unknown ids, so the
 // lookup goes through the registry to tell missing tables apart.

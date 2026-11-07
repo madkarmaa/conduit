@@ -7,22 +7,22 @@ import net.minecraft.resources.Identifier
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.MinecraftServer
 import net.minecraft.tags.TagKey
+import top.madkarma.conduit.game.invalidInput
+import top.madkarma.conduit.game.notFound
 import top.madkarma.conduit.game.parseId
 import top.madkarma.conduit.proto.*
-import top.madkarma.conduit.rpc.invalidArgument
-import top.madkarma.conduit.rpc.notFound
 
 private const val DEFAULT_PAGE_SIZE = 1000
 private const val MAX_PAGE_SIZE = 10000
 
 internal fun requireId(id: String, kind: String): Identifier {
-    if (id.isBlank()) invalidArgument("A $kind id is required")
+    if (id.isBlank()) invalidInput("A $kind id is required")
     return parseId(id)
 }
 
 internal fun <T> List<T>.page(offset: Int, limit: Int): List<T> {
-    if (offset < 0) invalidArgument("Offset must not be negative")
-    if (limit !in 0..MAX_PAGE_SIZE) invalidArgument("Limit must be between 0 and $MAX_PAGE_SIZE")
+    if (offset < 0) invalidInput("Offset must not be negative")
+    if (limit !in 0..MAX_PAGE_SIZE) invalidInput("Limit must be between 0 and $MAX_PAGE_SIZE")
 
     return drop(offset).take(if (limit == 0) DEFAULT_PAGE_SIZE else limit)
 }

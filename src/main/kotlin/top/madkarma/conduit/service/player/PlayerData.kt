@@ -21,11 +21,11 @@ import net.minecraft.world.level.storage.TagValueOutput
 import net.minecraft.world.level.storage.ValueInput
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
+import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.rotationOf
 import top.madkarma.conduit.game.toProto
 import top.madkarma.conduit.proto.OfflinePlayerInfo
 import top.madkarma.conduit.proto.offlinePlayerInfo
-import top.madkarma.conduit.rpc.invalidArgument
 
 // Saved player data is read with the same keys and codecs the game loads players with.
 
@@ -124,7 +124,7 @@ internal fun writeInventory(
 
     // Without this check, the game would leave an item it cannot save out of the file without
     // an error.
-    if (!problems.isEmpty) invalidArgument("Item cannot be saved: ${problems.report}")
+    if (!problems.isEmpty) invalidInput("Item cannot be saved: ${problems.report}")
 
     data.remove("equipment")
     data.merge(output.buildResult())

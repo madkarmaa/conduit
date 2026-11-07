@@ -3,12 +3,12 @@ package top.madkarma.conduit.service.world
 import kotlin.math.roundToLong
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.border.WorldBorder
+import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.level
 import top.madkarma.conduit.proto.DimensionRef
 import top.madkarma.conduit.proto.SetWorldBorderRequest
 import top.madkarma.conduit.proto.WorldBorderInfo
 import top.madkarma.conduit.proto.worldBorderInfo
-import top.madkarma.conduit.rpc.invalidArgument
 
 private val CENTER_RANGE = -WorldBorder.MAX_CENTER_COORDINATE..WorldBorder.MAX_CENTER_COORDINATE
 private val SIZE_RANGE = 1.0..WorldBorder.MAX_SIZE
@@ -64,24 +64,24 @@ private fun validateWorldBorder(request: SetWorldBorderRequest) {
     if (request.hasCenterZ()) requireInRange(request.centerZ, CENTER_RANGE, "center_z")
     if (request.hasSize()) requireInRange(request.size, SIZE_RANGE, "size")
 
-    if (request.transitionMs < 0) invalidArgument("transition_ms must not be negative")
+    if (request.transitionMs < 0) invalidInput("transition_ms must not be negative")
     if (request.transitionMs > 0 && !request.hasSize()) {
-        invalidArgument("transition_ms requires size")
+        invalidInput("transition_ms requires size")
     }
 
     if (request.hasDamagePerBlock()) requireNonNegative(request.damagePerBlock, "damage_per_block")
     if (request.hasDamageSafeZone()) requireNonNegative(request.damageSafeZone, "damage_safe_zone")
 
-    if (request.warningBlocks < 0) invalidArgument("warning_blocks must not be negative")
-    if (request.warningTimeTicks < 0) invalidArgument("warning_time_ticks must not be negative")
+    if (request.warningBlocks < 0) invalidInput("warning_blocks must not be negative")
+    if (request.warningTimeTicks < 0) invalidInput("warning_time_ticks must not be negative")
 }
 
 private fun requireInRange(value: Double, range: ClosedRange<Double>, name: String) {
     if (value in range) return
-    invalidArgument("$name must be between ${range.start} and ${range.endInclusive}, got $value")
+    invalidInput("$name must be between ${range.start} and ${range.endInclusive}, got $value")
 }
 
 private fun requireNonNegative(value: Double, name: String) {
     if (value >= 0.0 && value.isFinite()) return
-    invalidArgument("$name must be a finite number of at least 0, got $value")
+    invalidInput("$name must be a finite number of at least 0, got $value")
 }

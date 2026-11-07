@@ -10,11 +10,11 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate
 import top.madkarma.conduit.Conduit
+import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.level
 import top.madkarma.conduit.game.parseId
 import top.madkarma.conduit.proto.BlockPos as ProtoBlockPos
 import top.madkarma.conduit.proto.blockPos
-import top.madkarma.conduit.rpc.invalidArgument
 
 internal fun MinecraftServer.captureStructure(
     dimension: String,
@@ -42,7 +42,7 @@ internal fun MinecraftServer.captureStructure(
 
 internal fun checkVolume(volume: Long) {
     val limit = Conduit.config.maxStructureVolume
-    if (volume > limit) invalidArgument("Structure of $volume blocks exceeds the limit of $limit")
+    if (volume > limit) invalidInput("Structure of $volume blocks exceeds the limit of $limit")
 }
 
 internal val Vec3i.volume: Long
@@ -58,5 +58,5 @@ private fun ignoredBlocks(id: String): List<Block> {
     if (id.isBlank()) return emptyList()
 
     val block = BuiltInRegistries.BLOCK.getOptional(parseId(id)).getOrNull()
-    return listOf(block ?: invalidArgument("Unknown block: $id"))
+    return listOf(block ?: invalidInput("Unknown block: $id"))
 }

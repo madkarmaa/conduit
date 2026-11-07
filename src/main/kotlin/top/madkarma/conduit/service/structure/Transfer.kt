@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import top.madkarma.conduit.Conduit
 import top.madkarma.conduit.game.GameServer
+import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.proto.*
-import top.madkarma.conduit.rpc.invalidArgument
 import top.madkarma.conduit.rpc.runInWorkerThread
 
 // Well below gRPC's default 4 MiB message limit, so large files stream in several pieces.
@@ -56,24 +56,24 @@ private suspend fun receiveUpload(requests: Flow<ImportStructureRequest>): Uploa
 
     requests.collect { request ->
         if (placement == null) {
-            if (!request.hasHeader()) invalidArgument("The first message must be the header")
+            if (!request.hasHeader()) invalidInput("The first message must be the header")
 
             checkPlacement(request.header)
             placement = request.header
             return@collect
         }
 
-        if (!request.hasData()) invalidArgument("Only the first message may be a header")
+        if (!request.hasData()) invalidInput("Only the first message may be a header")
 
         if (data.size().toLong() + request.data.size() > limit) {
-            invalidArgument("Structure data exceeds the limit of $limit bytes")
+            invalidInput("Structure data exceeds the limit of $limit bytes")
         }
 
         request.data.writeTo(data)
     }
 
-    val header = placement ?: invalidArgument("The stream ended before the header")
-    if (data.size() == 0) invalidArgument("The stream contains no structure data")
+    val header = placement ?: invalidInput("The stream ended before the header")
+    if (data.size() == 0) invalidInput("The stream contains no structure data")
 
     return Upload(header, data.toByteArray())
 }

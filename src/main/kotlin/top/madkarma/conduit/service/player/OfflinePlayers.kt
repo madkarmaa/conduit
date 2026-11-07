@@ -6,10 +6,10 @@ import net.minecraft.nbt.TagParser
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.ProblemReporter
 import net.minecraft.world.level.storage.TagValueInput
+import top.madkarma.conduit.game.failedPrecondition
+import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.toMc
 import top.madkarma.conduit.proto.*
-import top.madkarma.conduit.rpc.failedPrecondition
-import top.madkarma.conduit.rpc.invalidArgument
 import top.madkarma.conduit.service.entity.saveEntity
 
 internal fun MinecraftServer.offlinePlayer(request: PlayerRef): OfflinePlayerInfo {
@@ -28,7 +28,7 @@ internal fun MinecraftServer.mergeOfflinePlayerNbt(request: MergeOfflinePlayerNb
 
 internal fun MinecraftServer.changeOfflineInventorySlot(request: SetInventorySlotRequest) {
     if (request.slot !in 0 until INVENTORY_SLOTS) {
-        invalidArgument("Slot ${request.slot} is out of range")
+        invalidInput("Slot ${request.slot} is out of range")
     }
 
     val registries = registryAccess()
@@ -67,7 +67,7 @@ private fun MinecraftServer.editPlayerData(ref: String, edit: (CompoundTag) -> U
     problemsIn(id, data)?.let { failedPrecondition("Saved data of player $id is invalid: $it") }
 
     edit(data)
-    problemsIn(id, data)?.let { invalidArgument("Edited player data is invalid: $it") }
+    problemsIn(id, data)?.let { invalidInput("Edited player data is invalid: $it") }
 
     writePlayerData(id, data)
 }

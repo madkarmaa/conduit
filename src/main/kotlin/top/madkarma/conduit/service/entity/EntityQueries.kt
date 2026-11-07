@@ -17,9 +17,9 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import top.madkarma.conduit.game.*
+import top.madkarma.conduit.game.failedPrecondition
+import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.proto.*
-import top.madkarma.conduit.rpc.failedPrecondition
-import top.madkarma.conduit.rpc.invalidArgument
 
 private const val UNLOADED_CHUNK_MESSAGE =
     "Chunk is not loaded; force-load it with WorldService.SetChunkForced or move a player nearby"
@@ -45,7 +45,7 @@ internal fun MinecraftServer.spawnEntity(request: SpawnEntityRequest): EntityInf
 
     val type =
         registryAccess().lookupOrThrow(Registries.ENTITY_TYPE).get(key).orElseGet {
-            invalidArgument("Unknown entity type: ${request.type}")
+            invalidInput("Unknown entity type: ${request.type}")
         }
 
     val level = level(request.dimension)
@@ -100,7 +100,7 @@ private class EntityFilter(
         request.typesList
             .map { id ->
                 BuiltInRegistries.ENTITY_TYPE.getOptional(parseId(id)).orElseGet {
-                    invalidArgument("Unknown entity type: $id")
+                    invalidInput("Unknown entity type: $id")
                 }
             }
             .toSet()
@@ -113,7 +113,7 @@ private class EntityFilter(
     private val radiusSq = if (request.hasRadius()) request.radius * request.radius else null
 
     init {
-        if (radiusSq != null && center == null) invalidArgument("radius requires center")
+        if (radiusSq != null && center == null) invalidInput("radius requires center")
     }
 
     fun collect(limit: Int): List<Entity> {

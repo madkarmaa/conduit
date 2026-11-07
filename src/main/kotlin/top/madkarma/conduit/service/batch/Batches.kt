@@ -2,8 +2,8 @@ package top.madkarma.conduit.service.batch
 
 import io.grpc.Status
 import net.minecraft.server.MinecraftServer
+import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.proto.*
-import top.madkarma.conduit.rpc.invalidArgument
 import top.madkarma.conduit.rpc.toStatusException
 
 private const val MAX_OPERATIONS = 10_000
@@ -15,7 +15,7 @@ private val SKIPPED: OperationResult = operationResult {
 
 internal fun MinecraftServer.executeBatch(request: BatchRequest): BatchResponse {
     if (request.operationsCount > MAX_OPERATIONS) {
-        invalidArgument(
+        invalidInput(
             "A batch holds at most $MAX_OPERATIONS operations, got ${request.operationsCount}",
         )
     }
@@ -58,5 +58,5 @@ private fun MinecraftServer.applyOperation(operation: Operation, result: Operati
             applyPlayerOperation(operation, result) ||
             applyServerOperation(operation, result)
 
-    if (!applied) invalidArgument("Operation is not set or not supported by this server")
+    if (!applied) invalidInput("Operation is not set or not supported by this server")
 }

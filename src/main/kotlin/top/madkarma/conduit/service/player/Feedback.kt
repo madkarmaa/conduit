@@ -9,6 +9,7 @@ import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.server.MinecraftServer
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundSource
+import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.parseId
 import top.madkarma.conduit.game.player
 import top.madkarma.conduit.game.toComponent
@@ -16,7 +17,6 @@ import top.madkarma.conduit.game.toMc
 import top.madkarma.conduit.proto.PlaySoundRequest
 import top.madkarma.conduit.proto.SendMessageRequest
 import top.madkarma.conduit.proto.SendTitleRequest
-import top.madkarma.conduit.rpc.invalidArgument
 
 internal fun MinecraftServer.sendMessage(request: SendMessageRequest) {
     val message = request.message.toComponent(registryAccess())
@@ -79,5 +79,5 @@ private fun soundEvent(sound: String): Holder<SoundEvent> {
 private fun soundCategory(category: String): SoundSource {
     if (category.isBlank()) return SoundSource.MASTER
     return SoundSource.entries.firstOrNull { it.getName() == category.lowercase() }
-        ?: invalidArgument("Unknown sound category: $category")
+        ?: invalidInput("Unknown sound category: $category")
 }

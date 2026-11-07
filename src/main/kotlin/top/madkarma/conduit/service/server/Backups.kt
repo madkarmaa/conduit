@@ -12,12 +12,12 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.level.storage.LevelResource
 import top.madkarma.conduit.Conduit
 import top.madkarma.conduit.game.GameServer
+import top.madkarma.conduit.game.aborted
+import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.proto.BackupList
 import top.madkarma.conduit.proto.BackupRequest
 import top.madkarma.conduit.proto.BackupResponse
 import top.madkarma.conduit.proto.backupResponse
-import top.madkarma.conduit.rpc.aborted
-import top.madkarma.conduit.rpc.invalidArgument
 import top.madkarma.conduit.rpc.runInWorkerThread
 
 private const val MAX_NAME_LENGTH = 64
@@ -32,7 +32,7 @@ private class BackupPaths(val world: Path, val target: Path)
 
 internal suspend fun createBackup(request: BackupRequest): BackupResponse {
     if (request.name.length > MAX_NAME_LENGTH) {
-        invalidArgument("Backup name must be at most $MAX_NAME_LENGTH characters")
+        invalidInput("Backup name must be at most $MAX_NAME_LENGTH characters")
     }
 
     if (!backupInProgress.compareAndSet(false, true)) aborted("A backup is already in progress")

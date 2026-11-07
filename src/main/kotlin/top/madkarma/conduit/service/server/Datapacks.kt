@@ -9,10 +9,10 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.packs.repository.Pack
 import net.minecraft.server.packs.repository.PackSource
 import top.madkarma.conduit.game.GameServer
+import top.madkarma.conduit.game.aborted
+import top.madkarma.conduit.game.failedPrecondition
+import top.madkarma.conduit.game.notFound
 import top.madkarma.conduit.proto.*
-import top.madkarma.conduit.rpc.aborted
-import top.madkarma.conduit.rpc.failedPrecondition
-import top.madkarma.conduit.rpc.notFound
 
 // This is a count because /reload can start while another reload still runs. The API holds one
 // extra slot from its check until its own reload ends, so two API calls cannot both start one.

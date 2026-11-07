@@ -6,12 +6,12 @@ import net.minecraft.core.BlockPos
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
+import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.level
 import top.madkarma.conduit.game.parseBlock
 import top.madkarma.conduit.game.toProto
 import top.madkarma.conduit.proto.*
 import top.madkarma.conduit.proto.BlockPos as ProtoBlockPos
-import top.madkarma.conduit.rpc.invalidArgument
 
 private const val MAX_REGION_VOLUME = 1_000_000L
 
@@ -71,7 +71,7 @@ private fun bounds(from: ProtoBlockPos, to: ProtoBlockPos): Pair<BlockPos, Block
     val volume = (max.x - min.x + 1L) * (max.y - min.y + 1L) * (max.z - min.z + 1L)
 
     if (volume > MAX_REGION_VOLUME) {
-        invalidArgument("Region of $volume blocks exceeds the limit of $MAX_REGION_VOLUME")
+        invalidInput("Region of $volume blocks exceeds the limit of $MAX_REGION_VOLUME")
     }
 
     return min to max

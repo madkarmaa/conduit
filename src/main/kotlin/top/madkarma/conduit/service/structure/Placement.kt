@@ -12,17 +12,17 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.world.level.levelgen.structure.templatesystem.BlockRotProcessor
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate
+import top.madkarma.conduit.game.failedPrecondition
+import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.level
 import top.madkarma.conduit.game.toMc
 import top.madkarma.conduit.mixin.StructureTemplateAccessor
 import top.madkarma.conduit.proto.*
-import top.madkarma.conduit.rpc.failedPrecondition
-import top.madkarma.conduit.rpc.invalidArgument
 
 /** Checks the placement options before any structure data is received or loaded. */
 internal fun checkPlacement(placement: StructurePlacement) {
     if (placement.hasIntegrity() && placement.integrity !in 0f..1f) {
-        invalidArgument("Integrity must be between 0 and 1")
+        invalidInput("Integrity must be between 0 and 1")
     }
 }
 
@@ -106,7 +106,7 @@ private fun StructureRotation.toMc(): Rotation =
         StructureRotation.STRUCTURE_ROTATION_CLOCKWISE_90 -> Rotation.CLOCKWISE_90
         StructureRotation.STRUCTURE_ROTATION_CLOCKWISE_180 -> Rotation.CLOCKWISE_180
         StructureRotation.STRUCTURE_ROTATION_COUNTERCLOCKWISE_90 -> Rotation.COUNTERCLOCKWISE_90
-        StructureRotation.UNRECOGNIZED -> invalidArgument("Unknown rotation")
+        StructureRotation.UNRECOGNIZED -> invalidInput("Unknown rotation")
     }
 
 private fun StructureMirror.toMc(): Mirror =
@@ -115,5 +115,5 @@ private fun StructureMirror.toMc(): Mirror =
         StructureMirror.STRUCTURE_MIRROR_NONE -> Mirror.NONE
         StructureMirror.STRUCTURE_MIRROR_LEFT_RIGHT -> Mirror.LEFT_RIGHT
         StructureMirror.STRUCTURE_MIRROR_FRONT_BACK -> Mirror.FRONT_BACK
-        StructureMirror.UNRECOGNIZED -> invalidArgument("Unknown mirror")
+        StructureMirror.UNRECOGNIZED -> invalidInput("Unknown mirror")
     }

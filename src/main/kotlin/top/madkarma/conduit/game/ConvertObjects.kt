@@ -20,7 +20,6 @@ import top.madkarma.conduit.proto.BlockState as ProtoBlockState
 import top.madkarma.conduit.proto.EntityInfo as ProtoEntityInfo
 import top.madkarma.conduit.proto.ItemStack as ProtoItemStack
 import top.madkarma.conduit.proto.StatusEffect as ProtoStatusEffect
-import top.madkarma.conduit.rpc.invalidArgument
 
 data class ParsedBlock(val state: BlockState, val nbt: CompoundTag?)
 
@@ -60,7 +59,7 @@ fun ProtoItemStack.toMc(registries: HolderLookup.Provider): ItemStack {
 
     val item =
         BuiltInRegistries.ITEM.get(parseId(id)).orElseGet {
-            invalidArgument("Unknown item: $id")
+            invalidInput("Unknown item: $id")
         }
     val patch = decodeComponents(components, registries)
 
@@ -79,7 +78,7 @@ private fun decodeComponents(snbt: String, registries: HolderLookup.Provider): D
 
     val context = registries.createSerializationContext(NbtOps.INSTANCE)
     return DataComponentPatch.CODEC.parse(context, TagParser.parseCompoundFully(snbt)).getOrThrow {
-        invalidArgument("Invalid item components: $it")
+        invalidInput("Invalid item components: $it")
     }
 }
 

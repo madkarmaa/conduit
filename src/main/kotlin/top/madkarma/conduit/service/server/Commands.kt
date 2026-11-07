@@ -5,18 +5,18 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.phys.Vec2
 import top.madkarma.conduit.game.*
+import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.proto.BroadcastRequest
 import top.madkarma.conduit.proto.ExecuteCommandRequest
 import top.madkarma.conduit.proto.ExecuteCommandResponse
 import top.madkarma.conduit.proto.executeCommandResponse
-import top.madkarma.conduit.rpc.invalidArgument
 
 private const val OWNER_PERMISSION_LEVEL = 4
 
 internal fun MinecraftServer.executeCommand(
     request: ExecuteCommandRequest,
 ): ExecuteCommandResponse {
-    if (request.command.isBlank()) invalidArgument("Command must not be empty")
+    if (request.command.isBlank()) invalidInput("Command must not be empty")
 
     val result = runCommand(request.command, commandSource(request))
 

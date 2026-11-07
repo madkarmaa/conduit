@@ -19,7 +19,6 @@ import top.madkarma.conduit.proto.Vec3 as ProtoVec3
 import top.madkarma.conduit.proto.blockPos
 import top.madkarma.conduit.proto.rotation
 import top.madkarma.conduit.proto.vec3
-import top.madkarma.conduit.rpc.invalidArgument
 
 fun McVec3.toProto(): ProtoVec3 = vec3 {
     x = this@toProto.x
@@ -46,7 +45,7 @@ fun rotationOf(yaw: Float, pitch: Float): ProtoRotation = rotation {
 fun ProtoRotation.toVec2(): Vec2 = Vec2(pitch, yaw)
 
 fun parseId(id: String): Identifier =
-    Identifier.tryParse(id) ?: invalidArgument("Invalid identifier: $id")
+    Identifier.tryParse(id) ?: invalidInput("Invalid identifier: $id")
 
 fun dimensionKey(id: String): ResourceKey<Level> =
     ResourceKey.create(Registries.DIMENSION, parseId(id.ifBlank { "minecraft:overworld" }))
@@ -58,7 +57,7 @@ fun Text.toComponent(registries: HolderLookup.Provider): Component =
                     registries.createSerializationContext(JsonOps.INSTANCE),
                     JsonParser.parseString(json),
                 )
-                .getOrThrow { invalidArgument("Invalid text component: $it") }
+                .getOrThrow { invalidInput("Invalid text component: $it") }
 
         Text.ContentCase.PLAIN -> Component.literal(plain)
 
@@ -69,5 +68,5 @@ inline fun <reified E : Enum<E>> enumByName(name: String, default: E, kind: Stri
     if (name.isBlank()) return default
 
     return enumValues<E>().firstOrNull { it.name == name.uppercase() }
-        ?: invalidArgument("Unknown $kind: $name")
+        ?: invalidInput("Unknown $kind: $name")
 }
