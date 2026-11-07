@@ -257,6 +257,17 @@ async function npmInstall(spec) {
     await execute("npm", ["cache", "clean", "--force"]);
 }
 
+// The version npm installed, from the package's own manifest.
+async function installedVersion(cli) {
+    const manifest = join(NPM_PREFIX, "lib", "node_modules", PACKAGES[cli], "package.json");
+    return JSON.parse(await readFile(manifest, "utf8")).version;
+}
+
+async function latestVersion(cli) {
+    const { stdout } = await execute("npm", ["view", PACKAGES[cli], "version"]);
+    return stdout.trim();
+}
+
 async function versionOf(cli) {
     const { stdout } = await execute(cli, ["--version"]).catch(() => ({ stdout: "unknown" }));
     return stdout.trim().split("\n")[0];
@@ -284,7 +295,10 @@ async function updateInstalled() {
         if (!installed(cli)) continue;
 
         try {
-            await npmInstall(`${PACKAGES[cli]}@latest`);
+            // Reinstalling the same version would download it again, and the CLI is missing meanwhile.
+            const latest = await latestVersion(cli);
+            if (latest !== (await installedVersion(cli)))
+                await npmInstall(`${PACKAGES[cli]}@${latest}`);
             state.versions[cli] = await versionOf(cli);
             log(`${cli} is at ${state.versions[cli]}`);
         } catch (error) {
