@@ -33,8 +33,6 @@ val minecraftVersion = providers.gradleProperty("minecraft_version").get()
 val loaderVersion = providers.gradleProperty("loader_version").get()
 val fabricApiVersion = providers.gradleProperty("fabric_api_version").get()
 val fabricKotlinVersion = providers.gradleProperty("fabric_kotlin_version").get()
-val grpcVersion = providers.gradleProperty("grpc_version").get()
-val grpcKotlinVersion = providers.gradleProperty("grpc_kotlin_version").get()
 val protobufVersion = providers.gradleProperty("protobuf_version").get()
 
 dependencies {
@@ -46,13 +44,7 @@ dependencies {
     implementation("net.fabricmc.fabric-api:fabric-api:$fabricApiVersion")
     implementation("net.fabricmc:fabric-language-kotlin:$fabricKotlinVersion")
 
-    bundled("io.grpc:grpc-netty-shaded:$grpcVersion")
-    bundled("io.grpc:grpc-protobuf:$grpcVersion")
-    bundled("io.grpc:grpc-stub:$grpcVersion")
-    bundled("io.grpc:grpc-services:$grpcVersion")
-    bundled("io.grpc:grpc-kotlin-stub:$grpcKotlinVersion")
     bundled("com.google.protobuf:protobuf-java:$protobufVersion")
-    bundled("com.google.protobuf:protobuf-java-util:$protobufVersion")
     bundled("com.google.protobuf:protobuf-kotlin:$protobufVersion")
 
     // Loom's include configuration is not transitive, so this lists every resolved module.
@@ -64,21 +56,7 @@ dependencies {
 
 protobuf {
     protoc { artifact = "com.google.protobuf:protoc:$protobufVersion" }
-    plugins {
-        id("grpc") { artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion" }
-        id("grpckt") { artifact = "io.grpc:protoc-gen-grpc-kotlin:$grpcKotlinVersion:jdk8@jar" }
-    }
-    generateProtoTasks {
-        all().configureEach {
-            plugins {
-                id("grpc")
-                id("grpckt")
-            }
-            builtins {
-                id("kotlin")
-            }
-        }
-    }
+    generateProtoTasks { all().configureEach { builtins { id("kotlin") } } }
 }
 
 tasks.processResources {

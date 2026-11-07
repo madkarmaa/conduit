@@ -1,6 +1,14 @@
 package top.madkarma.conduit.game
 
+import com.mojang.brigadier.exceptions.CommandSyntaxException
 import java.util.*
+import java.util.concurrent.CancellationException
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionException
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.future.await
+import kotlinx.coroutines.withTimeout
 import net.minecraft.commands.CommandSource
 import net.minecraft.commands.CommandSourceStack
 import net.minecraft.network.chat.Component
@@ -10,7 +18,8 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.permissions.LevelBasedPermissionSet
 import net.minecraft.server.permissions.PermissionLevel
 import net.minecraft.world.entity.Entity
-import top.madkarma.conduit.rpc.call
+
+private const val GAME_THREAD_TIMEOUT_MS = 30_000L
 
 object GameServer {
     @Volatile var current: MinecraftServer? = null
@@ -18,9 +27,40 @@ object GameServer {
     fun require(): MinecraftServer =
         current ?: unavailable("No Minecraft server is running (open a world first)")
 
+    /** Runs the block on the server thread, the only thread that may touch game state. */
     suspend fun <T> run(block: (MinecraftServer) -> T): T {
         val server = require()
-        return server.call { block(server) }
+
+        try {
+            if (server.isSameThread) return block(server)
+
+            return withTimeout(GAME_THREAD_TIMEOUT_MS.milliseconds) {
+                CompletableFuture.supplyAsync({ block(server) }, server).await()
+            }
+        } catch (exception: TimeoutCancellationException) {
+            throw ConduitError.TimedOut("Game thread did not respond in time")
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            throw exception.asConduitError()
+        }
+    }
+}
+
+/**
+ * The game reports bad input and bad state with its own exceptions. This turns them into
+ * ConduitErrors and leaves every other exception as it is.
+ */
+fun Throwable.asConduitError(): Throwable {
+    val cause = (this as? CompletionException)?.cause ?: this
+    val message = cause.message ?: cause.toString()
+
+    return when (cause) {
+        is ConduitError -> cause
+        is CommandSyntaxException,
+        is IllegalArgumentException -> ConduitError.InvalidInput(message)
+        is IllegalStateException -> ConduitError.FailedPrecondition(message)
+        else -> cause
     }
 }
 

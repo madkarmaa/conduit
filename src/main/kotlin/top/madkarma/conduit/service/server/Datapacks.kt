@@ -1,7 +1,5 @@
 package top.madkarma.conduit.service.server
 
-import io.grpc.Status
-import java.util.concurrent.CancellationException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.future.await
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
@@ -65,15 +63,7 @@ internal suspend fun changeDatapackEnabled(request: SetDatapackEnabledRequest): 
 // the tick until the reload is done. Every step of the reload still runs on the server thread or
 // the worker pool.
 private suspend fun reload(server: MinecraftServer, selection: List<String>) {
-    try {
-        server.reloadResources(selection).await()
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: Exception) {
-        throw Status.INTERNAL.withDescription("Datapack reload failed: $exception")
-            .withCause(exception)
-            .asException()
-    }
+    server.reloadResources(selection).await()
 }
 
 /** Returns the selected pack ids after the change, or null when nothing changes. */

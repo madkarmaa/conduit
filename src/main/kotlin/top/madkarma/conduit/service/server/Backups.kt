@@ -5,6 +5,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import net.minecraft.server.MinecraftServer
@@ -18,7 +19,6 @@ import top.madkarma.conduit.proto.BackupList
 import top.madkarma.conduit.proto.BackupRequest
 import top.madkarma.conduit.proto.BackupResponse
 import top.madkarma.conduit.proto.backupResponse
-import top.madkarma.conduit.rpc.runInWorkerThread
 
 private const val MAX_NAME_LENGTH = 64
 
@@ -46,7 +46,7 @@ internal suspend fun createBackup(request: BackupRequest): BackupResponse {
 
 internal suspend fun describeBackups(): BackupList {
     val directory = GameServer.run { it.backupDirectory() }
-    return runInWorkerThread { listBackupFiles(directory) }
+    return withContext(Dispatchers.IO) { listBackupFiles(directory) }
 }
 
 private suspend fun backUpWorld(request: BackupRequest): BackupResponse {
@@ -55,7 +55,7 @@ private suspend fun backUpWorld(request: BackupRequest): BackupResponse {
 
     try {
         val paths = GameServer.run { it.saveForBackup(request) }
-        val size = runInWorkerThread { zipWorld(paths.world, paths.target) }
+        val size = withContext(Dispatchers.IO) { zipWorld(paths.world, paths.target) }
 
         return backupResponse {
             path = paths.target.toString()
