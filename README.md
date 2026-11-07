@@ -42,6 +42,9 @@ bun run --cwd mcp build
 bun run --cwd bot build
 ```
 
+`bun install` also sets up a pre-commit hook that runs `./gradlew spotlessApply` and adds the
+formatted files to the commit.
+
 ## Configuration
 
 On first start the mod writes `config/conduit.json`:
