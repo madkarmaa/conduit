@@ -38,7 +38,7 @@ object GameServer {
             return withTimeout(GAME_THREAD_TIMEOUT_MS.milliseconds) {
                 CompletableFuture.supplyAsync({ block(server) }, server).await()
             }
-        } catch (exception: TimeoutCancellationException) {
+        } catch (_: TimeoutCancellationException) {
             throw ConduitError.TimedOut("Game thread did not respond in time")
         } catch (exception: CancellationException) {
             throw exception
