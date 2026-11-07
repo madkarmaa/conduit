@@ -10,7 +10,7 @@ COPY package.json bun.lock ./
 # The SDKs drive the CLIs installed in the home volume, so their own bundled CLIs stay out.
 RUN bun install --frozen-lockfile --production --omit optional && rm -rf /root/.bun
 COPY src ./src
-COPY conduit-login /usr/local/bin/conduit-login
+COPY conduit-login.sh /usr/local/bin/conduit-login
 
 # The base image installs global packages into /usr/local, which the read-only root filesystem
 # keeps the runner from writing.
