@@ -27,8 +27,8 @@ const CODEX_DISABLED_FEATURES = [
 const CLAUDE_WEB_TOOLS = ["WebSearch", "WebFetch"];
 
 /**
- * Returns what one run needs: the command, extra variables, files to write before it starts
- * (secrets go there instead of the command line), and where the answer ends up.
+ * Returns what one run needs: the command, extra variables, files to write before it starts, and
+ * where the answer ends up. Secrets go into the variables or files, never on the command line.
  */
 export function buildRun(request, paths) {
     const presets = { claude: claudeRun, codex: codexRun, opencode: opencodeRun };

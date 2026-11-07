@@ -60,7 +60,7 @@ object ConfigFile {
             throw InvalidConfig(listOf("$path is not valid JSON: ${firstLine(exception)}"))
         }
 
-    // Only the first line, because the rest of the message repeats the input, secrets included.
+    // This keeps only an error's first line, because the rest repeats the input, secrets included.
     private fun decode(json: JsonElement): ConduitConfig =
         try {
             CONFIG_JSON.decodeFromJsonElement(json)

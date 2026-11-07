@@ -18,8 +18,8 @@ private typealias Subcommand = (CommandSourceStack, String?) -> Unit
  *
  * Brigadier always prefers a literal over the request argument, so a request that starts with a
  * subcommand word would reach the subcommand. The subcommand nodes therefore take the request
- * themselves: everyone but operators asks with the words, and so does anyone who writes more after
- * them, such as "/conduit status of the world".
+ * themselves. They pass it to the bot when the player is not an operator, or when more words follow
+ * than the subcommand takes, such as "/conduit status of the world".
  */
 object ConduitCommand {
     fun register(dispatcher: CommandDispatcher<CommandSourceStack>) {

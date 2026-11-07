@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Takes agent runs from the Conduit mod over HTTP and runs them one at a time with the agent CLI.
-// The CLI is not part of the image: the runner installs it into the home volume on first use and
-// updates it once a day while idle, so it survives the container being recreated.
+// The CLI is not part of the image. The runner installs it into the home volume on first use and
+// updates it once a day while idle, so it stays when Compose recreates the container.
 //
 //   node runner.mjs           serves the API
 //   node runner.mjs install   installs a CLI and exits, for conduit-login

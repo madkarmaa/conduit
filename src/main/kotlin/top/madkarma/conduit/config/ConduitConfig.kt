@@ -20,8 +20,8 @@ data class McpConfig(
     val host: String = "0.0.0.0",
     val port: Int = 25585,
     /**
-     * Host names that clients use to reach the MCP server. Other Host headers are refused, which
-     * keeps web pages from reaching the server through DNS rebinding.
+     * Host names that clients use to reach the MCP server. The server refuses other Host headers,
+     * which keeps web pages from reaching it through DNS rebinding.
      */
     val allowedHosts: List<String> =
         listOf("minecraft", "host.docker.internal", "localhost", "127.0.0.1"),

@@ -36,8 +36,8 @@ data class BackupResult(
 )
 
 /**
- * Saves the world and zips it into the backup directory while the server keeps running. The name is
- * appended to the file name. Autosave pauses during the backup.
+ * Saves the world and zips it into the backup directory while the server keeps running. The file
+ * name ends with the name. Autosave pauses during the backup.
  */
 internal suspend fun createBackup(name: String?): BackupResult {
     if (name.orEmpty().length > MAX_NAME_LENGTH) {

@@ -15,8 +15,8 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import top.madkarma.conduit.game.invalidInput
 
-// English messages whatever the server's locale, fields named like "from.x", and 3.0 counts as an
-// integer like 3.
+// The messages are in English whatever the server's locale, they name fields like "from.x", and
+// 3.0 counts as an integer like 3.
 private val REGISTRY: SchemaRegistry =
     SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_2020_12) { registry ->
         val config =
@@ -28,7 +28,7 @@ private val REGISTRY: SchemaRegistry =
         registry.schemaRegistryConfig(config)
     }
 
-// Every request builds its tools anew, so each schema is compiled once and kept.
+// Every request builds its tools anew, so this compiles each schema once and keeps it.
 private val compiledSchemas = ConcurrentHashMap<JsonObject, Schema>()
 
 /**

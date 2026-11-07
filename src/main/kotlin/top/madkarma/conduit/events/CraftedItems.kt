@@ -19,7 +19,7 @@ data class ItemCraftEvent(
     val playerUuid: String,
     /** The item taken, with the total count. */
     val result: ItemInfo,
-    /** Recipe used, e.g. "minecraft:crafting_table". Not set for smelting. */
+    /** The recipe used, such as "minecraft:crafting_table". Not set for smelting. */
     val recipeId: String?,
     /** Number of items taken. */
     val count: Int,
@@ -46,7 +46,7 @@ object CraftedItems {
                 )
     }
 
-    // Only touched on the server thread.
+    // Only the server thread touches this.
     private var clickInProgress = false
     private var pendingTake: Take? = null
 

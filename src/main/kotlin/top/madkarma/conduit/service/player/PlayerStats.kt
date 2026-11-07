@@ -23,8 +23,8 @@ internal fun MinecraftServer.playerStats(ref: String): Map<String, Int> {
     return values
 }
 
-// The file is read the same way as at login. The counter is never saved, so this cannot change
-// the file.
+// This reads the file the same way the game does at login. It never saves the counter, so it
+// cannot change the file.
 private fun MinecraftServer.savedStats(id: UUID): StatsCounter {
     val file = getWorldPath(LevelResource.PLAYER_STATS_DIR).resolve("$id.json")
     if (!Files.isRegularFile(file)) notFound("No saved statistics for player $id")

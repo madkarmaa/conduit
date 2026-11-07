@@ -101,7 +101,7 @@ fun permissionSet(level: Int): LevelBasedPermissionSet {
 @Serializable
 data class CommandResult(
     val success: Boolean,
-    /** The command's result value, e.g. the number of affected entities. */
+    /** The command's result value, such as the number of affected entities. */
     val result: Int,
     /** Feedback messages the command produced. */
     val output: List<String>,

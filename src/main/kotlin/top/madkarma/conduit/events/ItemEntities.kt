@@ -16,7 +16,7 @@ data class ItemEntityEvent(
     /** For pickups, only the part that fit into the inventory. */
     val item: ItemInfo,
     val itemEntityUuid: String,
-    /** Only for drops: the player died and dropped it. */
+    /** Only for drops. Whether the player dropped it by dying. */
     val death: Boolean,
 )
 

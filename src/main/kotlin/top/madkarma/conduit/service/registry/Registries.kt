@@ -15,14 +15,14 @@ private const val MAX_PAGE_SIZE = 10000
 
 @Serializable
 data class RegistryInfo(
-    /** Registry id, e.g. "minecraft:block" or "minecraft:worldgen/biome". */
+    /** Registry id, such as "minecraft:block" or "minecraft:worldgen/biome". */
     val id: String,
     val entryCount: Int,
 )
 
 @Serializable
 data class TagInfo(
-    /** Tag id without "#", e.g. "minecraft:logs". */
+    /** Tag id without "#", such as "minecraft:logs". */
     val id: String,
     val entries: List<String>,
 )

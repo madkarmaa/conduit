@@ -19,19 +19,19 @@ import net.minecraft.world.level.storage.LevelData
 
 @Serializable
 data class BlockStateInfo(
-    /** Block id, e.g. "minecraft:oak_stairs". */
+    /** Block id, such as "minecraft:oak_stairs". */
     val id: String,
     val properties: Map<String, String>,
-    /** Full state in command syntax, e.g. "minecraft:oak_stairs[facing=east,half=bottom]". */
+    /** Full state in command syntax, such as "minecraft:oak_stairs[facing=east,half=bottom]". */
     val serialized: String,
 )
 
 @Serializable
 data class ItemInfo(
-    /** Item id, e.g. "minecraft:diamond_sword". "minecraft:air" is an empty stack. */
+    /** Item id, such as "minecraft:diamond_sword". "minecraft:air" is an empty stack. */
     val id: String,
     val count: Int,
-    /** Data component patch as SNBT, e.g. {"minecraft:custom_name":"Excalibur"}. */
+    /** Data component patch as SNBT, such as {"minecraft:custom_name":"Excalibur"}. */
     val components: String = "",
 )
 

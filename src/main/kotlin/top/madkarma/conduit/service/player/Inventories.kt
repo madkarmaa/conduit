@@ -11,8 +11,8 @@ import top.madkarma.conduit.game.*
 @Serializable data class InventorySlot(val slot: Int, val item: ItemInfo)
 
 /**
- * Player inventory slots: 0-8 hotbar, 9-35 main, 36-39 armor (feet, legs, chest, head), 40 offhand.
- * Lists only the slots that are not empty.
+ * Player inventory slots: 0-8 hotbar, 9-35 main, 36-39 armor from feet to head, 40 offhand. Lists
+ * only the slots that are not empty.
  */
 @Serializable
 data class InventoryContents(val size: Int, val slots: List<InventorySlot>, val selectedSlot: Int)

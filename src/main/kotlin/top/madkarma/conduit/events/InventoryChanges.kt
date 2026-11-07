@@ -15,9 +15,9 @@ import top.madkarma.conduit.game.toInfo
 private const val SLOT_COUNT = Inventory.SLOT_OFFHAND + 1
 
 /**
- * A slot of a player's inventory changed. Inventories are compared once per tick, so several
- * changes to one slot within a tick are one event, and a change undone within the tick is not
- * reported.
+ * A slot of a player's inventory changed. Conduit compares inventories once per tick, so several
+ * changes to one slot within a tick are one event, and a change undone within the tick never shows
+ * up.
  */
 @Serializable
 data class InventoryChangeEvent(

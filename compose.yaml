@@ -1,6 +1,6 @@
 # Gameplay test environment with HeadlessMC. It runs a Fabric server with the mod from build/libs
 # and a vanilla headless client with an offline account as a real player. Build the mod first with
-# ./gradlew build. MC_VERSION must be the Minecraft version the mod was built for.
+# ./gradlew build. MC_VERSION must match the Minecraft version in gradle.properties.
 #
 #   MC_VERSION=<version> docker compose up -d server   # server only, MCP on localhost:25585/mcp
 #   MC_VERSION=<version> docker compose up -d          # server and a vanilla client that joins it
@@ -17,7 +17,7 @@ x-headlessmc: &headlessmc
     image: 3arthqu4ke/headlessmc:latest
     entrypoint: ["/bin/bash"]
     environment: &environment
-        MC_VERSION: ${MC_VERSION:?set MC_VERSION to the Minecraft version the mod was built for}
+        MC_VERSION: ${MC_VERSION:?set MC_VERSION to the Minecraft version in gradle.properties}
         HMC_UPDATER_ENABLED: "false"
         HMC_JLINE_ENABLED: "false"
 

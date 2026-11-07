@@ -18,7 +18,7 @@ object Bot {
         Mode.entries.associateWith { RequestLine(scope, Answers::answer) }
 
     /**
-     * Puts a request in line. Called on the server thread. Returns why it did not, if it did not.
+     * Puts a request in line, or returns why it refuses the request. Called on the server thread.
      */
     fun ask(server: MinecraftServer, player: ServerPlayer, text: String): String? {
         val config = Conduit.config ?: return "Conduit is off until its config is fixed."
@@ -47,7 +47,7 @@ object Bot {
     fun cancel(predicate: (BotRequest) -> Boolean): Boolean {
         val cancelled = lines.values.flatMap { it.cancel(predicate) }
 
-        // A running request says so when it ends. A waiting one never starts, so it is said here.
+        // Running requests announce their end. Waiting ones never start, so this announces them.
         val players = GameServer.current?.playerList
         cancelled
             .filter { it.job == null }

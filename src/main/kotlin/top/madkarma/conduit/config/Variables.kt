@@ -13,7 +13,7 @@ class MissingVariable(val name: String, val path: String)
 
 /**
  * Replaces the variable references in every string of a JSON value. A reference to a variable that
- * is not set and has no default becomes an empty string and is added to missing.
+ * is not set and has no default becomes an empty string and goes into missing.
  */
 fun expandVariables(
     value: JsonElement,

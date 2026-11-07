@@ -28,7 +28,7 @@ private const val UNLOADED_CHUNK_MESSAGE =
 data class EntityQuery(
     /** Null means every dimension. */
     val dimension: String? = null,
-    /** Entity type ids, e.g. "minecraft:zombie". Empty means any type. */
+    /** Entity type ids, such as "minecraft:zombie". Empty means any type. */
     val types: List<String> = emptyList(),
     val box: Box? = null,
     /** Distance filter around center. */
@@ -48,7 +48,7 @@ data class SpawnRequest(
     val rotation: Rotation? = null,
     /** Applied on spawn, like the /summon nbt argument. */
     val snbt: String? = null,
-    /** Runs the natural spawn setup (equipment, variants), like /summon without nbt. */
+    /** Runs the natural spawn setup, such as equipment and variants, like /summon without nbt. */
     val initialize: Boolean = true,
 )
 

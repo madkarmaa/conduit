@@ -54,7 +54,7 @@ internal fun MinecraftServer.playSound(
     player.connection.send(packet)
 }
 
-// Unregistered sounds, e.g. from resource packs, can only be sent by id.
+// Sounds that are not registered, such as those of resource packs, only work by id.
 private fun soundEvent(sound: String): Holder<SoundEvent> {
     val id = parseId(sound)
     return BuiltInRegistries.SOUND_EVENT.get(id)

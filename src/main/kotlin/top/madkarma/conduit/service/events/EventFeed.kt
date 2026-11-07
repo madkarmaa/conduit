@@ -43,7 +43,8 @@ object EventFeed {
     private val listening = AtomicBoolean(false)
 
     /**
-     * Waits up to the query's timeout for a matching event. Events are kept from the first poll on.
+     * Waits up to the query's timeout for a matching event. The feed keeps events from the first
+     * poll on.
      */
     suspend fun poll(query: EventQuery): EventPage {
         if (listening.compareAndSet(false, true)) EventBus.listen(::add)

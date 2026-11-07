@@ -4,7 +4,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import top.madkarma.conduit.service.world.BlockRegion
 
-// One character per palette entry; air gets "." so the shape of a build stands out.
+// Each palette entry gets one character, and air gets ".", so the shape of a build stands out.
 private const val SYMBOLS =
     "#@%&*+=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789$!?<>/|~^"
 private val AIR = setOf("minecraft:air", "minecraft:cave_air", "minecraft:void_air")

@@ -90,8 +90,8 @@ kotlin {
     }
 }
 
-// Eclipse-based Java tooling (Buildship, jdtls) compiles only Java, so the mixins see the Kotlin
-// classes they call only through the Kotlin compiler output.
+// Eclipse-based Java tooling, such as Buildship and jdtls, compiles only Java, so the mixins see
+// the Kotlin classes they call only through the Kotlin compiler output.
 eclipse {
     synchronizationTasks(tasks.compileKotlin)
     classpath.file.whenMerged(

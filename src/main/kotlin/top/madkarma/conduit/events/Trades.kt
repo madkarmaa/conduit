@@ -10,7 +10,7 @@ import top.madkarma.conduit.game.ItemInfo
 import top.madkarma.conduit.game.toInfo
 
 /**
- * A player traded with a villager or another merchant. Every trade is reported on its own, also
+ * A player traded with a villager or another merchant. Every trade is an event of its own, even
  * when one shift-click trades several times.
  */
 @Serializable

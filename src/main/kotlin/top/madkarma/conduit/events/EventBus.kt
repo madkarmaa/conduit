@@ -56,7 +56,7 @@ object EventBus {
 
     fun wants(): Boolean = listeners.isNotEmpty()
 
-    // Inline so that events nobody receives are never built.
+    // Inline, so callers never build events that nobody receives.
     inline fun <reified Payload> publish(type: EventType, payload: () -> Payload) {
         if (listeners.isEmpty()) return
 

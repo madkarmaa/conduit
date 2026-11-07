@@ -10,13 +10,13 @@ import top.madkarma.conduit.game.toInfo
 // players.
 private val IGNORED_TYPES = setOf("minecraft:item", "minecraft:experience_orb", "minecraft:player")
 
-/** A new entity was added to the world. Entities that load with their chunk are not reported. */
+/** A new entity entered the world. Entities that load with their chunk do not count. */
 @Serializable
 data class EntitySpawnEvent(
     val entity: EntityInfo,
     /**
-     * How a mob or other entity type was created, e.g. "natural", "breeding" or "command". Not set
-     * for entities the game creates directly, such as projectiles.
+     * How a mob or other entity type was created, such as "natural", "breeding" or "command". Not
+     * set for entities the game creates directly, such as projectiles.
      */
     val spawnReason: String?,
 )

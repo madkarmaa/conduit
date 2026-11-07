@@ -24,7 +24,7 @@ import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import top.madkarma.conduit.game.*
 
-// Saved player data is read with the same keys and codecs the game loads players with.
+// This reads saved player data with the same keys and codecs the game loads players with.
 
 internal val INVENTORY_SLOTS = Inventory.INVENTORY_SIZE + Inventory.EQUIPMENT_SLOT_MAPPING.size
 
@@ -109,7 +109,7 @@ internal fun MinecraftServer.problemsIn(id: UUID, data: CompoundTag): String? {
     return if (problems.isEmpty) null else problems.report
 }
 
-/** Slots are numbered like the online inventory: main items first, then the equipment. */
+/** Slot numbers follow the online inventory, with the main items first and then the equipment. */
 internal fun readInventory(input: ValueInput): SimpleContainer {
     val container = SimpleContainer(INVENTORY_SLOTS)
 

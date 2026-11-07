@@ -1,25 +1,24 @@
-# The two agent containers of Conduit: conduit-full answers operators in full mode, conduit-chat
-# answers everyone else in chat mode. Start them once with `docker compose up -d`. They restart on
-# their own, and the mod never starts or stops them.
+# The two agent containers of Conduit. conduit-full answers operators in full mode, and
+# conduit-chat answers everyone else in chat mode. Start them once with `docker compose up -d`.
+# They restart on their own, and the mod never starts or stops them.
 #
-# Put the runner secrets in a .env file next to this file, and the same values in the mod's
-# config/conduit.json (agents.full.runner.secret and agents.chat.runner.secret):
+# Put the runner secrets in a .env file next to this file. The mod's config/conduit.json needs the
+# same values in agents.full.runner.secret and agents.chat.runner.secret.
 #
 #   CONDUIT_FULL_SECRET=<random string of at least 16 characters>
 #   CONDUIT_CHAT_SECRET=<another one>
 #
-# Minecraft on the host: the mod reaches the runners at http://127.0.0.1:8081 and
+# With Minecraft on the host, the mod reaches the runners at http://127.0.0.1:8081 and
 # http://127.0.0.1:8082, and the agents reach the mod at http://host.docker.internal:25585/mcp.
 #
-# Minecraft in compose, such as itzg/minecraft-server: run this file in the same project as the
-# server, so all containers share its network:
+# With Minecraft in Compose, such as itzg/minecraft-server, run this file in the same project as
+# the server, so all containers share its network. The mod then reaches http://conduit-full:8080,
+# and the agents reach http://<server service>:25585/mcp.
 #
 #   docker compose -f compose.yaml -f conduit-agents.yaml up -d
 #
-# Then the mod reaches http://conduit-full:8080 and the agents reach http://<server service>:25585/mcp.
-#
-# The memory and CPU limits fit a small server next to Minecraft. Raise them with the variables
-# below if a CLI runs out of memory.
+# Each container may use 1 CPU. conduit-full gets 768 MiB of memory and conduit-chat 1 GiB. Raise
+# the limits with the variables below if a CLI runs out of memory.
 
 x-agent: &agent
     image: ${CONDUIT_AGENT_IMAGE:-ghcr.io/madkarmaa/conduit-agent:latest}

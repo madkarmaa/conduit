@@ -18,7 +18,7 @@ import top.madkarma.conduit.game.failedPrecondition
 import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.notFound
 
-// Saved player data is read and written on the server thread, each call within one
+// This reads and writes saved player data on the server thread, each call within one
 // GameServer.run block. Logins load this data on the server thread too, so a login never reads a
 // half-written file and never loads data that an edit is about to replace. The files are small,
 // which makes this the one place where file I/O on the server thread is acceptable.

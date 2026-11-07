@@ -8,8 +8,8 @@ private val AGENT_CLIS = setOf("claude", "codex", "opencode")
 private const val MIN_SECRET_LENGTH = 16
 
 /**
- * Returns what is wrong with the config. Tool and action names are checked against the tools, which
- * map each tool name to its action names.
+ * Returns what is wrong with the config. It checks tool and action names against tools, which maps
+ * each tool name to its action names.
  */
 fun ConduitConfig.problems(tools: Map<String, Set<String>>): List<String> {
     val problems = mutableListOf<String>()

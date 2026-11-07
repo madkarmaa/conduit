@@ -81,7 +81,7 @@ internal fun MinecraftServer.fillRegion(
     return changed
 }
 
-// A bare block id ("minecraft:furnace") is meant to match all of its states.
+// A bare block id, such as "minecraft:furnace", matches all of its states.
 private fun MinecraftServer.replaceFilter(input: String): (BlockState) -> Boolean {
     val target = parseBlock(registryAccess(), input).state
     return if ('[' in input) ({ it == target }) else ({ it.block == target.block })

@@ -15,7 +15,7 @@ import top.madkarma.conduit.game.parseId
 
 /**
  * Saves a region, corners inclusive, to the world's structure storage, the same storage structure
- * blocks use. The ignored block, such as "minecraft:structure_void", is left out.
+ * blocks use. The save leaves out the ignored block, such as "minecraft:structure_void".
  */
 internal suspend fun saveStructure(
     templateId: String,

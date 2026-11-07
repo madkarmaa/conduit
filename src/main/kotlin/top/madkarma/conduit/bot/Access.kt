@@ -40,8 +40,8 @@ fun ConduitConfig.agent(mode: Mode): AgentConfig =
     if (mode == Mode.FULL) agents.full else agents.chat
 
 /**
- * Listed players and, unless the config turns that off, operators get full mode. Everyone else gets
- * chat mode if it is on, or no answer.
+ * The listed players get full mode, and so do operators unless the config turns that off. Everyone
+ * else gets chat mode if it is on, or no answer.
  */
 fun MinecraftServer.modeFor(player: ServerPlayer, config: ConduitConfig): Mode? {
     val listed =
