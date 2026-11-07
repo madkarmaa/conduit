@@ -1,5 +1,5 @@
-// The bot answers one request at a time, like one player in the chat. Everyone can ask at once,
-// and the requests wait in line in the order they arrived.
+// A line of requests that the bot answers one at a time, like one player in the chat. Everyone
+// can ask at once, and the requests wait in the order they arrived.
 export class RequestQueue {
     private tail: Promise<void> = Promise.resolve();
     // Players with a request in line, the first one being answered.

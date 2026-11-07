@@ -18,7 +18,8 @@ export interface Bot {
     readonly config: Config;
     readonly agents: Readonly<Record<Mode, AgentRunner>>;
     readonly conversations: Conversations;
-    readonly queue: RequestQueue;
+    // Full mode has a line of its own, so operators never wait behind chat mode.
+    readonly queues: Readonly<Record<Mode, RequestQueue>>;
     // Every MCP setting except the approvals, which depend on the request.
     readonly mcp: Omit<McpHost, "approvals">;
     readonly approvals: Approvals;
@@ -60,11 +61,12 @@ export function handleChat(bot: Bot, sender: ChatMessage) {
 // A player gets one request in line at a time, so nobody can fill the line alone.
 function queue(bot: Bot, request: Request) {
     const { sender } = request;
-    if (bot.queue.has(sender.playerUuid)) {
+    const line = bot.queues[request.mode];
+    if (line.has(sender.playerUuid)) {
         return tell(bot, sender, "Wait until I answer your previous request.");
     }
 
-    const ahead = bot.queue.add(sender.playerUuid, () => answer(bot, request));
+    const ahead = line.add(sender.playerUuid, () => answer(bot, request));
     if (ahead === 1) status(bot, sender, "1 request is ahead of yours…");
     if (ahead > 1) status(bot, sender, `${ahead} requests are ahead of yours…`);
 }

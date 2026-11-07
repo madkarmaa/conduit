@@ -208,7 +208,8 @@ CONDUIT_TOKEN=<token> npx @conduit/bot [config file]
 
 The bot answers one request at a time, like one player in the chat. Requests wait in line in the
 order they arrive, and the action bar tells each player how many are ahead of theirs. A player can
-have one request in line at a time.
+have one request in line at a time. Full mode has a line of its own, so operators never wait behind
+chat mode.
 
 The config file defaults to `conduit-bot.json` in the working directory. `CONDUIT_HOST`,
 `CONDUIT_PORT` and `CONDUIT_TOKEN` work as they do for the MCP server.

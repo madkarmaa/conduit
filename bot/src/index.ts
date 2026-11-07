@@ -71,7 +71,7 @@ function start({ config, connection, mcp, agents }: Setup) {
         config,
         agents: { full: runnerFor(agents.full, config), chat: runnerFor(agents.chat, config) },
         conversations: new Conversations(config.stateDirectory, config.memory),
-        queue: new RequestQueue(),
+        queues: { full: new RequestQueue(), chat: new RequestQueue() },
         approvals: new Approvals(
             { clients, name: config.keyword },
             config.approvals.timeoutSeconds,
