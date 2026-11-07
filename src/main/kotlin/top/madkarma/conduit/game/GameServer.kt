@@ -26,7 +26,7 @@ object GameServer {
     @Volatile var current: MinecraftServer? = null
 
     fun require(): MinecraftServer =
-        current ?: unavailable("No Minecraft server is running (open a world first)")
+        current ?: unavailable("No Minecraft server is running. Open a world first.")
 
     /** Runs the block on the server thread, the only thread that may touch game state. */
     suspend fun <T> run(block: (MinecraftServer) -> T): T {
