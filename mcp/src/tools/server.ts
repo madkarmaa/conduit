@@ -78,7 +78,7 @@ export function serverTools({ server, world }: ConduitClients) {
             },
             actions: {
                 run: {
-                    access: "write",
+                    access: "destructive",
                     run: (input) =>
                         call(server, "executeCommand", {
                             ...input,
@@ -123,14 +123,14 @@ export function serverTools({ server, world }: ConduitClients) {
                     run: (input) => call(server, "backup", input).map(json),
                 },
                 set_datapack: {
-                    access: "write",
+                    access: "destructive",
                     run: (input) =>
                         required(input, "id", "enabled").andThenAsync((request) =>
                             call(server, "setDatapackEnabled", request).map(json),
                         ),
                 },
                 stop: {
-                    access: "write",
+                    access: "destructive",
                     run: () => call(server, "stop", {}).map(() => done("Server stopping")),
                 },
             },

@@ -4,7 +4,13 @@ import * as z from "zod";
 import { invalidInput, type ToolError } from "./grpc.ts";
 import { checkPlayers, offers, redact, type ToolPolicy } from "./policy.ts";
 
-export type Access = "read" | "write";
+// Destructive actions are writes that are hard to undo, such as stopping the server or kicking a
+// player.
+export type Access = "read" | "write" | "destructive";
+
+// Lists each offered action of a tool with its access in the tool's _meta, so a client can ask for
+// confirmation before the destructive ones.
+const ACTIONS_META_KEY = "top.madkarma.conduit/actions";
 
 export interface Reply {
     readonly text: string;
@@ -27,6 +33,7 @@ export interface Tool<Shape extends z.ZodRawShape> {
     // Returns data about players without naming them in a player argument, so a server limited to
     // one player cannot offer it.
     readonly seesOtherPlayers?: boolean;
+    readonly meta?: Record<string, unknown>;
 }
 
 export type Registration = (server: McpServer, policy: ToolPolicy) => void;
@@ -53,11 +60,14 @@ export function defineTool<Shape extends z.ZodRawShape>(tool: Tool<Shape>): Regi
                 inputSchema: advertised,
                 annotations: {
                     readOnlyHint: allowed.every(([, action]) => action.access === "read"),
-                    // MCP treats every tool that writes as destructive unless this hint says
-                    // otherwise. This server exists to control the game, so no tool asks for extra
-                    // confirmation. Read-only mode limits what an agent can change instead.
-                    destructiveHint: false,
+                    destructiveHint: allowed.some(([, action]) => action.access === "destructive"),
                     openWorldHint: false,
+                },
+                _meta: {
+                    ...tool.meta,
+                    [ACTIONS_META_KEY]: Object.fromEntries(
+                        allowed.map(([name, action]) => [name, action.access]),
+                    ),
                 },
             },
             (args: unknown) =>

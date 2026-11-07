@@ -12,6 +12,22 @@ const operation = z
         'One operation, e.g. {"setBlock": {"pos": {"x": 0, "y": 64, "z": 0}, "state": "minecraft:stone"}}.',
     );
 
+// The batch is destructive when it holds any of these operations, the ones that match the
+// destructive actions of the other tools.
+const DESTRUCTIVE_OPERATIONS = [
+    "executeCommand",
+    "fill",
+    "explode",
+    "removeEntity",
+    "clearInventory",
+    "setOperator",
+    "kick",
+    "setGameRule",
+    "setWorldBorder",
+];
+
+const DESTRUCTIVE_OPERATIONS_META_KEY = "top.madkarma.conduit/destructiveOperations";
+
 export function batchTools({ batch }: ConduitClients) {
     return [
         defineTool({
@@ -31,6 +47,7 @@ export function batchTools({ batch }: ConduitClients) {
                 "clearInventory, setSelectedSlot, getEnderChest, setGameMode, setFood, " +
                 "setExperience, sendMessage, sendTitle, playSound, kick, setOperator, " +
                 'executeCommand, broadcast. Text fields take {"plain": "..."}.',
+            meta: { [DESTRUCTIVE_OPERATIONS_META_KEY]: DESTRUCTIVE_OPERATIONS },
             input: {
                 operations: z.array(operation).min(1),
                 stop_on_error: z
@@ -40,7 +57,7 @@ export function batchTools({ batch }: ConduitClients) {
             },
             actions: {
                 run: {
-                    access: "write",
+                    access: "destructive",
                     run: (input) => {
                         // The server validates every operation and reports unknown ones per result.
                         const request = {

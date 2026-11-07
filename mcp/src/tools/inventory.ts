@@ -34,7 +34,7 @@ export function inventoryTools({ player: players }: ConduitClients) {
                         ),
                 },
                 clear: {
-                    access: "write",
+                    access: "destructive",
                     run: (input) =>
                         call(players, "clearInventory", input).map(() => done("Inventory cleared")),
                 },
@@ -84,7 +84,7 @@ export function inventoryTools({ player: players }: ConduitClients) {
             },
             actions: {
                 merge_nbt: {
-                    access: "write",
+                    access: "destructive",
                     run: (input) =>
                         required(input, "snbt").andThenAsync((request) =>
                             call(players, "mergeOfflinePlayerNbt", request).map(() =>
@@ -93,7 +93,7 @@ export function inventoryTools({ player: players }: ConduitClients) {
                         ),
                 },
                 set_slot: {
-                    access: "write",
+                    access: "destructive",
                     run: (input) =>
                         required(input, "slot").andThenAsync((request) =>
                             call(players, "setOfflineInventorySlot", request).map(() =>

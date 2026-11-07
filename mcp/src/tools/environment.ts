@@ -22,7 +22,7 @@ export function environmentTools({ world }: ConduitClients) {
                     run: () => call(world, "getGameRules", {}).map((rules) => json(rules.rules)),
                 },
                 set: {
-                    access: "write",
+                    access: "destructive",
                     run: (input) =>
                         required(input, "name", "value").andThenAsync((rule) =>
                             call(world, "setGameRule", rule).map(() =>
@@ -55,7 +55,7 @@ export function environmentTools({ world }: ConduitClients) {
             },
             actions: {
                 set: {
-                    access: "write",
+                    access: "destructive",
                     run: (input) =>
                         call(world, "setWorldBorder", {
                             dimension: input.dimension,
@@ -87,7 +87,7 @@ export function environmentTools({ world }: ConduitClients) {
             },
             actions: {
                 explode: {
-                    access: "write",
+                    access: "destructive",
                     run: (input) => call(world, "explode", input).map(() => done("Exploded")),
                 },
             },

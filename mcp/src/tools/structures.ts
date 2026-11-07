@@ -81,7 +81,7 @@ export function structureTools({ structure }: ConduitClients) {
                         ),
                 },
                 place: {
-                    access: "write",
+                    access: "destructive",
                     run: (input) =>
                         required(input, "id", "origin").andThenAsync(({ id, origin }) =>
                             call(structure, "place", {

@@ -70,7 +70,7 @@ export function blockTools({ world }: ConduitClients) {
                         ),
                 },
                 fill: {
-                    access: "write",
+                    access: "destructive",
                     run: (input) =>
                         required(input, "from", "to", "state").andThenAsync((request) =>
                             call(world, "fill", { ...request, noUpdates: input.no_updates }).map(

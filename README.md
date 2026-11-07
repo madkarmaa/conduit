@@ -172,6 +172,14 @@ The server has 30 tools. Tools with several operations take an `action` argument
 | Game data | `registry`, `recipes`                 |                                             |
 | Other     | `structures`, `wait_for_events`       | `structures`, `batch`                       |
 
+Some write actions are hard to undo: `run_command`, `server_admin` `stop` and `set_datapack`,
+`edit_blocks` `fill`, `explode`, `remove_entity`, `inventory` `clear`, `offline_player`,
+`edit_player` `operator` and `kick`, `structures` `place`, `game_rules` `set` and `world_border`
+`set`. Their tools have the MCP `destructiveHint`, and each tool's `_meta` maps every action to
+`read`, `write` or `destructive` under `top.madkarma.conduit/actions`, so a host can ask for
+confirmation. A `batch` is only destructive when it holds one of the operations listed under
+`top.madkarma.conduit/destructiveOperations`.
+
 To add the server to an MCP host:
 
 ```json

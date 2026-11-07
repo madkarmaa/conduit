@@ -48,7 +48,7 @@ export function playerActionTools({ player: players, server }: ConduitClients) {
                         call(players, "setExperience", input).map(() => done("Experience updated")),
                 },
                 operator: {
-                    access: "write",
+                    access: "destructive",
                     run: (input) =>
                         required(input, "operator").andThenAsync((request) =>
                             call(players, "setOperator", request).map(() =>
@@ -61,7 +61,7 @@ export function playerActionTools({ player: players, server }: ConduitClients) {
                         ),
                 },
                 kick: {
-                    access: "write",
+                    access: "destructive",
                     run: (input) =>
                         call(players, "kick", {
                             player: input.player,

@@ -116,7 +116,7 @@ export function entityTools({ entity }: ConduitClients) {
             input: { uuid, kill: z.boolean().default(false) },
             actions: {
                 remove: {
-                    access: "write",
+                    access: "destructive",
                     run: (input) =>
                         call(entity, "removeEntity", input).map(() => done("Entity removed")),
                 },
