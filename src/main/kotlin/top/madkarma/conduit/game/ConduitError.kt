@@ -14,6 +14,9 @@ sealed class ConduitError(val label: String, message: String) : RuntimeException
 
     class TimedOut(message: String) : ConduitError("Timed out", message)
 
+    /** A player denied an action the agent wanted to run, or nobody approved it in time. */
+    class NotApproved(message: String) : ConduitError("Not approved", message)
+
     /** The text a caller sees, such as "Not found: Unknown dimension: minecraft:moon". */
     fun describe(): String = "$label: $message"
 }

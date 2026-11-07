@@ -3,7 +3,7 @@
     "id": "conduit",
     "version": "${version}",
     "name": "Conduit",
-    "description": "Runs a gRPC server inside Minecraft so external programs can control the world, entities and players, run commands and stream live events.",
+    "description": "An AI bot for Minecraft servers. Players ask it with /conduit, and it reads and changes the game through MCP tools.",
     "authors": ["madkarma"],
     "contact": {},
     "license": "CC0-1.0",

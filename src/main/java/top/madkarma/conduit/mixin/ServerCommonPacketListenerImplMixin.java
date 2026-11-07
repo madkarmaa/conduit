@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import top.madkarma.conduit.events.GameEvents;
+import top.madkarma.conduit.bot.Approvals;
 
 /**
  * The handler first moves the packet to the server thread, so the event comes from the call that
@@ -25,7 +25,7 @@ public abstract class ServerCommonPacketListenerImplMixin {
     private void conduit$onCustomClick(
             ServerboundCustomClickActionPacket packet, CallbackInfo info) {
         if ((Object) this instanceof ServerGamePacketListenerImpl game) {
-            GameEvents.onCustomClick(game.player, packet.id(), packet.payload());
+            Approvals.onCustomClick(game.player, packet.id(), packet.payload());
         }
     }
 }

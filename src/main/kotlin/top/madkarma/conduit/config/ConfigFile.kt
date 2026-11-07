@@ -26,22 +26,23 @@ object ConfigFile {
      * Reads the config, after writing the defaults on first start. Fields the file leaves out keep
      * their defaults. Throws InvalidConfig naming every problem it finds.
      */
-    fun read(toolNames: Set<String>): ConduitConfig {
+    fun read(tools: Map<String, Set<String>>): ConduitConfig {
         if (!Files.exists(path)) writeDefaults()
 
         val defaults = CONFIG_JSON.encodeToJsonElement(ConduitConfig())
-        val missing = sortedSetOf<String>()
-        val expanded =
-            expandVariables(
-                merge(defaults, parse(Files.readString(path))),
-                System.getenv(),
-                missing,
-            )
-        if (missing.isNotEmpty())
-            throw InvalidConfig(listOf("Set the variables ${missing.joinToString(", ")}"))
+        val missing = mutableListOf<MissingVariable>()
+        val merged = merge(defaults, parse(Files.readString(path)))
+        val config = decode(expandVariables(merged, System.getenv(), missing))
 
-        val config = decode(expanded)
-        val problems = config.problems(toolNames)
+        // A disabled agent needs no secret, so its variables may stay unset.
+        val unset = missing.filter { config.uses(it.path) }.map { it.name }.toSortedSet()
+        val variables =
+            listOfNotNull(
+                unset
+                    .takeIf { it.isNotEmpty() }
+                    ?.let { "Set the variables ${it.joinToString(", ")}" },
+            )
+        val problems = variables + config.problems(tools)
         if (problems.isNotEmpty()) throw InvalidConfig(problems)
 
         return config

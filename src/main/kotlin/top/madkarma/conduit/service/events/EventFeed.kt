@@ -2,6 +2,7 @@ package top.madkarma.conduit.service.events
 
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.max
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
@@ -13,8 +14,7 @@ import top.madkarma.conduit.events.GameEvent
 
 private const val BUFFER_SIZE = 1000
 
-/** The event types the feed keeps. Custom clicks are the approval buttons' own business. */
-val FEED_TYPES: List<EventType> = EventType.entries - EventType.CUSTOM_CLICK
+val FEED_TYPES: List<EventType> = EventType.entries
 
 data class BufferedEvent(val cursor: Long, val event: GameEvent)
 
@@ -48,7 +48,9 @@ object EventFeed {
     suspend fun poll(query: EventQuery): EventPage {
         if (listening.compareAndSet(false, true)) EventBus.listen(::add)
 
-        withTimeoutOrNull(query.timeoutMs) { newest.first { matching(query).isNotEmpty() } }
+        withTimeoutOrNull(query.timeoutMs.milliseconds) {
+            newest.first { matching(query).isNotEmpty() }
+        }
         return page(query)
     }
 

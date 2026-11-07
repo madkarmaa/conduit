@@ -3,8 +3,6 @@ package top.madkarma.conduit.events
 import kotlin.jvm.optionals.getOrNull
 import kotlinx.serialization.Serializable
 import net.minecraft.core.BlockPos
-import net.minecraft.nbt.Tag
-import net.minecraft.resources.Identifier
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.damagesource.DamageSource
@@ -17,16 +15,6 @@ import net.minecraft.world.level.block.state.BlockState
 import top.madkarma.conduit.game.*
 
 @Serializable data class ChatEvent(val player: String, val playerUuid: String, val message: String)
-
-@Serializable
-data class CustomClickEvent(
-    val player: String,
-    val playerUuid: String,
-    /** The click event's id, such as "example:confirm". */
-    val id: String,
-    /** The click event's payload as SNBT, such as "\"abc\"" for a string. */
-    val payload: String?,
-)
 
 @Serializable
 data class PlayerEvent(
@@ -78,9 +66,6 @@ data class EntityAttackEvent(val player: String, val playerUuid: String, val tar
 
 internal fun chatPayload(sender: ServerPlayer, message: String) =
     ChatEvent(sender.gameProfile.name, sender.stringUUID, message)
-
-internal fun customClickPayload(player: ServerPlayer, id: Identifier, payload: Tag?) =
-    CustomClickEvent(player.gameProfile.name, player.stringUUID, id.toString(), payload?.toString())
 
 internal fun playerPayload(player: ServerPlayer) =
     PlayerEvent(

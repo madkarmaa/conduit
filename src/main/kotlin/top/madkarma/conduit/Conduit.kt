@@ -2,10 +2,14 @@ package top.madkarma.conduit
 
 import kotlin.jvm.optionals.getOrNull
 import net.fabricmc.api.ModInitializer
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.resources.Identifier
 import org.slf4j.LoggerFactory
+import top.madkarma.conduit.bot.Bot
+import top.madkarma.conduit.bot.ConduitCommand
 import top.madkarma.conduit.config.ConduitConfig
 import top.madkarma.conduit.config.ConfigFile
 import top.madkarma.conduit.config.GameConfig
@@ -19,6 +23,9 @@ import top.madkarma.conduit.service.server.trackDatapackReloads
 
 object Conduit : ModInitializer {
     const val MOD_ID: String = "conduit"
+
+    // The action bar shows a message for about three seconds, so the status comes every two.
+    private const val STATUS_INTERVAL_TICKS = 40
 
     private val LOGGER = LoggerFactory.getLogger(MOD_ID)
 
@@ -44,11 +51,20 @@ object Conduit : ModInitializer {
         trackDatapackReloads()
         config = readConfig()
 
+        CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
+            ConduitCommand.register(dispatcher)
+        }
+        ServerTickEvents.END_SERVER_TICK.register { server ->
+            if (server.tickCount % STATUS_INTERVAL_TICKS == 0) Bot.showStatus(server)
+        }
+
         // Singleplayer worlds start and stop an integrated server each time the player opens one.
         ServerLifecycleEvents.SERVER_STARTING.register { server ->
             GameServer.current = server
             config?.let(::startMcp)
         }
+
+        ServerLifecycleEvents.SERVER_STOPPING.register { Bot.stopAll() }
 
         ServerLifecycleEvents.SERVER_STOPPED.register { server ->
             McpHost.stop()
@@ -56,12 +72,32 @@ object Conduit : ModInitializer {
         }
     }
 
+    /**
+     * Reads the config file again. Returns its problems, and keeps the old config when it has any.
+     */
+    fun reloadConfig(): List<String> {
+        val updated =
+            try {
+                ConfigFile.read(toolActions())
+            } catch (exception: InvalidConfig) {
+                return exception.problems
+            }
+
+        config = updated
+        if (GameServer.current != null) startMcp(updated)
+        return emptyList()
+    }
+
+    private fun toolActions(): Map<String, Set<String>> = ALL_TOOLS.associate {
+        it.name to it.actions.keys
+    }
+
     private fun readConfig(): ConduitConfig? =
         try {
-            ConfigFile.read(ALL_TOOLS.map { it.name }.toSet())
+            ConfigFile.read(toolActions())
         } catch (exception: InvalidConfig) {
             LOGGER.error(
-                "Invalid {}, the MCP server stays off until it is fixed: {}",
+                "Invalid {}, Conduit stays off until /conduit reload loads a fixed one: {}",
                 ConfigFile.path,
                 exception.problems.joinToString("; "),
             )

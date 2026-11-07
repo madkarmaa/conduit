@@ -1,9 +1,19 @@
 package top.madkarma.conduit.config
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ConduitConfig(val mcp: McpConfig = McpConfig(), val game: GameConfig = GameConfig())
+data class ConduitConfig(
+    val mcp: McpConfig = McpConfig(),
+    val agents: AgentsConfig = AgentsConfig(),
+    val access: AccessConfig = AccessConfig(),
+    val tools: ToolsConfig = ToolsConfig(),
+    val approvals: ApprovalsConfig = ApprovalsConfig(),
+    val requests: RequestsConfig = RequestsConfig(),
+    val replies: RepliesConfig = RepliesConfig(),
+    val game: GameConfig = GameConfig(),
+)
 
 @Serializable
 data class McpConfig(
@@ -30,31 +40,96 @@ data class TokenConfig(
 )
 
 @Serializable
+data class AgentsConfig(
+    val full: AgentConfig =
+        AgentConfig(
+            cli = "claude",
+            model = "sonnet",
+            effort = "medium",
+            web = true,
+            runner = RunnerConfig("http://conduit-full:8080", $$"${CONDUIT_FULL_SECRET}"),
+        ),
+    val chat: AgentConfig =
+        AgentConfig(
+            cli = "opencode",
+            model = "opencode-go/deepseek-v4.1-flash",
+            effort = "high",
+            web = false,
+            runner = RunnerConfig("http://conduit-chat:8080", $$"${CONDUIT_CHAT_SECRET}"),
+        ),
+)
+
+/** The model and effort pass to the CLI as given, since every CLI names them its own way. */
+@Serializable
+data class AgentConfig(
+    val enabled: Boolean = true,
+    val cli: String,
+    val model: String,
+    val effort: String,
+    /** Extra arguments for the CLI. */
+    val args: List<String> = emptyList(),
+    /** Turns the CLI's own web search and fetch tools on. */
+    val web: Boolean,
+    val runner: RunnerConfig,
+    /** Where the CLI in the container reaches the mod's MCP server. */
+    val mcpUrl: String = "http://minecraft:25585/mcp",
+)
+
+@Serializable data class RunnerConfig(val url: String, val secret: String)
+
+@Serializable
+data class AccessConfig(
+    /** Operators get full mode. */
+    val operators: Boolean = true,
+    /** Player names or UUIDs that get full mode. */
+    val allow: List<String> = emptyList(),
+)
+
+@Serializable
+data class ToolsConfig(
+    /** Full mode only offers the actions that read. */
+    val readOnly: Boolean = false,
+    val chat: ChatToolsConfig = ChatToolsConfig(),
+)
+
+/**
+ * Tools of chat mode, which only reads. Without allow, chat mode offers the default list, or every
+ * tool but the denied ones when deny names any.
+ */
+@Serializable
+data class ChatToolsConfig(val allow: List<String>? = null, val deny: List<String> = emptyList())
+
+/**
+ * Actions the bot asks about before it runs them, as "tool" or "tool.action", besides the
+ * destructive ones, and those it never asks about.
+ */
+@Serializable
+data class ApprovalsConfig(
+    val timeoutSeconds: Int = 30,
+    val add: List<String> = emptyList(),
+    val remove: List<String> = emptyList(),
+)
+
+@Serializable
+data class RequestsConfig(
+    val timeoutSeconds: Int = 300,
+    val memory: Memory = Memory.PLAYER,
+    /** Added to the agent's instructions, such as the server's rules. */
+    val instructions: String = "",
+)
+
+/** Which earlier requests full mode remembers. Chat mode always remembers the player's own. */
+@Serializable
+enum class Memory {
+    @SerialName("player") PLAYER,
+    @SerialName("shared") SHARED,
+    @SerialName("none") NONE,
+}
+
+@Serializable data class RepliesConfig(val maxLength: Int = 1000)
+
+@Serializable
 data class GameConfig(
     val backupDirectory: String = "backups",
     val maxStructureVolume: Long = 8_000_000,
 )
-
-/** Returns what is wrong with the config. Tool names are checked against the given names. */
-fun ConduitConfig.problems(toolNames: Set<String>): List<String> {
-    val problems = mutableListOf<String>()
-    val check = { valid: Boolean, problem: String -> if (!valid) problems += problem }
-
-    check(mcp.port in 1..65535, "mcp.port must be between 1 and 65535")
-    check(mcp.allowedHosts.isNotEmpty(), "mcp.allowedHosts must name at least one host")
-    check(game.maxStructureVolume > 0, "game.maxStructureVolume must be positive")
-
-    mcp.tokens.forEachIndexed { index, token ->
-        val path = "mcp.tokens[$index]"
-        check(token.name.isNotBlank(), "$path.name must not be empty")
-        check(token.token.isNotBlank(), "$path.token must not be empty")
-        for (tool in token.allow + token.deny) check(
-            tool in toolNames,
-            "$path names unknown tool $tool",
-        )
-    }
-
-    check(mcp.tokens.distinctBy { it.name }.size == mcp.tokens.size, "mcp.tokens names repeat")
-    check(mcp.tokens.distinctBy { it.token }.size == mcp.tokens.size, "mcp.tokens values repeat")
-    return problems
-}

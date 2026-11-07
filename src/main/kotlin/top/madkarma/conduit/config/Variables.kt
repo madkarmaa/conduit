@@ -8,31 +8,45 @@ import kotlinx.serialization.json.JsonPrimitive
 // ${NAME} or ${NAME:-default}.
 private val REFERENCE = Regex("""\$\{(\w+)(?::-([^}]*))?}""")
 
+/** A variable without a default that is not set, and the config field that uses it. */
+class MissingVariable(val name: String, val path: String)
+
 /**
- * Replaces the variable references in every string of a JSON value. A reference without a default
- * to a variable that is not set adds the variable's name to missing.
+ * Replaces the variable references in every string of a JSON value. A reference to a variable that
+ * is not set and has no default becomes an empty string and is added to missing.
  */
 fun expandVariables(
     value: JsonElement,
     environment: Map<String, String>,
-    missing: MutableSet<String>,
+    missing: MutableList<MissingVariable>,
+    path: String = "",
 ): JsonElement =
-    when {
-        value is JsonObject ->
-            JsonObject(value.mapValues { expandVariables(it.value, environment, missing) })
+    when (value) {
+        is JsonObject ->
+            JsonObject(
+                value.mapValues { (key, field) ->
+                    val fieldPath = if (path.isEmpty()) key else "$path.$key"
+                    expandVariables(field, environment, missing, fieldPath)
+                },
+            )
 
-        value is JsonArray -> JsonArray(value.map { expandVariables(it, environment, missing) })
+        is JsonArray ->
+            JsonArray(
+                value.mapIndexed { index, item ->
+                    expandVariables(item, environment, missing, "$path[$index]")
+                },
+            )
 
-        value is JsonPrimitive && value.isString ->
-            JsonPrimitive(expand(value.content, environment, missing))
+        is JsonPrimitive if value.isString ->
+            JsonPrimitive(
+                expand(value.content, environment) { missing += MissingVariable(it, path) },
+            )
 
         else -> value
     }
 
-private fun expand(text: String, environment: Map<String, String>, missing: MutableSet<String>) =
+private fun expand(text: String, environment: Map<String, String>, onMissing: (String) -> Unit) =
     REFERENCE.replace(text) { match ->
         val name = match.groupValues[1]
-        val fallback = match.groups[2]?.value
-
-        environment[name] ?: fallback ?: "".also { missing += name }
+        environment[name] ?: match.groups[2]?.value ?: "".also { onMissing(name) }
     }

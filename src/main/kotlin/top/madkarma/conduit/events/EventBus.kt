@@ -33,9 +33,7 @@ enum class EventType {
     ITEM_DROP,
     ITEM_CRAFT,
     ITEM_SMELT,
-    TRADE,
-    /** A player clicked text with a custom click event. */
-    CUSTOM_CLICK;
+    TRADE;
 
     /** The name readers see, such as "player_join". */
     val id: String = name.lowercase()
