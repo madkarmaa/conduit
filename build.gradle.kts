@@ -190,45 +190,6 @@ val bun: String =
         .firstOrNull { it.canExecute() }
         ?.path ?: "${System.getProperty("user.home")}/.bun/bin/bun"
 
-val installClientDependencies =
-    tasks.register<Exec>("installClientDependencies") {
-        commandLine(bun, "install", "--frozen-lockfile")
-    }
-
-// The TypeScript client's types come from the mod's protos, so Gradle rebuilds it with the mod.
-val buildClient =
-    tasks.register<Exec>("buildClient") {
-        dependsOn(installClientDependencies)
-        workingDir("client")
-        commandLine(bun, "run", "build")
-
-        inputs.dir("src/main/proto")
-        inputs.files("client/package.json", "client/tsconfig.json", "client/tsdown.config.ts")
-        inputs.files(fileTree("client/src") { exclude("generated/**") })
-        outputs.dir("client/dist")
-    }
-
-// The MCP server and the bot import the built client.
-fun registerWorkspaceBuild(name: String, workspace: String) =
-    tasks.register<Exec>(name) {
-        dependsOn(buildClient)
-        workingDir(workspace)
-        commandLine(bun, "run", "build")
-
-        inputs.files(
-            "$workspace/package.json",
-            "$workspace/tsconfig.json",
-            "$workspace/tsdown.config.ts",
-        )
-        inputs.dir("$workspace/src")
-        outputs.dir("$workspace/dist")
-    }
-
-val buildMcp = registerWorkspaceBuild("buildMcp", "mcp")
-val buildBot = registerWorkspaceBuild("buildBot", "bot")
-
-tasks.build { finalizedBy(buildClient, buildMcp, buildBot) }
-
 val formatWithBun = tasks.register<Exec>("formatWithBun") { commandLine(bun, "fmt") }
 
 tasks.spotlessApply { finalizedBy(formatWithBun) }
