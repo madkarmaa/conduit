@@ -15,12 +15,12 @@ private val EVENT_NAMES = FEED_TYPES.map { it.id }
 // Damage, death and attack events carry the full entity, and one line is enough to read them.
 private val ENTITY_FIELDS = setOf("entity", "target")
 
-val WAIT_FOR_EVENTS =
+val EVENTS =
     ToolDefinition(
-        name = "wait_for_events",
-        title = "Wait for events",
+        name = "events",
+        title = "Game events",
         description =
-            "Returns game events newer than a cursor, waiting up to timeout_seconds for one to " +
+            "wait returns game events newer than a cursor, waiting up to timeout_seconds for one to " +
                 "happen. Pass the returned next cursor as after to continue where the last call " +
                 "stopped. Events are recorded from the first call on. Event types: " +
                 "${EVENT_NAMES.joinToString(", ")}.",

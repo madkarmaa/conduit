@@ -20,7 +20,7 @@ import net.minecraft.world.phys.Vec3
 import top.madkarma.conduit.game.*
 
 private const val UNLOADED_CHUNK_MESSAGE =
-    "Chunk is not loaded; force-load it with the force_chunk action of world_settings or move " +
+    "Chunk is not loaded; force-load it with the force_chunk action of edit_world or move " +
         "a player nearby"
 
 @Serializable data class Box(val min: Vector3, val max: Vector3)

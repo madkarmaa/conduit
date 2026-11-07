@@ -4,68 +4,6 @@ import top.madkarma.conduit.game.Vector3
 import top.madkarma.conduit.mcp.*
 import top.madkarma.conduit.service.server.broadcast
 
-val EDIT_PLAYER =
-    ToolDefinition(
-        name = "edit_player",
-        title = "Edit player",
-        description =
-            "Changes an online player: game_mode, food (level 0-20 and saturation), experience " +
-                "(levels and points within the level), operator status, or kick disconnects them.",
-        input =
-            input {
-                required("player", PLAYER)
-                optional(
-                    "game_mode",
-                    enumSchema(listOf("survival", "creative", "adventure", "spectator")),
-                )
-                optional("food_level", integerSchema(min = 0, max = 20))
-                optional("saturation", numberSchema(min = 0.0))
-                optional("levels", integerSchema(min = 0))
-                optional("points", integerSchema(min = 0))
-                optional("operator", booleanSchema("Required for operator."))
-                optional("reason", stringSchema("Kick message.", default = "Kicked by an operator"))
-            },
-        actions =
-            mapOf(
-                "game_mode" to
-                    writeAction { server, input ->
-                        input.require("game_mode")
-                        server.changeGameMode(input.string("player"), input.string("game_mode"))
-                        done("Game mode set to ${input.string("game_mode")}")
-                    },
-                "food" to
-                    writeAction { server, input ->
-                        server.changeFood(
-                            input.string("player"),
-                            input.intOrNull("food_level"),
-                            input.floatOrNull("saturation"),
-                        )
-                        done("Food updated")
-                    },
-                "experience" to
-                    writeAction { server, input ->
-                        server.changeExperience(
-                            input.string("player"),
-                            input.intOrNull("levels"),
-                            input.intOrNull("points"),
-                        )
-                        done("Experience updated")
-                    },
-                "operator" to
-                    destructiveAction { server, input ->
-                        input.require("operator")
-                        val operator = input.boolean("operator")
-                        server.changeOperator(input.string("player"), operator)
-                        done(if (operator) "Player is now operator" else "Operator removed")
-                    },
-                "kick" to
-                    destructiveAction { server, input ->
-                        server.kick(input.string("player"), input.string("reason"))
-                        done("Player kicked")
-                    },
-            ),
-    )
-
 val NOTIFY =
     ToolDefinition(
         name = "notify",

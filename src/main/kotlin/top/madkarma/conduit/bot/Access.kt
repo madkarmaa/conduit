@@ -26,14 +26,11 @@ private val DEFAULT_CHAT_TOOLS =
     setOf(
         "server_info",
         "world_info",
-        "game_rules",
-        "get_block",
-        "get_region",
-        "terrain",
-        "registry",
-        "recipes",
+        "get_blocks",
         "structures",
         "get_player",
+        "inventory",
+        "game_data",
     )
 
 fun ConduitConfig.agent(mode: Mode): AgentConfig =

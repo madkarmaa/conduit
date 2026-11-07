@@ -59,7 +59,7 @@ In full mode, `requests.memory` picks one conversation per player, one `shared` 
 ### Approvals
 
 Before the agent runs an action that is hard to undo, such as `run_command`, `edit_blocks` `fill`
-or `edit_player` `kick`, the asker and every online operator get the action with its arguments and
+or `moderation` `kick`, the asker and every online operator get the action with its arguments and
 an `[Approve]` and a `[Deny]` button. A click from the asker or an operator decides. When nobody
 answers within `approvals.timeoutSeconds`, the action does not run. Either way the agent learns what
 happened, and the time spent waiting does not count against the request's timeout.
@@ -123,9 +123,9 @@ command lists the problems and keeps the old config.
 | `game.backupDirectory`                                | `backups`                                                     | Where backups go, relative to the server folder                                       |
 | `game.maxStructureVolume`                             | `8000000`                                                     | Largest structure the tools save or place, in blocks                                  |
 
-Chat mode gets `server_info`, `world_info`, `game_rules`, `get_block`, `get_region`, `terrain`,
-`registry`, `recipes`, `structures` and `get_player` by default, and never the tools that list
-other players or entities.
+Chat mode gets `server_info`, `world_info`, `get_blocks`, `structures`, `get_player`, `inventory`
+and `game_data` by default, and never the tools that list other players or entities. It only gets
+their actions that read, and only the asking player's own data.
 
 > [!CAUTION]
 > `dangerouslyUseSubscriptionCredentials` makes the agent use the Claude, ChatGPT or OpenCode
@@ -167,17 +167,17 @@ claude mcp add --transport http conduit http://localhost:25585/mcp \
 
 The host name in the URL must be in `mcp.allowedHosts`.
 
-The server has 30 tools. Tools with several operations take an `action` argument.
+The server has 21 tools. Tools with several operations take an `action` argument.
 
-| Area      | Read                                  | Write                                                               |
-| --------- | ------------------------------------- | ------------------------------------------------------------------- |
-| Server    | `server_info`                         | `run_command`, `server_admin`                                       |
-| Blocks    | `get_block`, `get_region`             | `edit_blocks`                                                       |
-| World     | `terrain`, `world_info`, `game_rules` | `world_settings`, `world_border`, `game_rules`, `explode`           |
-| Entities  | `list_entities`, `get_entity`         | `spawn_entity`, `remove_entity`, `move_entity`, `edit_entity`       |
-| Players   | `list_players`, `get_player`          | `inventory`, `give_item`, `offline_player`, `edit_player`, `notify` |
-| Game data | `registry`, `recipes`                 |                                                                     |
-| Other     | `structures`, `wait_for_events`       | `structures`, `batch`                                               |
+| Area      | Read                                      | Write                                              |
+| --------- | ----------------------------------------- | -------------------------------------------------- |
+| Server    | `server_info`, `datapacks`                | `server_admin`, `run_command`, `datapacks`         |
+| World     | `world_info`                              | `edit_world`                                       |
+| Blocks    | `get_blocks`, `structures`                | `edit_blocks`, `structures`                        |
+| Entities  | `entities`                                | `edit_entity`, `move_entity`                       |
+| Players   | `list_players`, `get_player`, `inventory` | `edit_player`, `moderation`, `inventory`, `notify` |
+| Game data | `game_data`                               |                                                    |
+| Other     | `events`                                  | `batch`                                            |
 
 ## Security
 

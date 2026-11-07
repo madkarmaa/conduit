@@ -18,7 +18,7 @@ val SERVER_INFO =
         description =
             "summary reads the Minecraft and mod versions, players, seed, difficulty, " +
                 "performance (TPS, MSPT, memory) and the dimensions with their height range. " +
-                "mods, datapacks and backups list those.",
+                "mods and backups list those.",
         input = input {},
         defaultAction = "summary",
         actions =
@@ -33,7 +33,6 @@ val SERVER_INFO =
                             dataOf("mods" to encoded(mods)),
                         )
                     },
-                "datapacks" to readAction { server, _ -> json(server.listDatapacks()) },
                 "backups" to
                     AsyncAction(Access.READ) { _, _ -> describeBackupList(describeBackups()) },
             ),
@@ -89,8 +88,7 @@ val SERVER_ADMIN =
         title = "Server administration",
         description =
             "save writes worlds and players to disk. backup saves the world and zips it while " +
-                "the server keeps running. set_datapack enables or disables a datapack and " +
-                "reloads the data. stop saves and stops the server.",
+                "the server keeps running. stop saves and stops the server.",
         input =
             input {
                 optional(
@@ -98,8 +96,6 @@ val SERVER_ADMIN =
                     booleanSchema("save waits until everything is written.", default = false),
                 )
                 optional("name", stringSchema("Appended to the backup file name.", maxLength = 64))
-                optional("id", stringSchema("Datapack id for set_datapack, e.g. \"file/my_pack\"."))
-                optional("enabled", booleanSchema("Required for set_datapack."))
             },
         actions =
             mapOf(
@@ -111,11 +107,6 @@ val SERVER_ADMIN =
                 "backup" to
                     AsyncAction(Access.WRITE) { input, _ ->
                         json(createBackup(input.stringOrNull("name")))
-                    },
-                "set_datapack" to
-                    AsyncAction(Access.DESTRUCTIVE) { input, _ ->
-                        input.require("id", "enabled")
-                        json(changeDatapackEnabled(input.string("id"), input.boolean("enabled")))
                     },
                 "stop" to
                     destructiveAction { server, _ ->

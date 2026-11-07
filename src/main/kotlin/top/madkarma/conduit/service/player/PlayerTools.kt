@@ -41,10 +41,9 @@ val GET_PLAYER =
         name = "get_player",
         title = "Get player",
         description =
-            "info, inventory and ender_chest read an online player. Inventory slots: 0-8 hotbar, " +
-                "9-35 main, 36-39 armor (feet, legs, chest, head), 40 offhand. stats reads the " +
-                "statistics of any player, filtered by a substring. saved and saved_nbt read the " +
-                "saved data of any player, also offline ones.",
+            "info reads an online player. stats reads the statistics of any player, filtered " +
+                "by a substring. saved and saved_nbt read the saved data of any player, also " +
+                "offline ones. The inventory tool reads inventories.",
         input =
             input {
                 required("player", PLAYER)
@@ -59,21 +58,6 @@ val GET_PLAYER =
                 "info" to
                     readAction { server, input ->
                         json(server.describePlayer(input.string("player")))
-                    },
-                "inventory" to
-                    readAction { server, input ->
-                        val inventory = server.inventoryOf(input.string("player"))
-                        describeInventory(
-                            "Selected hotbar slot ${inventory.selectedSlot}; non-empty slots:",
-                            inventory,
-                        )
-                    },
-                "ender_chest" to
-                    readAction { server, input ->
-                        describeInventory(
-                            "Non-empty ender chest slots:",
-                            server.enderChestOf(input.string("player")),
-                        )
                     },
                 "stats" to
                     readAction { server, input ->
@@ -103,13 +87,3 @@ private fun describeKnown(player: KnownPlayer): String {
         if (player.online) " online" else " last played ${Instant.ofEpochMilli(player.lastPlayed)}"
     return "${player.name.ifEmpty { "?" }} ${player.uuid}$seen"
 }
-
-internal fun describeInventory(header: String, inventory: InventoryContents): Reply =
-    lines(
-        header,
-        inventory.slots.map { (slot, item) ->
-            val components = if (item.components.isEmpty()) "" else " ${item.components}"
-            "$slot: ${item.count} ${item.id}$components"
-        },
-        dataOf("slots" to encoded(inventory.slots)),
-    )

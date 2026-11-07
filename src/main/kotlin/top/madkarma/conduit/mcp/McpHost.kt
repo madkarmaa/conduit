@@ -40,7 +40,7 @@ private val INSTRUCTIONS =
     listOf(
             "Controls a running Minecraft server through the Conduit mod.",
             "Positions are block coordinates, and y grows upwards. Dimensions default to the overworld.",
-            "Use the registry tool to look up valid block, item and entity ids instead of guessing them.",
+            "Use the game_data tool to look up valid block, item and entity ids instead of guessing them.",
             "Prefer the dedicated tools. run_command covers anything they do not.",
         )
         .joinToString(" ")

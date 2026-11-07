@@ -1,6 +1,7 @@
 package top.madkarma.conduit.service.entity
 
 import top.madkarma.conduit.game.EffectInfo
+import top.madkarma.conduit.game.Rotation
 import top.madkarma.conduit.mcp.*
 
 val EDIT_ENTITY =
@@ -8,13 +9,18 @@ val EDIT_ENTITY =
         name = "edit_entity",
         title = "Edit entity",
         description =
-            "name sets or clears the custom name. tags adds and removes scoreboard tags. health " +
-                "sets the health. damage hurts the entity like an attack. nbt merges SNBT into its " +
-                "data. add_effect and remove_effect change status effects. set_attribute sets an " +
-                "attribute base value such as \"minecraft:max_health\".",
+            "spawn creates an entity in a loaded chunk and returns it; the force_chunk action " +
+                "of edit_world loads chunks away from players. remove takes an entity away " +
+                "silently, or kills it so it drops loot. name sets or clears the custom name. " +
+                "tags adds and removes scoreboard tags. health sets the health. damage hurts the " +
+                "entity like an attack. nbt merges SNBT into its data. add_effect and " +
+                "remove_effect change status effects. set_attribute sets an attribute base value " +
+                "such as \"minecraft:max_health\".",
         input =
             input {
-                required("uuid", UUID)
+                optional("uuid", UUID.described("Required for every action but spawn."))
+                spawnFields()
+                optional("kill", booleanSchema("remove kills the entity.", default = false))
                 optional("name", TEXT.described("New custom name. Leave it out to clear it."))
                 optional("name_visible", booleanSchema(default = false))
                 optional("add_tags", arraySchema(stringSchema()))
@@ -22,7 +28,12 @@ val EDIT_ENTITY =
                 optional("amount", numberSchema("Health or damage amount.", min = 0.0))
                 optional("damage_type", stringSchema(default = "minecraft:generic"))
                 optional("attacker", stringSchema("UUID of the attacking entity."))
-                optional("snbt", SNBT.described("Required for nbt."))
+                optional(
+                    "snbt",
+                    SNBT.described(
+                        "Required for nbt. For spawn, data applied like the /summon nbt argument.",
+                    ),
+                )
                 optional(
                     "effect",
                     stringSchema(
@@ -43,6 +54,24 @@ val EDIT_ENTITY =
             },
         actions =
             mapOf(
+                "spawn" to
+                    writeAction { server, input ->
+                        val request =
+                            SpawnRequest(
+                                type = input.string("type"),
+                                dimension = input.stringOrNull("dimension"),
+                                position = input.decode("position"),
+                                rotation = input.decodeOrNull<Rotation>("rotation"),
+                                snbt = input.stringOrNull("snbt"),
+                                initialize = input.boolean("initialize"),
+                            )
+                        json(server.spawnEntity(request))
+                    },
+                "remove" to
+                    destructiveAction { server, input ->
+                        server.removeEntity(input.string("uuid"), input.boolean("kill"))
+                        done("Entity removed")
+                    },
                 "name" to
                     writeAction { server, input ->
                         val name = input.stringOrNull("name")
@@ -118,3 +147,14 @@ val EDIT_ENTITY =
                     },
             ),
     )
+
+private fun InputBuilder.spawnFields() {
+    optional("type", stringSchema("Entity type, e.g. \"minecraft:villager\". Required for spawn."))
+    optional("dimension", DIMENSION)
+    optional("position", VEC3.described("Required for spawn."))
+    optional("rotation", ROTATION)
+    optional(
+        "initialize",
+        booleanSchema("spawn runs natural spawn setup (equipment, variants).", default = true),
+    )
+}

@@ -9,19 +9,33 @@ import top.madkarma.conduit.mcp.*
 // Drawn regions print one character per block, so they stay small enough to read.
 private const val MAX_DRAWN_VOLUME = 8192
 
-val GET_BLOCK =
+val GET_BLOCKS =
     ToolDefinition(
-        name = "get_block",
-        title = "Get block",
-        description = "Block state, biome and block entity SNBT (chest, sign, ...) at a position.",
+        name = "get_blocks",
+        title = "Read blocks",
+        description =
+            "block reads the block state, biome and block entity SNBT (chest, sign, ...) at pos. " +
+                "region reads a cuboid, corners inclusive: detail summary counts each block " +
+                "state, and draw prints every y layer as a character grid, up to " +
+                "$MAX_DRAWN_VOLUME blocks.",
         input =
             input {
                 optional("dimension", DIMENSION)
-                required("pos", BLOCK_POS)
+                optional("pos", BLOCK_POS.described("Required for block."))
+                optional("from", BLOCK_POS.described("Region corner. Required for region."))
+                optional("to", BLOCK_POS.described("Opposite region corner. Required for region."))
+                optional("detail", enumSchema(listOf("summary", "draw"), default = "summary"))
+                optional(
+                    "loaded_only",
+                    booleanSchema(
+                        "Do not load chunks. Unloaded positions read as void air.",
+                        default = false,
+                    ),
+                )
             },
         actions =
             mapOf(
-                "get" to
+                "block" to
                     readAction { server, input ->
                         json(
                             server.describeBlock(
@@ -30,6 +44,7 @@ val GET_BLOCK =
                             ),
                         )
                     },
+                "region" to readAction { server, input -> server.regionReply(input) },
             ),
     )
 
@@ -119,30 +134,6 @@ val EDIT_BLOCKS =
                         done("Block entity updated")
                     },
             ),
-    )
-
-val GET_REGION =
-    ToolDefinition(
-        name = "get_region",
-        title = "Read region",
-        description =
-            "Reads a cuboid region, corners inclusive. 'summary' counts each block state. 'draw' " +
-                "prints every y layer as a character grid, up to $MAX_DRAWN_VOLUME blocks.",
-        input =
-            input {
-                optional("dimension", DIMENSION)
-                required("from", BLOCK_POS)
-                required("to", BLOCK_POS)
-                optional("detail", enumSchema(listOf("summary", "draw"), default = "summary"))
-                optional(
-                    "loaded_only",
-                    booleanSchema(
-                        "Do not load chunks. Unloaded positions read as void air.",
-                        default = false,
-                    ),
-                )
-            },
-        actions = mapOf("read" to readAction { server, input -> server.regionReply(input) }),
     )
 
 private fun MinecraftServer.regionReply(input: ToolInput): Reply {
