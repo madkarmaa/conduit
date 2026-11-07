@@ -53,12 +53,16 @@ object Answers {
                     cli = agent.cli,
                     model = agent.model,
                     effort = agent.effort,
-                    args = agent.args,
+                    options = agent.options,
                     web = agent.web,
-                    prompt = config.buildPrompt(request.mode, request.asker, request.text),
+                    instructions = config.buildInstructions(request.mode, request.asker),
+                    prompt = requestPrompt(request.asker, request.text),
                     conversation = conversation.folder,
                     resume = conversation.resumable,
                     mcp = McpAccess(agent.mcpUrl, token),
+                    apiKey = agent.apiKey,
+                    dangerouslyUseSubscriptionCredentials =
+                        agent.dangerouslyUseSubscriptionCredentials,
                     timeoutSeconds = config.requests.timeoutSeconds * RUNNER_TIMEOUT_FACTOR,
                 )
 

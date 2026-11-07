@@ -5,7 +5,6 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { log } from "./log.ts";
-import { PACKAGES } from "./presets.ts";
 import { Cli } from "./requests.ts";
 
 const HOME = process.env.HOME ?? "/home/agent";
@@ -15,6 +14,12 @@ const UPDATE_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const UPDATE_RETRY_MS = 60 * 1000;
 
 const execute = promisify(execFile);
+
+export const PACKAGES: Record<Cli, string> = {
+    claude: "@anthropic-ai/claude-code",
+    codex: "@openai/codex",
+    opencode: "@opencode/cli",
+};
 
 /** The version of each installed CLI, as the CLI reports it. */
 export const versions: Partial<Record<Cli, string>> = {};
@@ -26,8 +31,12 @@ export function currentMaintenance(): string | undefined {
     return maintenance;
 }
 
+export function cliPath(cli: Cli): string {
+    return join(NPM_PREFIX, "bin", cli);
+}
+
 export function installed(cli: Cli): boolean {
-    return existsSync(join(NPM_PREFIX, "bin", cli));
+    return existsSync(cliPath(cli));
 }
 
 export function installedClis(): Cli[] {

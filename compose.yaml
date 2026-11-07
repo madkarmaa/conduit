@@ -8,10 +8,14 @@
 # The MCP endpoint takes the bearer token from CONDUIT_TEST_TOKEN, or dev-token when it is not set.
 # RCON on localhost:25575 runs console commands, with the password from RCON_PASSWORD or dev-rcon.
 #
-# To test the bot, add the agent containers to the same project and set their secrets:
+# To test the bot, add the agent containers to the same project and set their secrets and API keys:
 #
 #   CONDUIT_FULL_SECRET=<secret> CONDUIT_CHAT_SECRET=<secret> MC_VERSION=<version> \
+#       CONDUIT_FULL_API_KEY=<key> CONDUIT_CHAT_API_KEY=<key> \
 #       docker compose -f compose.yaml -f agent/compose.yaml up -d
+#
+# CONDUIT_DANGEROUSLY_USE_SUBSCRIPTION_CREDENTIALS=true uses the containers' logins instead, which
+# the providers' terms forbid. See agent/README.md.
 
 x-headlessmc: &headlessmc
     image: 3arthqu4ke/headlessmc:latest
@@ -34,6 +38,9 @@ services:
             CONDUIT_TEST_TOKEN: ${CONDUIT_TEST_TOKEN:-dev-token}
             CONDUIT_FULL_SECRET: ${CONDUIT_FULL_SECRET:-}
             CONDUIT_CHAT_SECRET: ${CONDUIT_CHAT_SECRET:-}
+            CONDUIT_FULL_API_KEY: ${CONDUIT_FULL_API_KEY:-}
+            CONDUIT_CHAT_API_KEY: ${CONDUIT_CHAT_API_KEY:-}
+            CONDUIT_DANGEROUSLY_USE_SUBSCRIPTION_CREDENTIALS: ${CONDUIT_DANGEROUSLY_USE_SUBSCRIPTION_CREDENTIALS:-false}
             RCON_PASSWORD: ${RCON_PASSWORD:-dev-rcon}
         ports:
             - 127.0.0.1:25565:25565

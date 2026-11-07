@@ -84,9 +84,11 @@ object Subcommands {
         val line = Bot.line(mode)
         val asking = line.running()?.let { "answering ${it.asker.name}" } ?: "idle"
         val web = if (agent.web) "web on" else "web off"
+        val credentials =
+            if (agent.dangerouslyUseSubscriptionCredentials) "subscription login" else "API key"
 
         return Component.literal(
-            "${mode.id}: ${agent.cli} ${agent.model} (${agent.effort}), $web. Runner: " +
+            "${mode.id}: ${agent.cli} ${agent.model} (${agent.effort}), $web, $credentials. Runner: " +
                 "${runnerState(agent.runner, agent.cli)}. Line: $asking, ${line.waiting().size} waiting.",
         )
     }

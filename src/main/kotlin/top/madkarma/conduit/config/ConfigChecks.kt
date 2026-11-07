@@ -32,12 +32,19 @@ fun ConduitConfig.problems(tools: Map<String, Set<String>>): List<String> {
 }
 
 /** Whether a field of the config matters, so a variable it uses must be set. */
-fun ConduitConfig.uses(path: String): Boolean =
-    when {
-        path.startsWith("agents.full") -> agents.full.enabled
-        path.startsWith("agents.chat") -> agents.chat.enabled
-        else -> true
-    }
+fun ConduitConfig.uses(path: String): Boolean {
+    val (agentPath, agent) =
+        when {
+            path.startsWith("agents.full") -> "agents.full" to agents.full
+            path.startsWith("agents.chat") -> "agents.chat" to agents.chat
+            else -> return true
+        }
+
+    // A subscription login stands in for the API key.
+    if (path == "$agentPath.apiKey")
+        return agent.enabled && !agent.dangerouslyUseSubscriptionCredentials
+    return agent.enabled
+}
 
 private fun ConduitConfig.tokenProblems(toolNames: Set<String>): List<String> {
     val tokens = mcp.tokens
@@ -72,6 +79,8 @@ private fun agentProblems(path: String, agent: AgentConfig): List<String> {
         "$path.runner.secret must have at least 16 letters, digits or -._~+/ characters"
             .takeIf { !RUNNER_SECRET.matches(agent.runner.secret) },
         "$path.mcpUrl must be an http or https URL".takeIf { httpUri(agent.mcpUrl) == null },
+        "$path.apiKey must be set, or $path.dangerouslyUseSubscriptionCredentials turned on"
+            .takeIf { agent.apiKey.isBlank() && !agent.dangerouslyUseSubscriptionCredentials },
     )
 }
 

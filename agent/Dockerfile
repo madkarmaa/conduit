@@ -15,7 +15,8 @@ COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 
 WORKDIR /opt/conduit
 COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile --production && rm -rf /root/.bun
+# The SDKs drive the CLIs installed in the home volume, so their own bundled CLIs stay out.
+RUN bun install --frozen-lockfile --production --omit optional && rm -rf /root/.bun
 COPY src ./src
 COPY conduit-login /usr/local/bin/conduit-login
 

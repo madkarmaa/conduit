@@ -10,6 +10,7 @@ import kotlinx.coroutines.future.await
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import top.madkarma.conduit.config.RunnerConfig
 
 private val HTTP: HttpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()
@@ -26,14 +27,19 @@ class RunRequest(
     val cli: String,
     val model: String,
     val effort: String,
-    val args: List<String>,
+    val options: JsonObject,
     val web: Boolean,
+    /** The system prompt. */
+    val instructions: String,
     val prompt: String,
     /** The conversation's folder in the container. */
     val conversation: String,
     /** Continues the conversation if it has started, and keeps its folder. */
     val resume: Boolean,
     val mcp: McpAccess,
+    /** Empty when the CLI uses its subscription login instead. */
+    val apiKey: String,
+    val dangerouslyUseSubscriptionCredentials: Boolean,
     val timeoutSeconds: Int,
 )
 

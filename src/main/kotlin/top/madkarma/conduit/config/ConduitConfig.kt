@@ -2,6 +2,7 @@ package top.madkarma.conduit.config
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 
 @Serializable
 data class ConduitConfig(
@@ -47,14 +48,16 @@ data class AgentsConfig(
             model = "sonnet",
             effort = "medium",
             web = true,
+            apiKey = $$"${CONDUIT_FULL_API_KEY}",
             runner = RunnerConfig("http://conduit-full:8080", $$"${CONDUIT_FULL_SECRET}"),
         ),
     val chat: AgentConfig =
         AgentConfig(
             cli = "opencode",
-            model = "opencode-go/deepseek-v4.1-flash",
+            model = "deepseek/deepseek-flash",
             effort = "high",
             web = false,
+            apiKey = $$"${CONDUIT_CHAT_API_KEY}",
             runner = RunnerConfig("http://conduit-chat:8080", $$"${CONDUIT_CHAT_SECRET}"),
         ),
 )
@@ -66,10 +69,17 @@ data class AgentConfig(
     val cli: String,
     val model: String,
     val effort: String,
-    /** Extra arguments for the CLI. */
-    val args: List<String> = emptyList(),
+    /** Extra options for the CLI's SDK. Conduit's own options win over them. */
+    val options: JsonObject = JsonObject(emptyMap()),
     /** Turns the CLI's own web search and fetch tools on. */
     val web: Boolean,
+    /** The key of the model's provider, which bills each request. */
+    val apiKey: String,
+    /**
+     * Lets the CLI use the subscription that its container is logged in to. The providers' terms
+     * forbid this, and it can get the account banned.
+     */
+    val dangerouslyUseSubscriptionCredentials: Boolean = false,
     val runner: RunnerConfig,
     /** Where the CLI in the container reaches the mod's MCP server. */
     val mcpUrl: String = "http://minecraft:25585/mcp",

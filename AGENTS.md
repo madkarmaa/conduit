@@ -30,7 +30,9 @@
 
 - Never log or show secrets: runner secrets, MCP tokens and CLI logins.
 
-- Write the runner in `agent/` in TypeScript that Bun runs as it is, with Hono and Zod as its only dependencies. CLI flags belong in `agent/src/presets.ts`, so a CLI change only needs a new image, not a new mod.
+- Write the runner in `agent/` in TypeScript that Bun runs as it is, with Hono, Zod and the CLIs' SDKs as its only dependencies. How the runner drives each CLI belongs in `agent/src/drivers/`, so a CLI change only needs a new image, not a new mod.
+
+- Agents use API keys by default. Only `dangerouslyUseSubscriptionCredentials` may let a CLI use a subscription login, and a run without it must never reach one.
 
 - The mod never starts or stops the agent containers. It only talks to their runners over HTTP.
 

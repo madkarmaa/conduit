@@ -23,6 +23,16 @@ if [ -n "${CONDUIT_FULL_SECRET:-}" ] && [ -n "${CONDUIT_CHAT_SECRET:-}" ]; then
     agents=true
 fi
 
+# The agents use API keys unless a test asks for the containers' subscription logins.
+subscriptions="${CONDUIT_DANGEROUSLY_USE_SUBSCRIPTION_CREDENTIALS:-false}"
+case "$subscriptions" in
+    true | false) ;;
+    *)
+        echo "CONDUIT_DANGEROUSLY_USE_SUBSCRIPTION_CREDENTIALS must be true or false" >&2
+        exit 2
+        ;;
+esac
+
 mkdir -p "$dir/config"
 cat > "$dir/config/conduit.json" <<EOF
 {
@@ -31,8 +41,16 @@ cat > "$dir/config/conduit.json" <<EOF
         "tokens": [{ "name": "test", "token": "\${CONDUIT_TEST_TOKEN}" }]
     },
     "agents": {
-        "full": { "enabled": $agents, "mcpUrl": "http://server:25585/mcp" },
-        "chat": { "enabled": $agents, "mcpUrl": "http://server:25585/mcp" }
+        "full": {
+            "enabled": $agents,
+            "mcpUrl": "http://server:25585/mcp",
+            "dangerouslyUseSubscriptionCredentials": $subscriptions
+        },
+        "chat": {
+            "enabled": $agents,
+            "mcpUrl": "http://server:25585/mcp",
+            "dangerouslyUseSubscriptionCredentials": $subscriptions
+        }
     }
 }
 EOF

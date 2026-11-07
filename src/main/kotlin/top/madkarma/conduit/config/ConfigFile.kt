@@ -9,6 +9,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import net.fabricmc.loader.api.FabricLoader
+import org.slf4j.LoggerFactory
 
 class InvalidConfig(val problems: List<String>) : Exception(problems.joinToString("; "))
 
@@ -18,6 +19,8 @@ private val CONFIG_JSON = Json {
     prettyPrintIndent = "    "
     encodeDefaults = true
 }
+
+private val LOGGER = LoggerFactory.getLogger("conduit")
 
 object ConfigFile {
     val path: Path = FabricLoader.getInstance().configDir.resolve("conduit.json")
@@ -45,7 +48,21 @@ object ConfigFile {
         val problems = variables + config.problems(tools)
         if (problems.isNotEmpty()) throw InvalidConfig(problems)
 
+        warnAboutSubscriptions(config)
         return config
+    }
+
+    // The flag is easy to forget once it is on, so every load repeats the warning.
+    private fun warnAboutSubscriptions(config: ConduitConfig) {
+        val agents = mapOf("full" to config.agents.full, "chat" to config.agents.chat)
+        for ((mode, agent) in agents) {
+            if (!agent.enabled || !agent.dangerouslyUseSubscriptionCredentials) continue
+            LOGGER.warn(
+                "agents.{} uses the subscription its CLI is logged in to. The providers' terms " +
+                    "forbid this, and it can get the account banned.",
+                mode,
+            )
+        }
     }
 
     private fun writeDefaults() {
