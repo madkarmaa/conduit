@@ -4,7 +4,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("net.fabricmc.fabric-loom")
-    `maven-publish`
     eclipse
     id("org.jetbrains.kotlin.jvm") version "2.4.21"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.4.21"
@@ -14,17 +13,9 @@ plugins {
 // Libraries bundled into the mod jar via jar-in-jar, together with their transitive dependencies.
 val bundled: Configuration = configurations.create("bundled")
 
-// Minecraft or fabric-language-kotlin already provides these at runtime.
-val providedGroups =
-    setOf(
-        "com.google.guava",
-        "com.google.code.gson",
-        "org.jspecify",
-        "org.slf4j",
-        "org.jetbrains",
-        "org.jetbrains.kotlin",
-        "org.jetbrains.kotlinx",
-    )
+// Minecraft already provides these at runtime.
+val minecraftGroups =
+    setOf("com.google.guava", "com.google.code.gson", "org.jspecify", "org.slf4j", "org.jetbrains")
 
 configurations.implementation { extendsFrom(bundled) }
 
@@ -32,6 +23,8 @@ val minecraftVersion = providers.gradleProperty("minecraft_version").get()
 val loaderVersion = providers.gradleProperty("loader_version").get()
 val fabricApiVersion = providers.gradleProperty("fabric_api_version").get()
 val fabricKotlinVersion = providers.gradleProperty("fabric_kotlin_version").get()
+val ktorVersion = providers.gradleProperty("ktor_version").get()
+val mcpVersion = providers.gradleProperty("mcp_version").get()
 
 dependencies {
     // gradle.properties sets the versions.
@@ -42,10 +35,27 @@ dependencies {
     implementation("net.fabricmc.fabric-api:fabric-api:$fabricApiVersion")
     implementation("net.fabricmc:fabric-language-kotlin:$fabricKotlinVersion")
 
+    // CIO keeps a second Netty out of the game, which already ships its own.
+    bundled("io.ktor:ktor-server-cio:$ktorVersion")
+    bundled("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+    bundled("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+    bundled("io.modelcontextprotocol:kotlin-sdk-server:$mcpVersion")
+
+    // fabric-language-kotlin ships the Kotlin libraries its POM lists, such as coroutines and
+    // kotlinx-serialization, so the mod uses those instead of bundling its own copies.
+    val fabricKotlin = create("net.fabricmc:fabric-language-kotlin:$fabricKotlinVersion")
+    val fabricKotlinModules =
+        configurations
+            .detachedConfiguration(fabricKotlin)
+            .resolvedConfiguration
+            .resolvedArtifacts
+            .map { "${it.moduleVersion.id.group}:${it.moduleVersion.id.name}" }
+            .toSet()
+
     // Loom's include configuration is not transitive, so this lists every resolved module.
     bundled.resolvedConfiguration.resolvedArtifacts
         .map { it.moduleVersion.id }
-        .filter { it.group !in providedGroups }
+        .filter { it.group !in minecraftGroups && "${it.group}:${it.name}" !in fabricKotlinModules }
         .forEach { include("${it.group}:${it.name}:${it.version}") }
 }
 
@@ -166,12 +176,3 @@ val checkFormatWithBun =
     tasks.register<Exec>("checkFormatWithBun") { commandLine(bun, "fmt", "--check") }
 
 tasks.spotlessCheck { finalizedBy(checkFormatWithBun) }
-
-// Maven publication.
-publishing {
-    publications {
-        register<MavenPublication>("mavenJava") {
-            from(components["java"])
-        }
-    }
-}

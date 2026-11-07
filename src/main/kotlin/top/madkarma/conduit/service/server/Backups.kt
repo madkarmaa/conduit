@@ -99,7 +99,7 @@ private fun MinecraftServer.saveForBackup(name: String): BackupPaths {
 }
 
 private fun MinecraftServer.backupDirectory(): Path =
-    serverDirectory.resolve(Conduit.config.backupDirectory).toAbsolutePath().normalize()
+    serverDirectory.resolve(Conduit.gameConfig.backupDirectory).toAbsolutePath().normalize()
 
 private fun backupFileName(worldName: String, name: String): String {
     val timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT)

@@ -40,7 +40,7 @@ internal fun MinecraftServer.captureStructure(
 }
 
 internal fun checkVolume(volume: Long) {
-    val limit = Conduit.config.maxStructureVolume
+    val limit = Conduit.gameConfig.maxStructureVolume
     if (volume > limit) invalidInput("Structure of $volume blocks exceeds the limit of $limit")
 }
 
