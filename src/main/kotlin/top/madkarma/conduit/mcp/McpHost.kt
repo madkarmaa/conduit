@@ -69,7 +69,7 @@ object McpHost {
             embeddedServer(CIO, host = config.host, port = config.port) { module(config) }
                 .start(wait = false)
         running = config
-        LOGGER.info("MCP server listening on http://{}:{}{}", config.host, config.port, PATH)
+        LOGGER.info("MCP server listening on {}:{}{}", config.host, config.port, PATH)
     }
 
     @Synchronized

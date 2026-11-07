@@ -23,8 +23,9 @@ public abstract class LivingEntityMixin {
             boolean randomly,
             boolean thrownFromHand,
             CallbackInfoReturnable<ItemEntity> info) {
+        LivingEntity entity = (LivingEntity) (Object) this;
         ItemEntity itemEntity = info.getReturnValue();
-        if (!randomly || itemEntity == null || !((Object) this instanceof ServerPlayer player)) {
+        if (!randomly || itemEntity == null || !(entity instanceof ServerPlayer player)) {
             return;
         }
 
