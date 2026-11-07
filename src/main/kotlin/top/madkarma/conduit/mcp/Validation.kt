@@ -1,117 +1,78 @@
 package top.madkarma.conduit.mcp
 
-import kotlin.math.floor
+import com.networknt.schema.Error
+import com.networknt.schema.InputFormat
+import com.networknt.schema.Schema
+import com.networknt.schema.SchemaRegistry
+import com.networknt.schema.SchemaRegistryConfig
+import com.networknt.schema.SpecificationVersion
+import com.networknt.schema.path.PathType
+import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.doubleOrNull
-import kotlinx.serialization.json.int
-import kotlinx.serialization.json.jsonPrimitive
 import top.madkarma.conduit.game.invalidInput
 
-/**
- * Checks arguments against an object schema: types, required fields, enums, number ranges, string
- * lengths and array sizes. Returns the arguments with the defaults of missing fields filled in. A
- * null counts as a missing field.
- */
-fun validateArguments(schema: JsonObject, arguments: JsonObject): JsonObject =
-    checkObject(schema, arguments, "")
+// English messages whatever the server's locale, fields named like "from.x", and 3.0 counts as an
+// integer like 3.
+private val REGISTRY: SchemaRegistry =
+    SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_2020_12) { registry ->
+        val config =
+            SchemaRegistryConfig.builder()
+                .locale(Locale.ENGLISH)
+                .pathType(PathType.JSON_PATH)
+                .losslessNarrowing(true)
+                .build()
+        registry.schemaRegistryConfig(config)
+    }
 
-private fun checkObject(schema: JsonObject, value: JsonObject, path: String): JsonObject {
+// Every request builds its tools anew, so each schema is compiled once and kept.
+private val compiledSchemas = ConcurrentHashMap<JsonObject, Schema>()
+
+/**
+ * Checks arguments against a tool's input schema. Returns the arguments with the defaults of
+ * missing fields filled in. A null counts as a missing field.
+ */
+fun validateArguments(schema: JsonObject, arguments: JsonObject): JsonObject {
+    val prepared = withDefaults(schema, arguments)
+    val compiled = compiledSchemas.getOrPut(schema) { REGISTRY.getSchema(schema.toString()) }
+    val errors = compiled.validate(prepared.toString(), InputFormat.JSON)
+
+    if (errors.isNotEmpty()) invalidInput(errors.joinToString("; ", transform = ::describe))
+    return prepared
+}
+
+// JSON Schema only describes defaults, so filling them in is up to the server.
+private fun withDefaults(schema: JsonObject, value: JsonObject): JsonObject {
     val properties = schema["properties"] as? JsonObject ?: return value
-    val required = (schema["required"] as? JsonArray)?.map { it.jsonPrimitive.content }.orEmpty()
-    val checked = LinkedHashMap<String, JsonElement>(value)
+    val filled = LinkedHashMap(value.filterValues { it !is JsonNull })
 
     for ((name, field) in properties) {
         val fieldSchema = field as JsonObject
-        val fieldPath = if (path.isEmpty()) name else "$path.$name"
-        val fieldValue = value[name]?.takeUnless { it is JsonNull }
+        val current = filled[name]
+        val default = fieldSchema["default"]
 
-        checked.remove(name)
-        when {
-            fieldValue != null -> checked[name] = checkValue(fieldSchema, fieldValue, fieldPath)
-            fieldSchema["default"] != null -> checked[name] = fieldSchema.getValue("default")
-            name in required -> invalidInput("$fieldPath is required")
-        }
+        if (current == null && default != null) filled[name] = default
+        if (current != null) filled[name] = withNestedDefaults(fieldSchema, current)
     }
 
-    return JsonObject(checked)
+    return JsonObject(filled)
 }
 
-private fun checkValue(schema: JsonObject, value: JsonElement, path: String): JsonElement {
-    val type = (schema["type"] as? JsonPrimitive)?.content
-    if (!hasType(value, type)) invalidInput("$path must be ${article(type)} $type")
-
-    checkEnum(schema, value, path)
-    return when (value) {
-        is JsonObject -> checkObject(schema, value, path)
-        is JsonArray -> checkArray(schema, value, path)
-        else -> value.also { checkPrimitive(schema, it as JsonPrimitive, path) }
+private fun withNestedDefaults(schema: JsonObject, value: JsonElement): JsonElement {
+    val items = schema["items"] as? JsonObject
+    return when {
+        value is JsonObject -> withDefaults(schema, value)
+        value is JsonArray && items != null ->
+            JsonArray(value.map { withNestedDefaults(items, it) })
+        else -> value
     }
 }
 
-private fun hasType(value: JsonElement, type: String?): Boolean {
-    val primitive = value as? JsonPrimitive
-    val number = primitive?.takeUnless { it.isString }?.doubleOrNull
-
-    return when (type) {
-        "object" -> value is JsonObject
-        "array" -> value is JsonArray
-        "string" -> primitive?.isString == true
-        "number" -> number != null
-        "integer" -> number != null && number == floor(number)
-        "boolean" -> primitive?.takeUnless { it.isString }?.booleanOrNull != null
-        else -> true
-    }
+// Names the field without the root, such as "from.x: must be an integer".
+private fun describe(error: Error): String {
+    val location = error.instanceLocation.toString().removePrefix("$").removePrefix(".")
+    return if (location.isEmpty()) error.message else "$location: ${error.message}"
 }
-
-private fun checkEnum(schema: JsonObject, value: JsonElement, path: String) {
-    val allowed = schema["enum"] as? JsonArray ?: return
-    if (value in allowed) return
-
-    invalidInput("$path must be one of ${allowed.joinToString(", ") { it.jsonPrimitive.content }}")
-}
-
-private fun checkArray(schema: JsonObject, value: JsonArray, path: String): JsonArray {
-    limit(schema, "minItems")?.let {
-        if (value.size < it) invalidInput("$path needs at least $it items")
-    }
-    limit(schema, "maxItems")?.let {
-        if (value.size > it) invalidInput("$path takes at most $it items")
-    }
-
-    val items = schema["items"] as? JsonObject ?: return value
-    return JsonArray(value.mapIndexed { index, item -> checkValue(items, item, "$path[$index]") })
-}
-
-private fun checkPrimitive(schema: JsonObject, value: JsonPrimitive, path: String) {
-    if (value.isString) {
-        val length = value.content.codePointCount(0, value.content.length)
-        limit(schema, "maxLength")?.let {
-            if (length > it) invalidInput("$path takes at most $it characters")
-        }
-        return
-    }
-
-    val number = value.doubleOrNull ?: return
-    bound(schema, "minimum")?.let {
-        if (number < it) invalidInput("$path must be at least ${format(it)}")
-    }
-    bound(schema, "maximum")?.let {
-        if (number > it) invalidInput("$path must be at most ${format(it)}")
-    }
-}
-
-private fun limit(schema: JsonObject, key: String): Int? = schema[key]?.jsonPrimitive?.int
-
-private fun bound(schema: JsonObject, key: String): Double? =
-    schema[key]?.jsonPrimitive?.doubleOrNull
-
-private fun article(type: String?): String =
-    if (type == "object" || type == "integer" || type == "array") "an" else "a"
-
-private fun format(number: Double): String =
-    if (number == floor(number)) number.toLong().toString() else number.toString()

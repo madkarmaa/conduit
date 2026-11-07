@@ -25,6 +25,7 @@ val fabricApiVersion = providers.gradleProperty("fabric_api_version").get()
 val fabricKotlinVersion = providers.gradleProperty("fabric_kotlin_version").get()
 val ktorVersion = providers.gradleProperty("ktor_version").get()
 val mcpVersion = providers.gradleProperty("mcp_version").get()
+val jsonSchemaVersion = providers.gradleProperty("json_schema_version").get()
 
 dependencies {
     // gradle.properties sets the versions.
@@ -40,6 +41,7 @@ dependencies {
     bundled("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     bundled("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     bundled("io.modelcontextprotocol:kotlin-sdk-server:$mcpVersion")
+    bundled("com.networknt:json-schema-validator:$jsonSchemaVersion")
 
     // fabric-language-kotlin ships the Kotlin libraries its POM lists, such as coroutines and
     // kotlinx-serialization, so the mod uses those instead of bundling its own copies.
