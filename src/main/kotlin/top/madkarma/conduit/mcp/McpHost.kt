@@ -154,9 +154,13 @@ object McpHost {
             first.port == second.port &&
             first.allowedHosts == second.allowedHosts
 
-    // The SDK logs every tool it registers, and the server registers them for each request.
+    // The SDK logs every tool it registers, and the server registers them for each request. Its
+    // feature registries log under names of their own, outside its package.
     private fun quietSdkLogs() {
-        Configurator.setLevel("io.modelcontextprotocol", Level.WARN)
-        Configurator.setLevel("io.ktor", Level.WARN)
+        System.setProperty("kotlin-logging.logStartupMessage", "false")
+        val registries =
+            listOf("Tool", "Prompt", "Resource", "ResourceTemplate").map { "FeatureRegistry[$it]" }
+        val names = listOf("io.modelcontextprotocol", "io.ktor") + registries
+        Configurator.setLevel(names.associateWith { Level.WARN })
     }
 }
