@@ -65,7 +65,11 @@ async function handle(request, response) {
     const body = await readJson(request);
     const problem = body === undefined ? "The body is not JSON" : invalidRun(body);
     if (problem) return reply(response, 400, { error: problem });
-    if (currentRun) return reply(response, 409, { error: "Another run is in progress" });
+    if (currentRun) {
+        return reply(response, 409, {
+            error: "The agent is still busy with another request, try again in a moment",
+        });
+    }
 
     // Installing a CLI can take minutes, longer than the mod waits for an answer.
     if (!currentMaintenance() && !installed(body.cli)) {

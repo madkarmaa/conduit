@@ -68,7 +68,9 @@ object Answers {
             throw exception
         } catch (exception: RunnerRefused) {
             LOGGER.warn("The {} runner refused the request: {}", request.mode.id, exception.message)
-            return if (exception.status == 503) exception.message.orEmpty()
+            // A busy or updating runner explains itself to the players.
+            return if (exception.status == 409 || exception.status == 503)
+                exception.message.orEmpty()
             else "The agent is not set up right. The server log has the details."
         } catch (exception: IOException) {
             LOGGER.warn(
