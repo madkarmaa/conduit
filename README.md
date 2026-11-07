@@ -271,6 +271,9 @@ The build writes the mod jar to `build/libs/conduit-<mod version>+<minecraft ver
 build the agent image, run `docker build -t conduit-agent agent/` and set
 `CONDUIT_AGENT_IMAGE=conduit-agent` for the compose file.
 
+The runner in `agent/` is TypeScript that Bun runs without a build step. Bun does not check types,
+so run `bun install` and `bun run check` in `agent/` after changing it.
+
 `bun install` sets up two Git hooks. The pre-commit hook runs `./gradlew spotlessApply` and adds
 the formatted files to the commit. The commit-msg hook checks that the commit message follows
 [Conventional Commits](https://www.conventionalcommits.org).

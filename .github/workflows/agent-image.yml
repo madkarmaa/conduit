@@ -42,6 +42,16 @@ jobs:
                   fi
                   echo "tags=$tags" >> "$GITHUB_OUTPUT"
 
+            # Bun runs the runner without checking its types, so the check happens before the build.
+            - name: Set up Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: 1.4.4
+
+            - name: Check the runner's types
+              working-directory: agent
+              run: bun install --frozen-lockfile && bun run check
+
             - name: Set up QEMU
               uses: docker/setup-qemu-action@v3
 

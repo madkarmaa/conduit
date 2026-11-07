@@ -1,45 +1,34 @@
 // Runs the agent CLI for one request in its conversation's folder.
-import { spawn } from "node:child_process";
+import { type ChildProcess, spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { ensureInstalled } from "./installs.mjs";
-import { log } from "./log.mjs";
-import { buildRun, PACKAGES } from "./presets.mjs";
+import { ensureInstalled } from "./installs.ts";
+import { log } from "./log.ts";
+import { type AgentRun, buildRun } from "./presets.ts";
+import type { RunRequest } from "./requests.ts";
 
 const HOME = process.env.HOME ?? "/home/agent";
 const CONVERSATIONS = join(HOME, "conversations");
 // Written into a conversation's folder after its first successful run, so later runs continue it.
 const STARTED_MARKER = ".conduit-started";
-const CONVERSATION_NAME = /^[A-Za-z0-9_-]{1,100}$/;
 
 const KILL_GRACE_MS = 5000;
 const OUTPUT_LIMIT = 1_000_000;
 const STDERR_LIMIT = 4000;
 
-const current = { child: undefined, cancelled: false };
+export type RunResult = {
+    exitCode: number | null;
+    output: string;
+    stderrTail: string;
+    cancelled: boolean;
+    timedOut: boolean;
+};
 
-/** Returns what is wrong with a run request, or nothing. */
-export function invalidRun(body) {
-    const isString = (value) => typeof value === "string" && value.length > 0;
-    const isStringList = (value) =>
-        Array.isArray(value) && value.every((item) => typeof item === "string");
+const current: { child?: ChildProcess; cancelled: boolean } = { cancelled: false };
 
-    if (!(body.cli in PACKAGES)) return `cli must be one of ${Object.keys(PACKAGES).join(", ")}`;
-    if (!isString(body.model) || !isString(body.effort)) return "model and effort are required";
-    if (!isString(body.prompt)) return "prompt is required";
-    if (!isStringList(body.args)) return "args must be a list of strings";
-    if (typeof body.web !== "boolean" || typeof body.resume !== "boolean")
-        return "web and resume must be true or false";
-    if (!CONVERSATION_NAME.test(body.conversation ?? ""))
-        return "conversation must be a simple name";
-    if (!isString(body.mcp?.url) || !isString(body.mcp?.token)) return "mcp needs url and token";
-    if (!(body.timeoutSeconds > 0)) return "timeoutSeconds must be positive";
-    return undefined;
-}
-
-export async function runAgent(request) {
+export async function runAgent(request: RunRequest): Promise<RunResult> {
     await ensureInstalled(request.cli);
 
     const folder = join(CONVERSATIONS, request.conversation);
@@ -76,7 +65,7 @@ export async function runAgent(request) {
 }
 
 /** Stops the running CLI. Returns whether one was running. */
-export function cancel() {
+export function cancel(): boolean {
     if (!current.child) return false;
 
     current.cancelled = true;
@@ -84,8 +73,12 @@ export function cancel() {
     return true;
 }
 
-function spawnAgent(agentRun, folder, timeoutSeconds) {
-    const [executable, ...args] = agentRun.command;
+function spawnAgent(
+    agentRun: AgentRun,
+    folder: string,
+    timeoutSeconds: number,
+): Promise<RunResult> {
+    const [executable = "", ...args] = agentRun.command;
 
     return new Promise((resolve) => {
         // A process group of its own, so cancelling also stops the processes the CLI starts.
@@ -103,17 +96,17 @@ function spawnAgent(agentRun, folder, timeoutSeconds) {
         let timedOut = false;
         child.stdout
             .setEncoding("utf8")
-            .on("data", (chunk) => (output = (output + chunk).slice(0, OUTPUT_LIMIT)));
+            .on("data", (chunk: string) => (output = (output + chunk).slice(0, OUTPUT_LIMIT)));
         child.stderr
             .setEncoding("utf8")
-            .on("data", (chunk) => (stderr = (stderr + chunk).slice(-STDERR_LIMIT)));
+            .on("data", (chunk: string) => (stderr = (stderr + chunk).slice(-STDERR_LIMIT)));
 
         const timer = setTimeout(() => {
             timedOut = true;
             stopGroup(child);
         }, timeoutSeconds * 1000);
 
-        const finish = (exitCode, error) => {
+        const finish = (exitCode: number | null, error?: Error) => {
             clearTimeout(timer);
             current.child = undefined;
             const stderrTail = (error ? `${stderr}\n${error.message}` : stderr)
@@ -126,10 +119,13 @@ function spawnAgent(agentRun, folder, timeoutSeconds) {
     });
 }
 
-function stopGroup(child) {
-    const signal = (name) => {
+function stopGroup(child: ChildProcess): void {
+    const groupId = child.pid;
+    if (groupId === undefined) return;
+
+    const signal = (name: NodeJS.Signals) => {
         try {
-            process.kill(-child.pid, name);
+            process.kill(-groupId, name);
         } catch {
             // The group already ended.
         }
@@ -139,7 +135,7 @@ function stopGroup(child) {
     setTimeout(() => signal("SIGKILL"), KILL_GRACE_MS).unref();
 }
 
-function describeEnd({ exitCode, cancelled, timedOut }) {
+function describeEnd({ exitCode, cancelled, timedOut }: RunResult): string {
     if (cancelled) return "a cancel";
     if (timedOut) return "a timeout";
     return `exit code ${exitCode}`;

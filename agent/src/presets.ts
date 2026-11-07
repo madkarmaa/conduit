@@ -4,11 +4,26 @@
 // Every preset keeps the CLI's own tools off, so the agent cannot run commands or edit files, and
 // lets it use the Conduit tools without asking. The web switch turns the CLI's web search and
 // fetch tools on or off.
+import type { Cli, RunRequest } from "./requests.ts";
 
-export const PACKAGES = {
+export const PACKAGES: Record<Cli, string> = {
     claude: "@anthropic-ai/claude-code",
     codex: "@openai/codex",
     opencode: "@opencode/cli",
+};
+
+/** Where one run's temporary files go. */
+export type RunPaths = { mcpConfig: string; answer: string };
+
+/**
+ * What one run needs: the command, extra variables, files to write before it starts, and where
+ * the answer ends up. Secrets go into the variables or files, never on the command line.
+ */
+export type AgentRun = {
+    command: string[];
+    env: Record<string, string>;
+    files: Record<string, string>;
+    answerFile?: string;
 };
 
 // Codex features that would give the agent tools beyond the Conduit ones.
@@ -26,16 +41,18 @@ const CODEX_DISABLED_FEATURES = [
 
 const CLAUDE_WEB_TOOLS = ["WebSearch", "WebFetch"];
 
-/**
- * Returns what one run needs: the command, extra variables, files to write before it starts, and
- * where the answer ends up. Secrets go into the variables or files, never on the command line.
- */
-export function buildRun(request, paths) {
-    const presets = { claude: claudeRun, codex: codexRun, opencode: opencodeRun };
-    return presets[request.cli](request, paths);
+const PRESETS: Record<Cli, (request: RunRequest, paths: RunPaths) => AgentRun> = {
+    claude: claudeRun,
+    codex: codexRun,
+    opencode: opencodeRun,
+};
+
+export function buildRun(request: RunRequest, paths: RunPaths): AgentRun {
+    return PRESETS[request.cli](request, paths);
 }
 
-function claudeRun({ model, effort, args, web, prompt, resume, mcp }, paths) {
+function claudeRun(request: RunRequest, paths: RunPaths): AgentRun {
+    const { model, effort, args, web, prompt, resume, mcp } = request;
     const tools = web ? CLAUDE_WEB_TOOLS : [];
     const config = {
         mcpServers: {
@@ -59,12 +76,13 @@ function claudeRun({ model, effort, args, web, prompt, resume, mcp }, paths) {
         ],
         env: {},
         files: { [paths.mcpConfig]: JSON.stringify(config) },
-        answerFile: undefined,
     };
 }
 
 // -c values are TOML, and a JSON string is a valid TOML string.
-function codexRun({ model, effort, args, web, prompt, resume, mcp }, paths) {
+function codexRun(request: RunRequest, paths: RunPaths): AgentRun {
+    const { model, effort, args, web, prompt, resume, mcp } = request;
+
     return {
         command: [
             ...(resume ? ["codex", "exec", "resume", "--last"] : ["codex", "exec"]),
@@ -86,7 +104,8 @@ function codexRun({ model, effort, args, web, prompt, resume, mcp }, paths) {
 
 // OpenCode picks the effort as a variant of the model, in the form provider/model#variant. The
 // session id names the conversation, and OpenCode creates the session on first use.
-function opencodeRun({ model, effort, args, web, prompt, conversation, mcp }) {
+function opencodeRun(request: RunRequest): AgentRun {
+    const { model, effort, args, web, prompt, conversation, mcp } = request;
     const webPermissions = web ? { webfetch: "allow", websearch: "allow" } : {};
     const config = {
         mcp: {
@@ -112,6 +131,5 @@ function opencodeRun({ model, effort, args, web, prompt, conversation, mcp }) {
         ],
         env: { OPENCODE_CONFIG_CONTENT: JSON.stringify(config) },
         files: {},
-        answerFile: undefined,
     };
 }

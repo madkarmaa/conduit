@@ -13,7 +13,7 @@ case "$cli" in
         ;;
 esac
 
-node /opt/conduit/runner.mjs install "$cli"
+bun /opt/conduit/src/runner.ts install "$cli"
 
 case "$cli" in
     claude)
