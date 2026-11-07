@@ -24,7 +24,8 @@ const PORT = Number(process.env.CONDUIT_RUNNER_PORT ?? 8080);
 const SECRET = process.env.CONDUIT_RUNNER_SECRET ?? "";
 const BODY_LIMIT = 1_000_000;
 
-let busy = false;
+// The run in progress. A cancel waits for it, so the next run finds the runner free.
+let currentRun;
 // The CLI of the last run, which the health check reports.
 let lastCli;
 
@@ -49,7 +50,7 @@ createServer((request, response) => {
     });
 }).listen(PORT, () => log(`Listening on port ${PORT}`));
 
-scheduleUpdates(() => busy);
+scheduleUpdates(() => currentRun !== undefined);
 
 async function handle(request, response) {
     if (!authorized(request.headers.authorization)) {
@@ -58,13 +59,13 @@ async function handle(request, response) {
 
     const route = `${request.method} ${request.url}`;
     if (route === "GET /health") return reply(response, 200, health());
-    if (route === "POST /cancel") return reply(response, 200, { cancelled: cancel() });
+    if (route === "POST /cancel") return reply(response, 200, { cancelled: await cancelRun() });
     if (route !== "POST /run") return reply(response, 404, { error: "Unknown route" });
 
     const body = await readJson(request);
     const problem = body === undefined ? "The body is not JSON" : invalidRun(body);
     if (problem) return reply(response, 400, { error: problem });
-    if (busy) return reply(response, 409, { error: "Another run is in progress" });
+    if (currentRun) return reply(response, 409, { error: "Another run is in progress" });
 
     // Installing a CLI can take minutes, longer than the mod waits for an answer.
     if (!currentMaintenance() && !installed(body.cli)) {
@@ -76,13 +77,20 @@ async function handle(request, response) {
         });
     }
 
-    busy = true;
     lastCli = body.cli;
+    currentRun = runAgent(body);
     try {
-        reply(response, 200, await runAgent(body));
+        reply(response, 200, await currentRun);
     } finally {
-        busy = false;
+        currentRun = undefined;
     }
+}
+
+// The CLI can take a few seconds to stop, and the mod sends the next run as soon as this returns.
+async function cancelRun() {
+    const cancelled = cancel();
+    await currentRun?.catch(() => {});
+    return cancelled;
 }
 
 // Hashing first makes both sides the same length, which timingSafeEqual needs.
@@ -93,7 +101,13 @@ function authorized(header) {
 
 function health() {
     const version = lastCli ? versions[lastCli] : undefined;
-    return { cli: lastCli, version, versions, busy, updating: currentMaintenance() !== undefined };
+    return {
+        cli: lastCli,
+        version,
+        versions,
+        busy: currentRun !== undefined,
+        updating: currentMaintenance() !== undefined,
+    };
 }
 
 function readJson(request) {
