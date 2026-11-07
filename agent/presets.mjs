@@ -98,6 +98,8 @@ function opencodeRun({ model, effort, args, web, prompt, conversation, mcp }) {
             },
         },
         permission: { "*": "deny", "conduit_*": "allow", ...webPermissions },
+        // Without a chosen provider, web search asks which one to use, which a run cannot answer.
+        websearch: web ? { provider: "random" } : false,
     };
 
     return {
