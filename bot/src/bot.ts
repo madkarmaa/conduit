@@ -5,6 +5,7 @@ import { findRequest, type ChatMessage } from "./chat.ts";
 import type { Config } from "./config.ts";
 import type { Conversation, Conversations, StateError } from "./conversations.ts";
 import { buildPrompt } from "./prompt.ts";
+import type { RequestQueue } from "./queue.ts";
 import { say, showStatus, toChatText, type Speaker } from "./replies.ts";
 import type { Approvals } from "./approvals.ts";
 import { runInContainer, type Container, type RunError } from "./sandbox/container.ts";
@@ -17,6 +18,7 @@ export interface Bot {
     readonly config: Config;
     readonly agents: Readonly<Record<Mode, AgentRunner>>;
     readonly conversations: Conversations;
+    readonly queue: RequestQueue;
     // Every MCP setting except the approvals, which depend on the request.
     readonly mcp: Omit<McpHost, "approvals">;
     readonly approvals: Approvals;
@@ -55,9 +57,16 @@ export function handleChat(bot: Bot, sender: ChatMessage) {
     });
 }
 
+// A player gets one request in line at a time, so nobody can fill the line alone.
 function queue(bot: Bot, request: Request) {
-    const waiting = bot.conversations.enqueue(request.key, () => answer(bot, request));
-    if (waiting) status(bot, request.sender, "Waiting for your previous request…");
+    const { sender } = request;
+    if (bot.queue.has(sender.playerUuid)) {
+        return tell(bot, sender, "Wait until I answer your previous request.");
+    }
+
+    const ahead = bot.queue.add(sender.playerUuid, () => answer(bot, request));
+    if (ahead === 1) status(bot, sender, "1 request is ahead of yours…");
+    if (ahead > 1) status(bot, sender, `${ahead} requests are ahead of yours…`);
 }
 
 function answer(bot: Bot, request: Request): PromiseLike<void> {

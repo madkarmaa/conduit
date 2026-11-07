@@ -18,8 +18,6 @@ export interface Conversation {
 // Agent CLIs keep their conversations in their home and per working directory, so each
 // conversation gets its own directory, mounted as the agent's home.
 export class Conversations {
-    private readonly queues = new Map<string, Promise<void>>();
-
     constructor(
         private readonly stateDirectory: string,
         private readonly memory: Memory,
@@ -41,18 +39,6 @@ export class Conversations {
 
     markStarted(key: string): AsyncResult<void, StateError> {
         return createFile(this.marker(key), "");
-    }
-
-    // Requests in one conversation run one at a time, since each continues the one before it.
-    // Returns whether the task has to wait for an earlier request.
-    enqueue(key: string, task: () => PromiseLike<void>): boolean {
-        const previous = this.queues.get(key);
-        const next = (previous ?? Promise.resolve()).then(task).then(() => {
-            if (this.queues.get(key) === next) this.queues.delete(key);
-        });
-
-        this.queues.set(key, next);
-        return previous !== undefined;
     }
 
     private directory(key: string): string {

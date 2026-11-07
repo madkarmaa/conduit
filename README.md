@@ -206,6 +206,10 @@ colors and styles if the agent uses Minecraft's `§` codes. It needs Node.js 24 
 CONDUIT_TOKEN=<token> npx @conduit/bot [config file]
 ```
 
+The bot answers one request at a time, like one player in the chat. Requests wait in line in the
+order they arrive, and the action bar tells each player how many are ahead of theirs. A player can
+have one request in line at a time.
+
 The config file defaults to `conduit-bot.json` in the working directory. `CONDUIT_HOST`,
 `CONDUIT_PORT` and `CONDUIT_TOKEN` work as they do for the MCP server.
 
@@ -283,7 +287,7 @@ undo, the bot asks for approval in the chat. The asking player and every online 
 action with its arguments and an `[Approve]` and a `[Deny]` button. A click from the asking player
 or an operator decides. When nobody answers within `approvals.timeoutSeconds`, the action does not
 run. Either way, the agent learns what happened and can tell the player. The time spent waiting
-does not count against `sandbox.timeoutSeconds`.
+does not count against `sandbox.timeoutSeconds`, but the requests in line wait for it too.
 
 `approvals.add` and `approvals.remove` change which actions need approval. Each entry is a tool,
 such as `edit_player`, or one of its actions, such as `edit_player.game_mode`. For `batch`, the

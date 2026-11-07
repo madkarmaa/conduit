@@ -11,6 +11,7 @@ import { listenToChat } from "./chat.ts";
 import { chatAgent, loadConfig, type Config } from "./config.ts";
 import { Conversations } from "./conversations.ts";
 import { installedMcpServer } from "./mcp-server.ts";
+import { RequestQueue } from "./queue.ts";
 import { builtFiles, homeFiles, passedVariables, referencedVariables } from "./sandbox/host.ts";
 import { checkDocker, ensureImage } from "./sandbox/images.ts";
 
@@ -70,6 +71,7 @@ function start({ config, connection, mcp, agents }: Setup) {
         config,
         agents: { full: runnerFor(agents.full, config), chat: runnerFor(agents.chat, config) },
         conversations: new Conversations(config.stateDirectory, config.memory),
+        queue: new RequestQueue(),
         approvals: new Approvals(
             { clients, name: config.keyword },
             config.approvals.timeoutSeconds,
