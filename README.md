@@ -42,8 +42,9 @@ bun run --cwd mcp build
 bun run --cwd bot build
 ```
 
-`bun install` also sets up a pre-commit hook that runs `./gradlew spotlessApply` and adds the
-formatted files to the commit.
+`bun install` also sets up Git hooks. Before a commit, one runs `./gradlew spotlessApply` and adds
+the formatted files to the commit. Another checks that the commit message follows
+[Conventional Commits](https://www.conventionalcommits.org).
 
 ## Configuration
 
