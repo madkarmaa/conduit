@@ -228,31 +228,35 @@ a default. The bot does not start while a variable without a default is not set.
 `.env` file next to the config file, if there is one. Variables that are already set keep their
 value.
 
-| Key                      | Default        | Description                                          |
-| ------------------------ | -------------- | ---------------------------------------------------- |
-| `keyword`                | `conduit`      | Word that players mention with `@`                   |
-| `memory`                 | `player`       | `player` keeps one conversation per player, `shared` |
-|                          |                | one for all players, and `none` starts a new one for |
-|                          |                | every request                                        |
-| `instructions`           |                | Extra instructions for the agent                     |
-| `agents.full`            |                | Agent for full mode, see [Agents](#agents)           |
-| `agents.chat`            |                | Agent for chat mode, which is off without it         |
-| `access.operators`       | `true`         | Server operators get full mode                       |
-| `access.allow`           | `[]`           | Players who get full mode, by name or UUID           |
-| `access.chat`            | `true`         | Answer everyone else in [chat mode](#modes)          |
-| `tools.readOnly`         | `false`        | Only give full mode tools that read state            |
-| `tools.chat.allow`       |                | Only these tools in chat mode, instead of the        |
-|                          |                | default list                                         |
-| `tools.chat.deny`        | `[]`           | Never these tools in chat mode. On its own, it       |
-|                          |                | allows every other read tool                         |
-| `sandbox.offline`        | `false`        | Cut the agent's container off from every network     |
-| `sandbox.timeoutSeconds` | `300`          | Time limit for one request                           |
-| `sandbox.files`          | `[]`           | More login files to copy into the agent's home,      |
-|                          |                | relative to `~`                                      |
-| `sandbox.env`            | `{}`           | Variables for the agent by name, such as API keys    |
-| `replies.maxLength`      | `1000`         | The bot cuts longer answers                          |
-| `stateDirectory`         | `.conduit-bot` | Where the bot keeps conversations, relative to the   |
-|                          |                | config file                                          |
+| Key                        | Default        | Description                                        |
+| -------------------------- | -------------- | -------------------------------------------------- |
+| `keyword`                  | `conduit`      | Word that players mention with `@`                 |
+| `memory`                   | `player`       | `player` keeps one conversation per player,        |
+|                            |                | `shared` one for all players, and `none` starts a  |
+|                            |                | new one for every request                          |
+| `instructions`             |                | Extra instructions for the agent                   |
+| `agents.full`              |                | Agent for full mode, see [Agents](#agents)         |
+| `agents.chat`              |                | Agent for chat mode, which is off without it       |
+| `access.operators`         | `true`         | Server operators get full mode                     |
+| `access.allow`             | `[]`           | Players who get full mode, by name or UUID         |
+| `access.chat`              | `true`         | Answer everyone else in [chat mode](#modes)        |
+| `tools.readOnly`           | `false`        | Only give full mode tools that read state          |
+| `tools.chat.allow`         |                | Only these tools in chat mode, instead of the      |
+|                            |                | default list                                       |
+| `tools.chat.deny`          | `[]`           | Never these tools in chat mode. On its own, it     |
+|                            |                | allows every other read tool                       |
+| `approvals.timeoutSeconds` | `30`           | Time to answer an approval before it counts as     |
+|                            |                | denied                                             |
+| `approvals.add`            | `[]`           | Tools or actions that also need approval           |
+| `approvals.remove`         | `[]`           | Tools or actions that never need approval          |
+| `sandbox.offline`          | `false`        | Cut the agent's container off from every network   |
+| `sandbox.timeoutSeconds`   | `300`          | Time limit for one request                         |
+| `sandbox.files`            | `[]`           | More login files to copy into the agent's home,    |
+|                            |                | relative to `~`                                    |
+| `sandbox.env`              | `{}`           | Variables for the agent by name, such as API keys  |
+| `replies.maxLength`        | `1000`         | The bot cuts longer answers                        |
+| `stateDirectory`           | `.conduit-bot` | Where the bot keeps conversations, relative to the |
+|                            |                | config file                                        |
 
 Each agent has an `agent`, a `model` and an `effort`, which are required, and optional `args`.
 
@@ -271,6 +275,23 @@ mode conversation of their own, separate from full mode, and only that player se
 The default chat mode tools are `server_info`, `world_info`, `game_rules`, `get_block`,
 `get_region`, `terrain`, `registry`, `recipes`, `structures` and `get_player`. Chat mode never gets
 the tools that list other players or entities.
+
+### Approvals
+
+Before the agent uses a destructive action, the ones the [MCP server](#mcp-server) lists as hard to
+undo, the bot asks for approval in the chat. The asking player and every online operator get the
+action with its arguments and an `[Approve]` and a `[Deny]` button. A click from the asking player
+or an operator decides. When nobody answers within `approvals.timeoutSeconds`, the action does not
+run. Either way, the agent learns what happened and can tell the player. The time spent waiting
+does not count against `sandbox.timeoutSeconds`.
+
+`approvals.add` and `approvals.remove` change which actions need approval. Each entry is a tool,
+such as `edit_player`, or one of its actions, such as `edit_player.game_mode`. For `batch`, the
+actions are its operations, such as `batch.setBlock`.
+
+The buttons use Minecraft's custom click events, which reach the bot through the mod's event stream.
+Every button has a random value that only the players who got it know, since a modified client can
+send any click.
 
 ### Isolation
 

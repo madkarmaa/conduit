@@ -16,10 +16,19 @@ export function say(
     audience: Audience,
     text: string,
 ): AsyncResult<unknown, CallError> {
+    return post(speaker, audience, toComponents(text));
+}
+
+// Posts JSON text components under the bot's name.
+export function post(
+    speaker: Speaker,
+    audience: Audience,
+    components: readonly object[],
+): AsyncResult<unknown, CallError> {
     const message = {
         json: JSON.stringify({
             text: "",
-            extra: [{ text: `[${speaker.name}] `, color: "aqua" }, ...toComponents(text)],
+            extra: [{ text: `[${speaker.name}] `, color: "aqua" }, ...components],
         }),
     };
 

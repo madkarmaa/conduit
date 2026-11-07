@@ -16,6 +16,9 @@ const agentSchema = z.strictObject({
     args: z.array(z.string()).default([]),
 });
 
+// A tool, or one action of it, such as "edit_player" or "edit_player.kick".
+const toolAction = z.string().regex(/^\w+(\.\w+)?$/, "Use a tool name or tool.action");
+
 const configSchema = z.strictObject({
     keyword: z
         .string()
@@ -44,6 +47,13 @@ const configSchema = z.strictObject({
                     deny: z.array(z.string()).default([]),
                 })
                 .prefault({}),
+        })
+        .prefault({}),
+    approvals: z
+        .strictObject({
+            timeoutSeconds: z.number().int().positive().default(30),
+            add: z.array(toolAction).default([]),
+            remove: z.array(toolAction).default([]),
         })
         .prefault({}),
     sandbox: z

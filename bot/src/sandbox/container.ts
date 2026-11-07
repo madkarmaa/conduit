@@ -1,9 +1,9 @@
-import { spawn, type ChildProcessByStdio } from "node:child_process";
-import type { Readable, Writable } from "node:stream";
+import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createInterface } from "node:readline";
 import { Err, Ok, type AsyncResult, type Result } from "results-ts";
-import type { McpServer } from "../agents.ts";
+import { connectMcp, type McpConnection, type McpHost } from "./mcp-proxy.ts";
+import { PausableTimer } from "./timer.ts";
 import { ASSETS_MOUNT, SUPERVISOR_PATH, type FromContainer, type ToContainer } from "./protocol.ts";
 
 export type RunError =
@@ -25,12 +25,6 @@ export interface Container {
     // The bot's built files, which include the supervisor and the relay.
     readonly assets: string;
     readonly timeoutSeconds: number;
-}
-
-// The real MCP server runs here, outside the container, with the token the agent never sees.
-export interface McpHost {
-    readonly server: McpServer;
-    readonly env: NodeJS.ProcessEnv;
 }
 
 interface Outcome {
@@ -71,7 +65,7 @@ function start(
         stdio: ["pipe", "pipe", "pipe"],
     });
 
-    const servers = new Map<number, ChildProcessByStdio<Writable, Readable, null>>();
+    const connections = new Map<number, McpConnection>();
     let exit: Outcome["exit"];
     let spawnError: Error | undefined;
     let timedOut = false;
@@ -81,24 +75,42 @@ function start(
         if (docker.stdin.writable) docker.stdin.write(`${JSON.stringify(frame)}\n`);
     };
 
+    const timer = new PausableTimer(container.timeoutSeconds * 1000, () => {
+        timedOut = true;
+        spawn("docker", ["kill", name], { stdio: "ignore" });
+    });
+    // The time a player takes to answer an approval does not count against the request.
+    const host: McpHost = {
+        ...mcp,
+        approvals: {
+            ...mcp.approvals,
+            ask: (request) => {
+                timer.pause();
+                return mcp.approvals.ask(request).inspect(timer.resume).inspectErr(timer.resume);
+            },
+        },
+    };
+
+    const open = (id: number) =>
+        connectMcp(
+            host,
+            (line) => send({ type: "mcp", id, line }),
+            () => send({ type: "close", id }),
+        );
+
     createInterface({ input: docker.stdout }).on("line", (line) => {
         const frame = JSON.parse(line) as FromContainer;
-        if (frame.type === "open") servers.set(frame.id, serveMcp(mcp, frame.id, send));
-        if (frame.type === "mcp") servers.get(frame.id)?.stdin.write(`${frame.line}\n`);
-        if (frame.type === "close") servers.get(frame.id)?.stdin.end();
+        if (frame.type === "open") connections.set(frame.id, open(frame.id));
+        if (frame.type === "mcp") connections.get(frame.id)?.receive(frame.line);
+        if (frame.type === "close") connections.get(frame.id)?.end();
         if (frame.type === "exit") exit = frame;
     });
     docker.stderr.setEncoding("utf8").on("data", (chunk: string) => (dockerStderr += chunk));
 
-    const timer = setTimeout(() => {
-        timedOut = true;
-        spawn("docker", ["kill", name], { stdio: "ignore" });
-    }, container.timeoutSeconds * 1000);
-
     docker.on("error", (error) => (spawnError = error));
     docker.on("close", () => {
-        clearTimeout(timer);
-        for (const server of servers.values()) server.kill();
+        timer.stop();
+        for (const connection of connections.values()) connection.kill();
         finish({ exit, spawnError, timedOut, dockerStderr });
     });
 
@@ -126,19 +138,6 @@ function dockerArguments(container: Container, name: string): string[] {
         ...["-w", CONTAINER_HOME, container.image],
         ...["node", SUPERVISOR_PATH],
     ];
-}
-
-// Each MCP connection gets its own server process, like a CLI that starts the server itself.
-function serveMcp(mcp: McpHost, id: number, send: (frame: ToContainer) => void) {
-    const server = spawn(mcp.server.command, [mcp.server.script], {
-        env: mcp.env,
-        stdio: ["pipe", "pipe", "ignore"],
-    });
-
-    createInterface({ input: server.stdout }).on("line", (line) => send({ type: "mcp", id, line }));
-    server.on("close", () => send({ type: "close", id }));
-    server.on("error", () => send({ type: "close", id }));
-    return server;
 }
 
 function toResult(outcome: Outcome, container: Container): Result<string, RunError> {

@@ -6,12 +6,9 @@ import type { Config } from "./config.ts";
 import type { Conversation, Conversations, StateError } from "./conversations.ts";
 import { buildPrompt } from "./prompt.ts";
 import { say, showStatus, toChatText, type Speaker } from "./replies.ts";
-import {
-    runInContainer,
-    type Container,
-    type McpHost,
-    type RunError,
-} from "./sandbox/container.ts";
+import type { Approvals } from "./approvals.ts";
+import { runInContainer, type Container, type RunError } from "./sandbox/container.ts";
+import type { McpHost } from "./sandbox/mcp-proxy.ts";
 import { log } from "./log.ts";
 import { withLogins } from "./sandbox/logins.ts";
 
@@ -20,7 +17,9 @@ export interface Bot {
     readonly config: Config;
     readonly agents: Readonly<Record<Mode, AgentRunner>>;
     readonly conversations: Conversations;
-    readonly mcp: McpHost;
+    // Every MCP setting except the approvals, which depend on the request.
+    readonly mcp: Omit<McpHost, "approvals">;
+    readonly approvals: Approvals;
 }
 
 // What a mode needs to run its agent.
@@ -98,7 +97,14 @@ function ask(bot: Bot, conversation: Conversation, request: Request) {
     const command = agent.command(prompt, conversation.started);
     const container = { ...runner.container, home: conversation.directory };
     const policy = toolPolicy(bot.config.tools, request.mode, request.sender);
-    const mcp = { ...bot.mcp, env: { ...bot.mcp.env, ...policy } };
+    const mcp: McpHost = {
+        ...bot.mcp,
+        env: { ...bot.mcp.env, ...policy },
+        approvals: {
+            overrides: bot.config.approvals,
+            ask: (approval) => bot.approvals.ask(request.sender, approval),
+        },
+    };
 
     return withLogins(conversation.directory, logins, agent.exportedLogins, (setup) =>
         runInContainer(container, mcp, { setup, command }),

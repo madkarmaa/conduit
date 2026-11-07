@@ -4,6 +4,7 @@ import { call, close, connect, connectionFromEnv, type ConnectionOptions } from 
 import type { AsyncResult } from "results-ts";
 import type { Mode } from "./access.ts";
 import { createAgent, type Agent, type McpServer } from "./agents.ts";
+import { Approvals } from "./approvals.ts";
 import { describeCall, handleChat, type AgentRunner, type Bot } from "./bot.ts";
 import { log } from "./log.ts";
 import { listenToChat } from "./chat.ts";
@@ -69,6 +70,10 @@ function start({ config, connection, mcp, agents }: Setup) {
         config,
         agents: { full: runnerFor(agents.full, config), chat: runnerFor(agents.chat, config) },
         conversations: new Conversations(config.stateDirectory, config.memory),
+        approvals: new Approvals(
+            { clients, name: config.keyword },
+            config.approvals.timeoutSeconds,
+        ),
         // Only the MCP server outside the container gets the variables with the host and the token.
         // Each request adds its mode's tool policy.
         mcp: { server: mcp, env: process.env },
@@ -80,11 +85,11 @@ function start({ config, connection, mcp, agents }: Setup) {
         Err: (error) => log(`Cannot reach the server yet: ${describeCall(error)}`),
     });
 
-    const listener = listenToChat(
-        clients.events,
-        (message) => handleChat(bot, message),
-        (reason) => log(`Lost the chat stream (${reason}), reconnecting`),
-    );
+    const listener = listenToChat(clients.events, {
+        onMessage: (message) => handleChat(bot, message),
+        onClick: (click) => bot.approvals.handleClick(click),
+        onDisconnect: (reason) => log(`Lost the chat stream (${reason}), reconnecting`),
+    });
     log(`Listening for @${config.keyword} in the chat`);
 
     for (const signal of ["SIGINT", "SIGTERM"] as const) {
