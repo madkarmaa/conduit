@@ -1,0 +1,63 @@
+# The two agent containers of Conduit: conduit-full answers operators in full mode, conduit-chat
+# answers everyone else in chat mode. Start them once with `docker compose up -d`. They restart on
+# their own, and the mod never starts or stops them.
+#
+# Put the runner secrets in a .env file next to this file, and the same values in the mod's
+# config/conduit.json (agents.full.runner.secret and agents.chat.runner.secret):
+#
+#   CONDUIT_FULL_SECRET=<random string of at least 16 characters>
+#   CONDUIT_CHAT_SECRET=<another one>
+#
+# Minecraft on the host: the mod reaches the runners at http://127.0.0.1:8081 and
+# http://127.0.0.1:8082, and the agents reach the mod at http://host.docker.internal:25585/mcp.
+#
+# Minecraft in compose, such as itzg/minecraft-server: run this file in the same project as the
+# server, so all containers share its network:
+#
+#   docker compose -f compose.yaml -f conduit-agents.yaml up -d
+#
+# Then the mod reaches http://conduit-full:8080 and the agents reach http://<server service>:25585/mcp.
+#
+# The memory and CPU limits fit a small server next to Minecraft. Raise them with the variables
+# below if a CLI runs out of memory.
+
+x-agent: &agent
+    image: ${CONDUIT_AGENT_IMAGE:-ghcr.io/madkarmaa/conduit-agent:latest}
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+        - /tmp
+    cap_drop:
+        - ALL
+    security_opt:
+        - no-new-privileges:true
+    pids_limit: 256
+    extra_hosts:
+        - host.docker.internal:host-gateway
+
+services:
+    conduit-full:
+        <<: *agent
+        mem_limit: ${CONDUIT_FULL_MEMORY:-768m}
+        cpus: ${CONDUIT_FULL_CPUS:-1.0}
+        environment:
+            CONDUIT_RUNNER_SECRET: ${CONDUIT_FULL_SECRET:?set CONDUIT_FULL_SECRET in .env}
+        ports:
+            - 127.0.0.1:8081:8080
+        volumes:
+            - conduit-full:/home/agent
+
+    conduit-chat:
+        <<: *agent
+        mem_limit: ${CONDUIT_CHAT_MEMORY:-1g}
+        cpus: ${CONDUIT_CHAT_CPUS:-1.0}
+        environment:
+            CONDUIT_RUNNER_SECRET: ${CONDUIT_CHAT_SECRET:?set CONDUIT_CHAT_SECRET in .env}
+        ports:
+            - 127.0.0.1:8082:8080
+        volumes:
+            - conduit-chat:/home/agent
+
+volumes:
+    conduit-full:
+    conduit-chat:
