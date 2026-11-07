@@ -5,7 +5,7 @@
 # Put the runner secrets in a .env file next to this file. The mod's config/conduit.json needs the
 # same values in agents.full.runner.secret and agents.chat.runner.secret.
 #
-#   CONDUIT_FULL_SECRET=<random string of at least 16 characters>
+#   CONDUIT_FULL_SECRET=<at least 16 letters, digits or -._~+/ characters>
 #   CONDUIT_CHAT_SECRET=<another one>
 #
 # With Minecraft on the host, the mod reaches the runners at http://127.0.0.1:8081 and

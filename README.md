@@ -31,8 +31,8 @@ image is `ghcr.io/madkarmaa/conduit-agent`.
 1. Put the mod jar in the server's `mods` folder.
 
 2. Copy [`agent/compose.yaml`](./agent/compose.yaml) to the server, for example as
-   `conduit-agents.yaml`, and create a `.env` file next to it with two random secrets of at least
-   16 characters:
+   `conduit-agents.yaml`, and create a `.env` file next to it with two random secrets. Each needs
+   at least 16 letters, digits or `-._~+/` characters, such as the output of `openssl rand -hex 24`:
 
     ```sh
     CONDUIT_FULL_SECRET=<random string>

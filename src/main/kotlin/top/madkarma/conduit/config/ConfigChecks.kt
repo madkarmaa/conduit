@@ -4,8 +4,8 @@ import java.net.URI
 
 private val AGENT_CLIS = setOf("claude", "codex", "opencode")
 
-// The runner refuses shorter secrets.
-private const val MIN_SECRET_LENGTH = 16
+// The runner refuses other secrets, since bearer tokens may only use these characters.
+private val RUNNER_SECRET = Regex("[A-Za-z0-9._~+/-]{16,}=*")
 
 /**
  * Returns what is wrong with the config. It checks tool and action names against tools, which maps
@@ -69,8 +69,8 @@ private fun agentProblems(path: String, agent: AgentConfig): List<String> {
             .takeIf { agent.effort.isBlank() },
         "$path.runner.url must be an http or https URL with a host name without underscores"
             .takeIf { httpUri(agent.runner.url)?.host == null },
-        "$path.runner.secret must have at least $MIN_SECRET_LENGTH characters"
-            .takeIf { agent.runner.secret.length < MIN_SECRET_LENGTH },
+        "$path.runner.secret must have at least 16 letters, digits or -._~+/ characters"
+            .takeIf { !RUNNER_SECRET.matches(agent.runner.secret) },
         "$path.mcpUrl must be an http or https URL".takeIf { httpUri(agent.mcpUrl) == null },
     )
 }
