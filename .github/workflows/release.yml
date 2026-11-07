@@ -16,6 +16,9 @@ jobs:
     release:
         if: github.ref == 'refs/heads/main'
         runs-on: ubuntu-latest
+        env:
+            # The release commit only changes versions, so it skips the formatting hook.
+            HUSKY: "0"
         steps:
             - name: Checkout sources
               uses: actions/checkout@v7
