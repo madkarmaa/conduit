@@ -14,7 +14,7 @@ ENV HOME=/home/agent \
     NPM_CONFIG_FUND=false \
     PATH=/home/agent/.npm-global/bin:$PATH
 
-COPY runner.mjs presets.mjs /opt/conduit/
+COPY *.mjs /opt/conduit/
 COPY conduit-login /usr/local/bin/conduit-login
 
 USER agent
