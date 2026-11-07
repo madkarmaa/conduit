@@ -2,10 +2,11 @@
 # and a vanilla headless client with an offline account as a real player. Build the mod first with
 # ./gradlew build. MC_VERSION must be the Minecraft version the mod was built for.
 #
-#   MC_VERSION=<version> docker compose up -d server   # server only, gRPC on localhost:25585
+#   MC_VERSION=<version> docker compose up -d server   # server only, MCP on localhost:25585/mcp
 #   MC_VERSION=<version> docker compose up -d          # server and a vanilla client that joins it
 #
-# The gRPC endpoint uses the bearer token from CONDUIT_TOKEN, or dev-token when it is not set.
+# The MCP endpoint takes the bearer token from CONDUIT_TEST_TOKEN, or dev-token when it is not set.
+# RCON on localhost:25575 runs console commands, with the password from RCON_PASSWORD or dev-rcon.
 
 x-headlessmc: &headlessmc
     image: 3arthqu4ke/headlessmc:latest
@@ -25,10 +26,11 @@ services:
             - server-data:/home/default
         environment:
             <<: *environment
-            CONDUIT_HOST: 0.0.0.0
-            CONDUIT_TOKEN: ${CONDUIT_TOKEN:-dev-token}
+            CONDUIT_TEST_TOKEN: ${CONDUIT_TEST_TOKEN:-dev-token}
+            RCON_PASSWORD: ${RCON_PASSWORD:-dev-rcon}
         ports:
             - 127.0.0.1:25565:25565
+            - 127.0.0.1:25575:25575
             - 127.0.0.1:25585:25585
         healthcheck:
             test: ["CMD", "bash", "-c", "echo > /dev/tcp/127.0.0.1/25565"]
