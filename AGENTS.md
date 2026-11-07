@@ -10,8 +10,6 @@
 
 - Prefer early guards in the code to reduce indentation.
 
-- Follow `.editorconfig`.
-
 - Run `./gradlew spotlessApply` as the last step before considering a task done.
 
 - Run Entanglement against a baseline regularly and refactor based on its results. Every edited file must stay green, with a maintainability index of at least 20.
@@ -29,10 +27,6 @@
 - Keep the MCP tools backwards compatible: their names, actions, arguments and output format. Mark every action as read, write or destructive, so approvals and MCP hosts can rely on the marks.
 
 - Never log or show secrets: runner secrets, MCP tokens and CLI logins.
-
-- Write the runner in `agent/` in TypeScript that Bun runs as it is, with Hono, Zod and the CLIs' SDKs as its only dependencies. How the runner drives each CLI belongs in `agent/src/drivers/`, so a CLI change only needs a new image, not a new mod.
-
-- Agents use API keys by default. Only `dangerouslyUseSubscriptionCredentials` may let a CLI use a subscription login, and a run without it must never reach one.
 
 - The mod never starts or stops the agent containers. It only talks to their runners over HTTP.
 

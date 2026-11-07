@@ -15,9 +15,6 @@ containers next to the server, one for operators and one for everyone else, as
 [OpenCode](https://opencode.ai). The mod also serves its tools over
 [MCP](https://modelcontextprotocol.io), so other MCP hosts can control the game too.
 
-Each [GitHub release](https://github.com/madkarmaa/conduit/releases) has the mod jar, and the agent
-image is `ghcr.io/madkarmaa/conduit-agent`.
-
 ## Requirements
 
 - The Minecraft and Fabric Loader versions set in [`gradle.properties`](./gradle.properties), and
@@ -182,13 +179,6 @@ The server has 30 tools. Tools with several operations take an `action` argument
 | Game data | `registry`, `recipes`                 |                                                                     |
 | Other     | `structures`, `wait_for_events`       | `structures`, `batch`                                               |
 
-The actions that are hard to undo are `run_command`, `server_admin` `stop` and `set_datapack`,
-`edit_blocks` `fill`, `explode`, `remove_entity`, `inventory` `clear`, `offline_player`,
-`edit_player` `operator` and `kick`, `structures` `place`, `game_rules` `set` and `world_border`
-`set`. Their tools carry the MCP `destructiveHint`. Each tool's `_meta` also maps every action to
-`read`, `write` or `destructive` under `top.madkarma.conduit/actions`, so a host can ask for
-confirmation before the destructive ones. `batch` runs calls to other tools within one server tick.
-
 ## Security
 
 - Anyone in full mode controls the agent and every tool it has, including `run_command`. Keep
@@ -196,17 +186,12 @@ confirmation before the destructive ones. `batch` runs calls to other tools with
 - The MCP server listens on every interface by default, so the agent containers can reach it.
   Every request needs a token, but keep port 25585 closed to the internet. Each agent request gets
   a token of its own that only works while the request runs.
-- The runner secrets and the MCP tokens never show up in the log or in `/conduit status`.
 - The agent only has the Conduit tools, and its container keeps it away from the rest of the
   machine. [`agent/README.md`](./agent/README.md#security) has the details.
-- A modified client can send any click. Every approval button therefore carries a random value that
-  only the players who got the prompt know, and the mod only counts clicks from the asker and
-  operators.
 
 ## Building
 
-Building needs JDK 25 and [Bun](https://bun.sh) on the `PATH`. The build uses Bun to format the
-Markdown, JSON, YAML and JavaScript files.
+Building needs JDK 25 and [Bun](https://bun.sh) on the `PATH`.
 
 ```sh
 ./gradlew build
@@ -214,10 +199,6 @@ Markdown, JSON, YAML and JavaScript files.
 
 The build writes the mod jar to `build/libs/conduit-<mod version>+<minecraft version>.jar`.
 [`agent/README.md`](./agent/README.md#building) covers the agent image.
-
-`bun install` sets up two Git hooks. The pre-commit hook runs `./gradlew spotlessApply` and adds
-the formatted files to the commit. The commit-msg hook checks that the commit message follows
-[Conventional Commits](https://www.conventionalcommits.org).
 
 ## Test environment
 
@@ -245,9 +226,7 @@ CONDUIT_FULL_SECRET=<secret> CONDUIT_CHAT_SECRET=<secret> MC_VERSION=<minecraft 
 `CONDUIT_DANGEROUSLY_USE_SUBSCRIPTION_CREDENTIALS=true` makes the test server use the containers'
 subscription logins instead, which the caution above warns about.
 
-Docker volumes keep the game data and the agents' logins between runs. The client starts with
-[`docker/options.txt`](./docker/options.txt), so it skips the onboarding screens of a first start
-and joins the server right away.
+Docker volumes keep the game data and the agents' logins between runs.
 
 ## License
 
