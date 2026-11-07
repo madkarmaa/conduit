@@ -95,7 +95,7 @@ has reflection enabled, so tools like `grpcurl` can discover the services.
 |                    | dimension change, block break, place and use, damage, death and       |
 |                    | attack, command, server tick, start and stop, entity spawn and        |
 |                    | removal, chunk load and unload, advancement, inventory change, item   |
-|                    | pickup, drop, craft and smelt, and trade events                       |
+|                    | pickup, drop, craft and smelt, trade, and custom click events         |
 | `RegistryService`  | Registries and their entries, tags, recipes, loot tables              |
 | `BatchService`     | Many world, entity, player and command operations in one call and one |
 |                    | server tick                                                           |

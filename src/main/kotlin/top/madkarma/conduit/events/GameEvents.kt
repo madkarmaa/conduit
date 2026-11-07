@@ -1,5 +1,7 @@
 package top.madkarma.conduit.events
 
+import java.util.Optional
+import kotlin.jvm.optionals.getOrNull
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
@@ -10,6 +12,9 @@ import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents
 import net.minecraft.core.BlockPos
+import net.minecraft.nbt.Tag
+import net.minecraft.resources.Identifier
+import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
@@ -55,6 +60,14 @@ object GameEvents {
                 this.source = source
                 this.command = command.removePrefix("/")
             }
+        }
+    }
+
+    // Called from the custom click mixin.
+    @JvmStatic
+    fun onCustomClick(player: ServerPlayer, id: Identifier, payload: Optional<Tag>) {
+        EventBus.publish(EventType.EVENT_TYPE_CUSTOM_CLICK) {
+            customClick = customClickPayload(player, id, payload.getOrNull())
         }
     }
 

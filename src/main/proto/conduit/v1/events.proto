@@ -43,6 +43,10 @@ enum EventType {
     EVENT_TYPE_ITEM_CRAFT = 25;
     EVENT_TYPE_ITEM_SMELT = 26;
     EVENT_TYPE_TRADE = 27;
+    // A player clicked text with a custom click event, {"action": "custom", "id": ..., "payload": ...}.
+    // A client sends such text to get the click back, such as for a confirmation button. Any
+    // modified client can send any id and payload, so put an unguessable value in the payload.
+    EVENT_TYPE_CUSTOM_CLICK = 28;
 }
 
 message SubscribeRequest {
@@ -119,6 +123,7 @@ message Event {
         TradeEvent trade = 36;
         // Always sent when events were lost, whatever types the subscription lists.
         EventsDroppedEvent events_dropped = 37;
+        CustomClickEvent custom_click = 38;
     }
 }
 
@@ -133,6 +138,15 @@ message ChatEvent {
     string player = 1;
     string player_uuid = 2;
     string message = 3;
+}
+
+message CustomClickEvent {
+    string player = 1;
+    string player_uuid = 2;
+    // The click event's id, such as "example:confirm".
+    string id = 3;
+    // The click event's payload as SNBT, such as "\"abc\"" for a string. Not set without one.
+    optional string payload = 4;
 }
 
 message PlayerEvent {

@@ -2,6 +2,8 @@ package top.madkarma.conduit.events
 
 import kotlin.jvm.optionals.getOrNull
 import net.minecraft.core.BlockPos
+import net.minecraft.nbt.Tag
+import net.minecraft.resources.Identifier
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
@@ -40,6 +42,14 @@ internal fun chatPayload(sender: ServerPlayer, message: String): ChatEvent = cha
     playerUuid = sender.stringUUID
     this.message = message
 }
+
+internal fun customClickPayload(player: ServerPlayer, id: Identifier, payload: Tag?) =
+    customClickEvent {
+        this.player = player.gameProfile.name
+        playerUuid = player.stringUUID
+        this.id = id.toString()
+        if (payload != null) this.payload = payload.toString()
+    }
 
 internal fun playerPayload(player: ServerPlayer): PlayerEvent = playerEvent {
     this.player = player.gameProfile.name

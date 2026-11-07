@@ -12,6 +12,7 @@
         "MerchantResultSlotMixin",
         "PlayerAdvancementsMixin",
         "ResultSlotMixin",
+        "ServerCommonPacketListenerImplMixin",
         "ServerGamePacketListenerImplMixin",
         "ServerLevelMixin",
         "ServerPlayerMixin",
