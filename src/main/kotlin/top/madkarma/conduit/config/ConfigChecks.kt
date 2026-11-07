@@ -67,10 +67,11 @@ private fun agentProblems(path: String, agent: AgentConfig): List<String> {
         "$path.model must name the model as the CLI names it".takeIf { agent.model.isBlank() },
         "$path.effort must name the reasoning effort as the CLI names it"
             .takeIf { agent.effort.isBlank() },
-        "$path.runner.url must be an http or https URL".takeIf { !isHttpUrl(agent.runner.url) },
+        "$path.runner.url must be an http or https URL with a host name without underscores"
+            .takeIf { httpUri(agent.runner.url)?.host == null },
         "$path.runner.secret must have at least $MIN_SECRET_LENGTH characters"
             .takeIf { agent.runner.secret.length < MIN_SECRET_LENGTH },
-        "$path.mcpUrl must be an http or https URL".takeIf { !isHttpUrl(agent.mcpUrl) },
+        "$path.mcpUrl must be an http or https URL".takeIf { httpUri(agent.mcpUrl) == null },
     )
 }
 
@@ -89,7 +90,10 @@ private fun unknownTools(
         }
         .map { "$path names unknown tool or action $it" }
 
-private fun isHttpUrl(text: String): Boolean {
-    val uri = runCatching { URI(text) }.getOrNull() ?: return false
-    return (uri.scheme == "http" || uri.scheme == "https") && !uri.authority.isNullOrEmpty()
+// Java's HTTP client, which reaches the runners, also needs URI.host, which is null for host names
+// with underscores. The agent CLIs reach mcpUrl with clients that accept those.
+private fun httpUri(text: String): URI? {
+    val uri = runCatching { URI(text) }.getOrNull() ?: return null
+    val isHttp = uri.scheme == "http" || uri.scheme == "https"
+    return uri.takeIf { isHttp && !it.authority.isNullOrEmpty() }
 }
