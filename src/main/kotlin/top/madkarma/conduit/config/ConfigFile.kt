@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory
 
 class InvalidConfig(val problems: List<String>) : Exception(problems.joinToString("; "))
 
-@OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
 private val CONFIG_JSON = Json {
     prettyPrint = true
     prettyPrintIndent = "    "

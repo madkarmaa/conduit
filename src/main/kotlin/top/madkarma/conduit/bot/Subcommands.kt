@@ -13,8 +13,14 @@ import top.madkarma.conduit.service.player.resolvePlayerId
 /** The operators' subcommands of /conduit. They run on the server thread. */
 object Subcommands {
     /** Shows each mode's agent, its runner and its line. Never shows secrets. */
-    fun status(source: CommandSourceStack, target: String?) {
-        val config = Conduit.config ?: return source.sendFailure(Component.literal(invalidConfig()))
+    fun status(source: CommandSourceStack) {
+        val config =
+            Conduit.config
+                ?: return source.sendFailure(
+                    Component.literal(
+                        "Conduit's config is invalid. The server log names the problems.",
+                    ),
+                )
 
         Bot.launch {
             val rows = Mode.entries.map { describeMode(it, config) }
@@ -22,7 +28,7 @@ object Subcommands {
         }
     }
 
-    fun reload(source: CommandSourceStack, target: String?) {
+    fun reload(source: CommandSourceStack) {
         val problems = Conduit.reloadConfig()
         if (problems.isEmpty()) return source.sendSystemMessage(botMessage("Reloaded the config."))
 
@@ -104,6 +110,4 @@ object Subcommands {
         } catch (_: IOException) {
             "unreachable"
         }
-
-    private fun invalidConfig() = "Conduit's config is invalid. The server log names the problems."
 }

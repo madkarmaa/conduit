@@ -27,14 +27,16 @@ object Conversations {
     /** Chat mode never shares a conversation, with other players or with full mode. */
     @Synchronized
     fun of(mode: Mode, memory: Memory, asker: Asker): Conversation {
-        val key =
-            when {
-                mode == Mode.CHAT -> chatKey(asker.uuid)
-                memory == Memory.SHARED -> SHARED_KEY
-                memory == Memory.PLAYER -> asker.uuid.toString()
-                else -> return Conversation("once-${UUID.randomUUID()}", resumable = false)
-            }
+        if (mode == Mode.CHAT) return remembered(chatKey(asker.uuid))
 
+        return when (memory) {
+            Memory.PLAYER -> remembered(asker.uuid.toString())
+            Memory.SHARED -> remembered(SHARED_KEY)
+            Memory.NONE -> Conversation("once-${UUID.randomUUID()}", resumable = false)
+        }
+    }
+
+    private fun remembered(key: String): Conversation {
         val stored = load()
         return Conversation(
             "$key-${stored.base + stored.keys.getOrDefault(key, 0)}",

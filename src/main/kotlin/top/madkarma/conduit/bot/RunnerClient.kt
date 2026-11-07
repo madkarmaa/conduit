@@ -20,8 +20,10 @@ private val JSON = Json {
     encodeDefaults = true
 }
 
-@Serializable class McpAccess(val url: String, val token: String)
+// Only the runner reads these, from the JSON. Data classes would print the secrets in toString.
+@Suppress("unused") @Serializable class McpAccess(val url: String, val token: String)
 
+@Suppress("unused")
 @Serializable
 class RunRequest(
     val cli: String,
@@ -54,7 +56,6 @@ class RunResult(
 
 @Serializable
 class RunnerHealth(
-    val cli: String? = null,
     val versions: Map<String, String> = emptyMap(),
     val busy: Boolean = false,
     val updating: Boolean = false,

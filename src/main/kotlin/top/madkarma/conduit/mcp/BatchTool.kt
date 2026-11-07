@@ -12,7 +12,7 @@ import top.madkarma.conduit.game.invalidInput
 
 private const val MAX_CALLS = 1000
 
-private class BatchOutcome(val call: PreparedCall, val text: String, val status: String) {
+private class BatchOutcome(call: PreparedCall, val text: String, val status: String) {
     val label = "${call.tool.name}.${call.actionName}"
 }
 

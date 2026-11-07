@@ -25,8 +25,8 @@ object ConduitCommand {
     fun register(dispatcher: CommandDispatcher<CommandSourceStack>) {
         dispatcher.register(
             Commands.literal("conduit")
-                .then(subcommand("status", null, Subcommands::status))
-                .then(subcommand("reload", null, Subcommands::reload))
+                .then(subcommand("status", null) { source, _ -> Subcommands.status(source) })
+                .then(subcommand("reload", null) { source, _ -> Subcommands.reload(source) })
                 .then(subcommand("cancel", suggest("full", "chat"), Subcommands::cancel))
                 .then(subcommand("forget", suggest("shared", "all"), Subcommands::forget))
                 .then(

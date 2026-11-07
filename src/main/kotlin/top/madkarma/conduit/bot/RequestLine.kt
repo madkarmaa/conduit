@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 
 /** One request, from the moment a player asks until the bot answers it. */
@@ -24,7 +25,7 @@ class RequestLine(
     private val wakeUp = Channel<Unit>(Channel.CONFLATED)
 
     init {
-        scope.launch { for (signal in wakeUp) answerWaiting() }
+        scope.launch { wakeUp.consumeEach { answerWaiting() } }
     }
 
     /** Returns how many requests come before this one. */

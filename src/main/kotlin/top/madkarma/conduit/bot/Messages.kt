@@ -4,7 +4,7 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 
 /**
- * A message from the bot, after "[Conduit]". The content goes into a white component of its own, so
+ * A message from the bot, after `[Conduit]`. The content goes into a white component of its own, so
  * its own colors still apply.
  */
 fun botMessage(content: Component): Component =

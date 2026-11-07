@@ -22,7 +22,7 @@ internal fun MinecraftServer.tellAudience(asker: Asker, message: Component) {
         .forEach { it.sendSystemMessage(message) }
 }
 
-/** The approval prompt, with [Approve] and [Deny] buttons that carry the nonce. */
+/** The approval prompt, with `[Approve]` and `[Deny]` buttons that carry the nonce. */
 internal fun prompt(
     nonce: String,
     asker: Asker,

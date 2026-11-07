@@ -22,9 +22,9 @@ import top.madkarma.conduit.mcp.CalledAction
 internal val CLICK_ID = Conduit.id("approval")
 
 /**
- * Asks for approval with [Approve] and [Deny] buttons in the chat, which the asking player and the
- * online operators get. A click from either counts. Any modified client can send any click, so each
- * prompt has a random nonce that only the players who got it know.
+ * Asks for approval with `[Approve]` and `[Deny]` buttons in the chat, which the asking player and
+ * the online operators get. A click from either counts. Any modified client can send any click, so
+ * each prompt has a random nonce that only the players who got it know.
  */
 object Approvals {
     private class Decision(val approved: Boolean, val player: String)

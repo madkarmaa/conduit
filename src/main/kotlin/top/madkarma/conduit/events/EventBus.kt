@@ -43,7 +43,6 @@ class GameEvent(
     val type: EventType,
     /** Server tick count at the time of the event. */
     val tick: Int,
-    val timestampMs: Long,
     val payload: JsonObject,
 )
 
@@ -62,7 +61,7 @@ object EventBus {
 
         val encoded = GAME_JSON.encodeToJsonElement(payload()).jsonObject
         val tick = GameServer.current?.tickCount ?: 0
-        val event = GameEvent(type, tick, System.currentTimeMillis(), encoded)
+        val event = GameEvent(type, tick, encoded)
 
         for (listener in listeners) listener(event)
     }
