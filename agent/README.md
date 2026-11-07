@@ -65,6 +65,7 @@ volume when Compose recreates the container.
 
 ```sh
 docker compose -f conduit-agents.yaml exec -it conduit-full conduit-login claude
+docker compose -f conduit-agents.yaml exec -it conduit-full conduit-login codex
 docker compose -f conduit-agents.yaml exec -it conduit-chat conduit-login opencode
 ```
 
@@ -125,8 +126,6 @@ Each container may use 1 CPU and 1 GiB of memory. Set `CONDUIT_FULL_MEMORY`, `CO
   whether the agent may also search and fetch the web.
 - The runner turns off the CLI's own tools, such as shell commands and file edits, so the agent
   only has the Conduit tools.
-- The CLI never sees the runner secret, and the runner removes API keys and tokens from the errors
-  it reports.
 
 ## Building
 
@@ -135,6 +134,3 @@ docker build -t conduit-agent agent/
 ```
 
 Set `CONDUIT_AGENT_IMAGE=conduit-agent` for the compose file to use the local image.
-
-The runner is TypeScript that Bun runs without a build step. Bun does not check types, so run
-`bun install` and `bun run check` in `agent/` after changing it.
