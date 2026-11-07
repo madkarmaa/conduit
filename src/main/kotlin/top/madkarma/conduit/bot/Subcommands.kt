@@ -37,7 +37,7 @@ object Subcommands {
 
         val cancelled =
             when {
-                mode != null -> Bot.line(mode).cancel { it === Bot.line(mode).running() }
+                mode != null -> Bot.cancel { it === Bot.line(mode).running() }
                 target != null -> Bot.cancel { it.asker.name.equals(target, ignoreCase = true) }
                 ownId != null -> Bot.cancel { it.asker.uuid == ownId }
                 else -> return source.sendFailure(Component.literal("Name full, chat or a player."))

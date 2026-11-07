@@ -9,6 +9,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import top.madkarma.conduit.Conduit
+import top.madkarma.conduit.game.GameServer
 
 /** Answers /conduit requests with the agent of the asker's mode. */
 object Bot {
@@ -39,9 +40,26 @@ object Bot {
         scope.launch(block = block)
     }
 
-    /** Cancels the requests that match, waiting or running. Returns whether there were any. */
-    fun cancel(predicate: (BotRequest) -> Boolean): Boolean =
-        lines.values.map { it.cancel(predicate) }.any { it }
+    /**
+     * Cancels the requests that match, waiting or running. Returns whether there were any. Called
+     * on the server thread.
+     */
+    fun cancel(predicate: (BotRequest) -> Boolean): Boolean {
+        val cancelled = lines.values.flatMap { it.cancel(predicate) }
+
+        // A running request says so when it ends. A waiting one never starts, so it is said here.
+        val players = GameServer.current?.playerList
+        cancelled
+            .filter { it.job == null }
+            .forEach {
+                players?.broadcastSystemMessage(
+                    botMessage("${it.asker.name}'s request was cancelled."),
+                    false,
+                )
+            }
+
+        return cancelled.isNotEmpty()
+    }
 
     /**
      * Shows each asker the state of their request in the action bar. Called on the server thread.

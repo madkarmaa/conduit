@@ -46,13 +46,20 @@ class RequestLine(
 
     @Synchronized fun waiting(): List<BotRequest> = waiting.toList()
 
-    /** Takes waiting requests out of the line and cancels the running one, if they match. */
-    fun cancel(predicate: (BotRequest) -> Boolean): Boolean {
+    /**
+     * Takes waiting requests out of the line and cancels the running one, if they match. Returns
+     * the requests it cancelled.
+     */
+    fun cancel(predicate: (BotRequest) -> Boolean): List<BotRequest> {
         val (removed, current) =
-            synchronized(this) { waiting.removeAll(predicate) to running?.takeIf(predicate) }
+            synchronized(this) {
+                val matching = waiting.filter(predicate)
+                waiting.removeAll(matching)
+                matching to running?.takeIf(predicate)
+            }
 
         current?.job?.cancel()
-        return removed || current != null
+        return removed + listOfNotNull(current)
     }
 
     private suspend fun answerWaiting() {
