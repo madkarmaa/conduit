@@ -18,7 +18,7 @@
 
 # Minecraft, MCP and agent standards
 
-- Target the Minecraft version in `gradle.properties` (unobfuscated Mojang names). Verify game and Fabric API signatures against the actual jars instead of relying on memory.
+- Target the Minecraft version in `gradle.properties`, which has unobfuscated Mojang names. Verify game and Fabric API signatures against the actual jars instead of relying on memory.
 
 - Access game state only on the server thread, through `GameServer.run`.
 

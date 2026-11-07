@@ -45,8 +45,8 @@ image is `ghcr.io/madkarmaa/conduit-agent`.
     docker compose -f conduit-agents.yaml up -d
     ```
 
-4. Log each container in to its CLI once. The login stays in the container's volume, also when the
-   container is recreated.
+4. Log each container in to its CLI once. The CLI keeps the login in the container's volume, so it
+   stays when Compose recreates the container.
 
     ```sh
     docker compose -f conduit-agents.yaml exec -it conduit-full conduit-login claude
@@ -61,15 +61,17 @@ image is `ghcr.io/madkarmaa/conduit-agent`.
    [networking](#networking) section describes, then run `/conduit reload`.
 
 The agent containers install their CLI on first use and update it once a day while idle. Until the
-first install is done, requests get "try again in a few minutes".
+first install finishes, the bot answers requests with "try again in a few minutes".
 
 ## Networking
 
 The mod reaches the runner in each agent container, and the CLI in the container reaches the mod's
 MCP server. Pick the setup that matches the server.
 
-**Minecraft in Docker Compose**, such as
-[itzg/minecraft-server](https://github.com/itzg/docker-minecraft-server): start the agents in the
+### Minecraft in Docker Compose
+
+If the server runs in Docker Compose, such as with
+[itzg/minecraft-server](https://github.com/itzg/docker-minecraft-server), start the agents in the
 same project as the server, so they share its network.
 
 ```sh
@@ -79,8 +81,10 @@ docker compose -f compose.yaml -f conduit-agents.yaml up -d
 The defaults fit a server service named `minecraft`. For another name, change both `mcpUrl`
 values and add the name to `mcp.allowedHosts`.
 
-**Minecraft on the host**: the runners listen on `127.0.0.1:8081` and `127.0.0.1:8082`, and the
-containers reach the host as `host.docker.internal`.
+### Minecraft on the host
+
+The runners listen on `127.0.0.1:8081` and `127.0.0.1:8082`, and the containers reach the host as
+`host.docker.internal`. Point the config at them:
 
 ```json
 {
@@ -97,9 +101,11 @@ containers reach the host as `host.docker.internal`.
 }
 ```
 
-The containers use memory and CPU limits that fit a small server next to Minecraft. Set
-`CONDUIT_FULL_MEMORY`, `CONDUIT_CHAT_MEMORY`, `CONDUIT_FULL_CPUS` or `CONDUIT_CHAT_CPUS` in `.env`
-to change them.
+### Resource limits
+
+Each agent container may use 1 CPU. `conduit-full` gets 768 MiB of memory and `conduit-chat` 1 GiB.
+Set `CONDUIT_FULL_MEMORY`, `CONDUIT_CHAT_MEMORY`, `CONDUIT_FULL_CPUS` or `CONDUIT_CHAT_CPUS` in
+`.env` to change these limits.
 
 ## Using the bot
 
@@ -138,45 +144,49 @@ such as `edit_player`, or one of its actions, such as `edit_player.game_mode`.
 | `/conduit forget [<player>\|shared\|all]` | Starts fresh conversations, so the agent forgets earlier ones |
 
 Without an argument, `cancel` and `forget` act on the operator's own request and conversations.
-For operators, a request that is just one of these words, or `cancel` or `forget` and one more
-word, runs the command. Longer requests that start with them, such as
-`/conduit status of the farm`, still ask the bot, and so does everyone else.
+
+An operator's request runs a command when it is one of these words alone, or `cancel` or `forget`
+followed by one more word. Longer requests that start with these words, such as
+`/conduit status of the farm`, go to the bot. Requests from other players always go to the bot.
 
 ## Configuration
 
 The mod reads `config/conduit.json` at startup and on `/conduit reload`. Fields the file leaves out
 keep their defaults. Any string can use `${NAME}` or `${NAME:-default}` to read an environment
-variable. The mod names the missing variables and invalid fields, and keeps the bot and the MCP
-server off until the config is valid. The variables of a disabled agent may stay unset.
+variable. The variables of a disabled agent may stay unset.
 
-| Field                      | Default                                                       | Description                                                    |
-| -------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------- |
-| `mcp.host`                 | `0.0.0.0`                                                     | Address the MCP server listens on                              |
-| `mcp.port`                 | `25585`                                                       | Port of the MCP server                                         |
-| `mcp.allowedHosts`         | `minecraft`, `host.docker.internal`, `localhost`, `127.0.0.1` | Host names clients may use to reach the MCP server             |
-| `mcp.tokens`               | none                                                          | Tokens for other [MCP hosts](#other-mcp-hosts)                 |
-| `agents.<mode>.enabled`    | `true`                                                        | Turns the mode on                                              |
-| `agents.<mode>.cli`        | `claude` for full, `opencode` for chat                        | `claude`, `codex` or `opencode`                                |
-| `agents.<mode>.model`      | `sonnet` for full, `opencode-go/deepseek-v4.1-flash` for chat | The model, as the CLI names it                                 |
-| `agents.<mode>.effort`     | `medium` for full, `high` for chat                            | The reasoning effort, as the CLI names it                      |
-| `agents.<mode>.args`       | none                                                          | Extra arguments for the CLI                                    |
-| `agents.<mode>.web`        | `true` for full, `false` for chat                             | Lets the CLI search and fetch the web                          |
-| `agents.<mode>.runner`     | `http://conduit-<mode>:8080`, `${CONDUIT_<MODE>_SECRET}`      | `url` and `secret` of the mode's agent container               |
-| `agents.<mode>.mcpUrl`     | `http://minecraft:25585/mcp`                                  | Where the agent container reaches the MCP server               |
-| `access.operators`         | `true`                                                        | Operators get full mode                                        |
-| `access.allow`             | none                                                          | Names or UUIDs of other players who get full mode              |
-| `tools.readOnly`           | `false`                                                       | Full mode only gets the actions that read                      |
-| `tools.chat.allow`         | the chat tools below                                          | The only tools chat mode gets                                  |
-| `tools.chat.deny`          | none                                                          | Tools chat mode never gets. On its own, allows every other one |
-| `approvals.timeoutSeconds` | `30`                                                          | How long an approval waits for a click                         |
-| `approvals.add`            | none                                                          | Tools or actions that also need approval                       |
-| `approvals.remove`         | none                                                          | Tools or actions that never need approval                      |
-| `requests.timeoutSeconds`  | `300`                                                         | How long a request may run, not counting approvals             |
-| `requests.memory`          | `player`                                                      | Full mode conversations: `player`, `shared` or `none`          |
-| `requests.instructions`    | none                                                          | Extra instructions for the agent, such as the server's rules   |
-| `replies.maxLength`        | `1000`                                                        | Longest answer the bot posts                                   |
-| `game.backupDirectory`     | `backups`                                                     | Where backups go, relative to the server folder                |
-| `game.maxStructureVolume`  | `8000000`                                                     | Largest structure the tools save or place, in blocks           |
+When the config is invalid at startup, the mod logs the missing variables and invalid fields, and
+keeps the bot and the MCP server off until `/conduit reload` loads a valid config. On a reload, the
+command lists the problems and keeps the old config.
+
+| Field                      | Default                                                       | Description                                                           |
+| -------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `mcp.host`                 | `0.0.0.0`                                                     | Address the MCP server listens on                                     |
+| `mcp.port`                 | `25585`                                                       | Port of the MCP server                                                |
+| `mcp.allowedHosts`         | `minecraft`, `host.docker.internal`, `localhost`, `127.0.0.1` | Host names clients may use to reach the MCP server                    |
+| `mcp.tokens`               | none                                                          | Tokens for other [MCP hosts](#other-mcp-hosts)                        |
+| `agents.<mode>.enabled`    | `true`                                                        | Turns the mode on                                                     |
+| `agents.<mode>.cli`        | `claude` for full, `opencode` for chat                        | `claude`, `codex` or `opencode`                                       |
+| `agents.<mode>.model`      | `sonnet` for full, `opencode-go/deepseek-v4.1-flash` for chat | The model, as the CLI names it                                        |
+| `agents.<mode>.effort`     | `medium` for full, `high` for chat                            | The reasoning effort, as the CLI names it                             |
+| `agents.<mode>.args`       | none                                                          | Extra arguments for the CLI                                           |
+| `agents.<mode>.web`        | `true` for full, `false` for chat                             | Lets the CLI search and fetch the web                                 |
+| `agents.<mode>.runner`     | `http://conduit-<mode>:8080`, `${CONDUIT_<MODE>_SECRET}`      | `url` and `secret` of the mode's agent container                      |
+| `agents.<mode>.mcpUrl`     | `http://minecraft:25585/mcp`                                  | Where the agent container reaches the MCP server                      |
+| `access.operators`         | `true`                                                        | Operators get full mode                                               |
+| `access.allow`             | none                                                          | Names or UUIDs of other players who get full mode                     |
+| `tools.readOnly`           | `false`                                                       | Full mode only gets the actions that read                             |
+| `tools.chat.allow`         | the chat tools below                                          | The only tools chat mode gets                                         |
+| `tools.chat.deny`          | none                                                          | Tools chat mode never gets. Without `allow`, it gets every other tool |
+| `approvals.timeoutSeconds` | `30`                                                          | How long an approval waits for a click                                |
+| `approvals.add`            | none                                                          | Tools or actions that also need approval                              |
+| `approvals.remove`         | none                                                          | Tools or actions that never need approval                             |
+| `requests.timeoutSeconds`  | `300`                                                         | How long a request may run, not counting approvals                    |
+| `requests.memory`          | `player`                                                      | Full mode conversations: `player`, `shared` or `none`                 |
+| `requests.instructions`    | none                                                          | Extra instructions for the agent, such as the server's rules          |
+| `replies.maxLength`        | `1000`                                                        | Longest answer the bot posts                                          |
+| `game.backupDirectory`     | `backups`                                                     | Where backups go, relative to the server folder                       |
+| `game.maxStructureVolume`  | `8000000`                                                     | Largest structure the tools save or place, in blocks                  |
 
 Chat mode gets `server_info`, `world_info`, `game_rules`, `get_block`, `get_region`, `terrain`,
 `registry`, `recipes`, `structures` and `get_player` by default, and never the tools that list
@@ -228,9 +238,9 @@ The server has 30 tools. Tools with several operations take an `action` argument
 The actions that are hard to undo are `run_command`, `server_admin` `stop` and `set_datapack`,
 `edit_blocks` `fill`, `explode`, `remove_entity`, `inventory` `clear`, `offline_player`,
 `edit_player` `operator` and `kick`, `structures` `place`, `game_rules` `set` and `world_border`
-`set`. Their tools have the MCP `destructiveHint`, and each tool's `_meta` maps every action to
+`set`. Their tools carry the MCP `destructiveHint`. Each tool's `_meta` also maps every action to
 `read`, `write` or `destructive` under `top.madkarma.conduit/actions`, so a host can ask for
-confirmation. `batch` runs calls to other tools within one server tick.
+confirmation before the destructive ones. `batch` runs calls to other tools within one server tick.
 
 ## Security
 
@@ -240,17 +250,18 @@ confirmation. `batch` runs calls to other tools within one server tick.
   Every request needs a token, but keep port 25585 closed to the internet. Each agent request gets
   a token of its own that only works while the request runs.
 - The runner secrets and the MCP tokens never show up in the log or in `/conduit status`.
-- The agent containers have a read-only root filesystem, no Linux capabilities and limits on
-  memory, CPU and processes. They reach the internet, which the CLI needs for its model's API, and
-  `agents.<mode>.web` decides whether the agent may also search and fetch the web. The CLI's own
-  tools, such as shell commands and file edits, are off.
-- A modified client can send any click, so every approval button carries a random value that only
-  the players who got it know, and the mod only counts clicks from the asker and operators.
+- The agent containers have a read-only root filesystem, no Linux capabilities, and limits on
+  memory, CPU and processes. They can reach the internet, because the CLI needs its model's API.
+  `agents.<mode>.web` decides whether the agent may also search and fetch the web. The runner turns
+  off the CLI's own tools, such as shell commands and file edits.
+- A modified client can send any click. Every approval button therefore carries a random value that
+  only the players who got the prompt know, and the mod only counts clicks from the asker and
+  operators.
 
 ## Building
 
-Building needs JDK 25 and [Bun](https://bun.sh) on the `PATH`, which formats the Markdown, JSON,
-YAML and JavaScript files.
+Building needs JDK 25 and [Bun](https://bun.sh) on the `PATH`. The build uses Bun to format the
+Markdown, JSON, YAML and JavaScript files.
 
 ```sh
 ./gradlew build
@@ -260,15 +271,15 @@ The build writes the mod jar to `build/libs/conduit-<mod version>+<minecraft ver
 build the agent image, run `docker build -t conduit-agent agent/` and set
 `CONDUIT_AGENT_IMAGE=conduit-agent` for the compose file.
 
-`bun install` sets up Git hooks. Before a commit, one runs `./gradlew spotlessApply` and adds the
-formatted files to the commit. Another checks that the commit message follows
+`bun install` sets up two Git hooks. The pre-commit hook runs `./gradlew spotlessApply` and adds
+the formatted files to the commit. The commit-msg hook checks that the commit message follows
 [Conventional Commits](https://www.conventionalcommits.org).
 
 ## Test environment
 
 [`compose.yaml`](./compose.yaml) runs a Fabric server with the mod from `build/libs` and a vanilla
 headless client as a real player, using the [HeadlessMC](https://github.com/headlesshq/headlessmc)
-Docker image. `MC_VERSION` is required and must match the Minecraft version the mod was built for:
+Docker image. `MC_VERSION` is required and must match the Minecraft version in `gradle.properties`:
 
 ```sh
 ./gradlew build
@@ -286,9 +297,9 @@ CONDUIT_FULL_SECRET=<secret> CONDUIT_CHAT_SECRET=<secret> MC_VERSION=<minecraft 
     docker compose -f compose.yaml -f agent/compose.yaml up -d
 ```
 
-Docker volumes keep the game data and the agents' logins between runs. The client uses the
-preconfigured [`docker/options.txt`](./docker/options.txt), so it skips the first-start onboarding
-and joins the server directly.
+Docker volumes keep the game data and the agents' logins between runs. The client starts with
+[`docker/options.txt`](./docker/options.txt), so it skips the onboarding screens of a first start
+and joins the server right away.
 
 ## License
 
