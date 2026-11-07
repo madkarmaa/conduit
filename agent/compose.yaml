@@ -17,7 +17,7 @@
 #
 #   docker compose -f compose.yaml -f conduit-agents.yaml up -d
 #
-# Each container may use 1 CPU. conduit-full gets 768 MiB of memory and conduit-chat 1 GiB. Raise
+# Each container may use 1 CPU. conduit-full gets 1 GiB of memory and conduit-chat 1 GiB. Raise
 # the limits with the variables below if a CLI runs out of memory.
 
 x-agent: &agent
@@ -37,7 +37,7 @@ x-agent: &agent
 services:
     conduit-full:
         <<: *agent
-        mem_limit: ${CONDUIT_FULL_MEMORY:-768m}
+        mem_limit: ${CONDUIT_FULL_MEMORY:-1g}
         cpus: ${CONDUIT_FULL_CPUS:-1.0}
         environment:
             CONDUIT_RUNNER_SECRET: ${CONDUIT_FULL_SECRET:?set CONDUIT_FULL_SECRET in .env}

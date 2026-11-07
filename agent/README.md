@@ -114,9 +114,8 @@ The runners listen on `127.0.0.1:8081` and `127.0.0.1:8082`, and the containers 
 
 ## Resource limits
 
-Each container may use 1 CPU. `conduit-full` gets 768 MiB of memory and `conduit-chat` 1 GiB. Set
-`CONDUIT_FULL_MEMORY`, `CONDUIT_CHAT_MEMORY`, `CONDUIT_FULL_CPUS` or `CONDUIT_CHAT_CPUS` in `.env`
-to change these limits.
+Each container may use 1 CPU and 1 GiB of memory. Set `CONDUIT_FULL_MEMORY`, `CONDUIT_CHAT_MEMORY`,
+`CONDUIT_FULL_CPUS` or `CONDUIT_CHAT_CPUS` in `.env` to change these limits.
 
 ## Security
 
