@@ -1,10 +1,10 @@
 package top.madkarma.conduit.events
 
 import kotlin.jvm.optionals.getOrNull
+import kotlinx.serialization.Serializable
 import net.minecraft.core.BlockPos
 import net.minecraft.nbt.Tag
 import net.minecraft.resources.Identifier
-import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.damagesource.DamageSource
@@ -14,75 +14,93 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
-import top.madkarma.conduit.game.GameServer
-import top.madkarma.conduit.game.rotationOf
-import top.madkarma.conduit.game.toProto
-import top.madkarma.conduit.proto.*
-import top.madkarma.conduit.service.server.performance
+import top.madkarma.conduit.game.*
 
-inline fun buildEvent(fill: Event.Builder.() -> Unit): Event {
-    val builder =
-        Event.newBuilder()
-            .setTimestampMs(System.currentTimeMillis())
-            .setTick(GameServer.current?.tickCount ?: 0)
+@Serializable data class ChatEvent(val player: String, val playerUuid: String, val message: String)
 
-    builder.fill()
-    return builder.build()
-}
+@Serializable
+data class CustomClickEvent(
+    val player: String,
+    val playerUuid: String,
+    /** The click event's id, such as "example:confirm". */
+    val id: String,
+    /** The click event's payload as SNBT, such as "\"abc\"" for a string. */
+    val payload: String?,
+)
 
-internal fun droppedEvent(firstSequence: Long, count: Long): Event = buildEvent {
-    eventsDropped = eventsDroppedEvent {
-        this.firstSequence = firstSequence
-        this.count = count
-    }
-}
+@Serializable
+data class PlayerEvent(
+    val player: String,
+    val playerUuid: String,
+    val dimension: String,
+    val position: Vector3,
+)
 
-internal fun chatPayload(sender: ServerPlayer, message: String): ChatEvent = chatEvent {
-    player = sender.gameProfile.name
-    playerUuid = sender.stringUUID
-    this.message = message
-}
+@Serializable
+data class DimensionChangeEvent(
+    val player: String,
+    val playerUuid: String,
+    val from: String,
+    val to: String,
+)
+
+@Serializable
+data class BlockEvent(
+    val player: String?,
+    val playerUuid: String?,
+    val dimension: String,
+    val pos: BlockCoordinates,
+    val state: BlockStateInfo,
+    /** Item in the hand used, for place and use events. */
+    val item: ItemInfo?,
+)
+
+@Serializable
+data class EntityDamageEvent(
+    val entity: EntityInfo,
+    val damageType: String,
+    val amount: Float,
+    val attackerUuid: String?,
+)
+
+@Serializable
+data class EntityDeathEvent(
+    val entity: EntityInfo,
+    val damageType: String,
+    val deathMessage: String,
+    val attackerUuid: String?,
+)
+
+@Serializable
+data class EntityAttackEvent(val player: String, val playerUuid: String, val target: EntityInfo)
+
+@Serializable data class CommandEvent(val source: String, val command: String)
+
+internal fun chatPayload(sender: ServerPlayer, message: String) =
+    ChatEvent(sender.gameProfile.name, sender.stringUUID, message)
 
 internal fun customClickPayload(player: ServerPlayer, id: Identifier, payload: Tag?) =
-    customClickEvent {
-        this.player = player.gameProfile.name
-        playerUuid = player.stringUUID
-        this.id = id.toString()
-        if (payload != null) this.payload = payload.toString()
-    }
+    CustomClickEvent(player.gameProfile.name, player.stringUUID, id.toString(), payload?.toString())
 
-internal fun playerPayload(player: ServerPlayer): PlayerEvent = playerEvent {
-    this.player = player.gameProfile.name
-    playerUuid = player.stringUUID
-    dimension = player.level().dimension().identifier().toString()
-    position = player.position().toProto()
-}
-
-internal fun movePayload(player: ServerPlayer, teleported: Boolean): PlayerMoveEvent =
-    playerMoveEvent {
-        this.player = player.gameProfile.name
-        playerUuid = player.stringUUID
-
-        dimension = player.level().dimension().identifier().toString()
-        position = player.position().toProto()
-        rotation = rotationOf(player.yRot, player.xRot)
-        velocity = player.knownMovement.toProto()
-        onGround = player.onGround()
-
-        this.teleported = teleported
-    }
+internal fun playerPayload(player: ServerPlayer) =
+    PlayerEvent(
+        player = player.gameProfile.name,
+        playerUuid = player.stringUUID,
+        dimension = player.level().dimension().identifier().toString(),
+        position = player.position().toVector(),
+    )
 
 internal fun dimensionChangePayload(
     player: ServerPlayer,
     origin: ServerLevel,
     destination: ServerLevel,
-): DimensionChangeEvent = dimensionChangeEvent {
-    this.player = player.gameProfile.name
-    playerUuid = player.stringUUID
-
-    from = origin.dimension().identifier().toString()
-    to = destination.dimension().identifier().toString()
-}
+) =
+    DimensionChangeEvent(
+        player = player.gameProfile.name,
+        playerUuid = player.stringUUID,
+        from = origin.dimension().identifier().toString(),
+        to = destination.dimension().identifier().toString(),
+    )
 
 internal fun blockPayload(
     level: Level,
@@ -90,53 +108,29 @@ internal fun blockPayload(
     position: BlockPos,
     state: BlockState,
     item: ItemStack?,
-): BlockEvent = blockEvent {
-    if (player != null) {
-        this.player = player.gameProfile.name
-        playerUuid = player.stringUUID
-    }
+) =
+    BlockEvent(
+        player = player?.gameProfile?.name,
+        playerUuid = player?.stringUUID,
+        dimension = level.dimension().identifier().toString(),
+        pos = position.toCoordinates(),
+        state = state.toInfo(),
+        item = item?.toInfo(level.registryAccess()),
+    )
 
-    dimension = level.dimension().identifier().toString()
+internal fun damagePayload(entity: LivingEntity, source: DamageSource, amount: Float) =
+    EntityDamageEvent(entity.toInfo(), damageTypeOf(source), amount, source.entity?.stringUUID)
 
-    this.pos = position.toProto()
-    this.state = state.toProto()
+internal fun deathPayload(entity: LivingEntity, source: DamageSource) =
+    EntityDeathEvent(
+        entity = entity.toInfo(),
+        damageType = damageTypeOf(source),
+        deathMessage = source.getLocalizedDeathMessage(entity).string,
+        attackerUuid = source.entity?.stringUUID,
+    )
 
-    if (item != null) this.item = item.toProto(level.registryAccess())
-}
-
-internal fun damagePayload(
-    entity: LivingEntity,
-    source: DamageSource,
-    amount: Float,
-): EntityDamageEvent = entityDamageEvent {
-    this.entity = entity.toProto()
-
-    damageType = damageTypeOf(source)
-    this.amount = amount
-
-    source.entity?.let { attackerUuid = it.stringUUID }
-}
-
-internal fun deathPayload(entity: LivingEntity, source: DamageSource): EntityDeathEvent =
-    entityDeathEvent {
-        this.entity = entity.toProto()
-
-        damageType = damageTypeOf(source)
-        deathMessage = source.getLocalizedDeathMessage(entity).string
-
-        source.entity?.let { attackerUuid = it.stringUUID }
-    }
-
-internal fun attackPayload(player: Player, target: Entity): EntityAttackEvent = entityAttackEvent {
-    this.player = player.gameProfile.name
-    playerUuid = player.stringUUID
-    this.target = target.toProto()
-}
-
-internal fun tickPayload(server: MinecraftServer): TickEvent = tickEvent {
-    mspt = server.performance().mspt
-    playerCount = server.playerCount
-}
+internal fun attackPayload(player: Player, target: Entity) =
+    EntityAttackEvent(player.gameProfile.name, player.stringUUID, target.toInfo())
 
 private fun damageTypeOf(source: DamageSource): String =
     source.typeHolder().unwrapKey().getOrNull()?.identifier()?.toString() ?: ""

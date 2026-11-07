@@ -2,11 +2,11 @@ package top.madkarma.conduit.events
 
 import java.util.Optional
 import kotlin.jvm.optionals.getOrNull
+import kotlinx.serialization.json.JsonObject
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
@@ -20,9 +20,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
-import top.madkarma.conduit.proto.EventType
-import top.madkarma.conduit.proto.LifecycleEvent
-import top.madkarma.conduit.proto.commandEvent
 
 object GameEvents {
     fun register() {
@@ -30,9 +27,6 @@ object GameEvents {
         registerInteractionEvents()
         registerEntityEvents()
         registerServerEvents()
-        PlayerMoves.register()
-        EntityLifecycle.register()
-        ChunkLifecycle.register()
         InventoryChanges.register()
     }
 
@@ -47,76 +41,71 @@ object GameEvents {
     ) {
         if (level.isClientSide) return
 
-        EventBus.publish(EventType.EVENT_TYPE_BLOCK_PLACE) {
-            blockPlace = blockPayload(level, player, position, state, item)
+        EventBus.publish(EventType.BLOCK_PLACE) {
+            blockPayload(level, player, position, state, item)
         }
     }
 
     // Called from the command execution mixin.
     @JvmStatic
     fun onCommand(source: String, command: String) {
-        EventBus.publish(EventType.EVENT_TYPE_COMMAND) {
-            this.command = commandEvent {
-                this.source = source
-                this.command = command.removePrefix("/")
-            }
-        }
+        EventBus.publish(EventType.COMMAND) { CommandEvent(source, command.removePrefix("/")) }
     }
 
     // Called from the custom click mixin.
     @JvmStatic
     fun onCustomClick(player: ServerPlayer, id: Identifier, payload: Optional<Tag>) {
-        EventBus.publish(EventType.EVENT_TYPE_CUSTOM_CLICK) {
-            customClick = customClickPayload(player, id, payload.getOrNull())
+        EventBus.publish(EventType.CUSTOM_CLICK) {
+            customClickPayload(player, id, payload.getOrNull())
         }
     }
 
     private fun registerPlayerEvents() {
         ServerMessageEvents.CHAT_MESSAGE.register { message, sender, _ ->
-            EventBus.publish(EventType.EVENT_TYPE_CHAT) {
-                chat = chatPayload(sender, message.signedContent())
+            EventBus.publish(EventType.CHAT) {
+                chatPayload(sender, message.signedContent())
             }
         }
 
         ServerPlayerEvents.JOIN.register { player ->
-            EventBus.publish(EventType.EVENT_TYPE_PLAYER_JOIN) {
-                playerJoin = playerPayload(player)
+            EventBus.publish(EventType.PLAYER_JOIN) {
+                playerPayload(player)
             }
         }
 
         ServerPlayerEvents.LEAVE.register { player ->
-            EventBus.publish(EventType.EVENT_TYPE_PLAYER_LEAVE) {
-                playerLeave = playerPayload(player)
+            EventBus.publish(EventType.PLAYER_LEAVE) {
+                playerPayload(player)
             }
         }
 
         ServerPlayerEvents.AFTER_RESPAWN.register { _, player, _ ->
-            EventBus.publish(EventType.EVENT_TYPE_PLAYER_RESPAWN) {
-                playerRespawn = playerPayload(player)
+            EventBus.publish(EventType.PLAYER_RESPAWN) {
+                playerPayload(player)
             }
         }
 
         ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register { player, from, to ->
-            EventBus.publish(EventType.EVENT_TYPE_PLAYER_CHANGE_DIMENSION) {
-                playerChangeDimension = dimensionChangePayload(player, from, to)
+            EventBus.publish(EventType.PLAYER_CHANGE_DIMENSION) {
+                dimensionChangePayload(player, from, to)
             }
         }
     }
 
     private fun registerInteractionEvents() {
         PlayerBlockBreakEvents.AFTER.register { level, player, position, state, _ ->
-            EventBus.publish(EventType.EVENT_TYPE_BLOCK_BREAK) {
-                blockBreak = blockPayload(level, player, position, state, null)
+            EventBus.publish(EventType.BLOCK_BREAK) {
+                blockPayload(level, player, position, state, null)
             }
         }
 
         UseBlockCallback.EVENT.register { player, level, hand, hit ->
             if (level.isClientSide) return@register InteractionResult.PASS
 
-            EventBus.publish(EventType.EVENT_TYPE_BLOCK_USE) {
+            EventBus.publish(EventType.BLOCK_USE) {
                 val state = level.getBlockState(hit.blockPos)
                 val item = player.getItemInHand(hand)
-                blockUse = blockPayload(level, player, hit.blockPos, state, item)
+                blockPayload(level, player, hit.blockPos, state, item)
             }
 
             InteractionResult.PASS
@@ -125,8 +114,8 @@ object GameEvents {
         AttackEntityCallback.EVENT.register { player, level, _, target, _ ->
             if (level.isClientSide) return@register InteractionResult.PASS
 
-            EventBus.publish(EventType.EVENT_TYPE_ENTITY_ATTACK) {
-                entityAttack = attackPayload(player, target)
+            EventBus.publish(EventType.ENTITY_ATTACK) {
+                attackPayload(player, target)
             }
 
             InteractionResult.PASS
@@ -135,36 +124,27 @@ object GameEvents {
 
     private fun registerEntityEvents() {
         ServerLivingEntityEvents.AFTER_DAMAGE.register { entity, source, _, damageTaken, _ ->
-            EventBus.publish(EventType.EVENT_TYPE_ENTITY_DAMAGE) {
-                entityDamage = damagePayload(entity, source, damageTaken)
+            EventBus.publish(EventType.ENTITY_DAMAGE) {
+                damagePayload(entity, source, damageTaken)
             }
         }
 
         ServerLivingEntityEvents.AFTER_DEATH.register { entity, source ->
-            EventBus.publish(EventType.EVENT_TYPE_ENTITY_DEATH) {
-                entityDeath = deathPayload(entity, source)
+            EventBus.publish(EventType.ENTITY_DEATH) {
+                deathPayload(entity, source)
             }
         }
     }
 
     private fun registerServerEvents() {
-        val lifecycle = LifecycleEvent.getDefaultInstance()
-
-        ServerTickEvents.END_SERVER_TICK.register { server ->
-            EventBus.publish(
-                EventType.EVENT_TYPE_SERVER_TICK,
-                accepts = { server.tickCount % it.tickInterval == 0 },
-            ) {
-                serverTick = tickPayload(server)
-            }
-        }
+        val lifecycle = JsonObject(emptyMap())
 
         ServerLifecycleEvents.SERVER_STARTED.register {
-            EventBus.publish(EventType.EVENT_TYPE_SERVER_STARTED) { serverStarted = lifecycle }
+            EventBus.publish(EventType.SERVER_STARTED) { lifecycle }
         }
 
         ServerLifecycleEvents.SERVER_STOPPING.register {
-            EventBus.publish(EventType.EVENT_TYPE_SERVER_STOPPING) { serverStopping = lifecycle }
+            EventBus.publish(EventType.SERVER_STOPPING) { lifecycle }
         }
     }
 }

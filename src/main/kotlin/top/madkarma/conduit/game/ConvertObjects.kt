@@ -1,6 +1,7 @@
 package top.madkarma.conduit.game
 
 import kotlin.jvm.optionals.getOrNull
+import kotlinx.serialization.Serializable
 import net.minecraft.commands.arguments.blocks.BlockStateParser
 import net.minecraft.core.HolderLookup
 import net.minecraft.core.component.DataComponentPatch
@@ -15,11 +16,63 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.storage.LevelData
-import top.madkarma.conduit.proto.*
-import top.madkarma.conduit.proto.BlockState as ProtoBlockState
-import top.madkarma.conduit.proto.EntityInfo as ProtoEntityInfo
-import top.madkarma.conduit.proto.ItemStack as ProtoItemStack
-import top.madkarma.conduit.proto.StatusEffect as ProtoStatusEffect
+
+@Serializable
+data class BlockStateInfo(
+    /** Block id, e.g. "minecraft:oak_stairs". */
+    val id: String,
+    val properties: Map<String, String>,
+    /** Full state in command syntax, e.g. "minecraft:oak_stairs[facing=east,half=bottom]". */
+    val serialized: String,
+)
+
+@Serializable
+data class ItemInfo(
+    /** Item id, e.g. "minecraft:diamond_sword". "minecraft:air" is an empty stack. */
+    val id: String,
+    val count: Int,
+    /** Data component patch as SNBT, e.g. {"minecraft:custom_name":"Excalibur"}. */
+    val components: String = "",
+)
+
+@Serializable
+data class EffectInfo(
+    val id: String,
+    val duration: Int,
+    val amplifier: Int,
+    val ambient: Boolean,
+    val visible: Boolean,
+    val showIcon: Boolean,
+)
+
+@Serializable
+data class EntityInfo(
+    val uuid: String,
+    val networkId: Int,
+    val type: String,
+    val name: String,
+    val customName: String?,
+    val dimension: String,
+    val position: Vector3,
+    val rotation: Rotation,
+    val velocity: Vector3,
+    val onGround: Boolean,
+    val alive: Boolean,
+    val tags: List<String>,
+    /** Only set for living entities. */
+    val health: Float?,
+    val maxHealth: Float?,
+    val passengers: List<String>,
+    val vehicle: String?,
+)
+
+@Serializable
+data class SpawnPoint(
+    val dimension: String,
+    val pos: BlockCoordinates,
+    val yaw: Float,
+    val pitch: Float,
+)
 
 data class ParsedBlock(val state: BlockState, val nbt: CompoundTag?)
 
@@ -34,33 +87,28 @@ fun parseBlock(registries: HolderLookup.Provider, input: String): ParsedBlock {
     return ParsedBlock(result.blockState(), result.nbt())
 }
 
-fun BlockState.toProto(): ProtoBlockState {
-    val state = this
-    return blockState {
-        id = BuiltInRegistries.BLOCK.getKey(state.block).toString()
-        state.values.forEach { value -> properties[value.property().name] = value.valueName() }
-        serialized = BlockStateParser.serialize(state)
-    }
+fun BlockState.toInfo(): BlockStateInfo =
+    BlockStateInfo(
+        id = BuiltInRegistries.BLOCK.getKey(block).toString(),
+        properties = values.toList().associate { it.property().name to it.valueName() },
+        serialized = BlockStateParser.serialize(this),
+    )
+
+fun ItemStack.toInfo(registries: HolderLookup.Provider): ItemInfo {
+    if (isEmpty) return ItemInfo("minecraft:air", 0)
+
+    return ItemInfo(
+        id = BuiltInRegistries.ITEM.getKey(item).toString(),
+        count = count,
+        components = encodeComponents(componentsPatch, registries),
+    )
 }
 
-fun ItemStack.toProto(registries: HolderLookup.Provider): ProtoItemStack {
-    if (isEmpty) return itemStack { id = "minecraft:air" }
-    val stack = this
-
-    return itemStack {
-        id = BuiltInRegistries.ITEM.getKey(stack.item).toString()
-        count = stack.count
-        components = encodeComponents(stack.componentsPatch, registries)
-    }
-}
-
-fun ProtoItemStack.toMc(registries: HolderLookup.Provider): ItemStack {
+fun ItemInfo.toMc(registries: HolderLookup.Provider): ItemStack {
     if (id.isBlank() || id == "minecraft:air" || count < 0) return ItemStack.EMPTY
 
     val item =
-        BuiltInRegistries.ITEM.get(parseId(id)).orElseGet {
-            invalidInput("Unknown item: $id")
-        }
+        BuiltInRegistries.ITEM.get(parseId(id)).orElseGet { invalidInput("Unknown item: $id") }
     val patch = decodeComponents(components, registries)
 
     return ItemStack(item, if (count == 0) 1 else count, patch)
@@ -82,50 +130,43 @@ private fun decodeComponents(snbt: String, registries: HolderLookup.Provider): D
     }
 }
 
-fun Entity.toProto(): ProtoEntityInfo {
-    val entity = this
-    return entityInfo {
-        uuid = entity.stringUUID
-        networkId = entity.id
-        type = BuiltInRegistries.ENTITY_TYPE.getKey(entity.type).toString()
-        name = entity.name.string
-        entity.customName?.let { customName = it.string }
-        dimension = entity.level().dimension().identifier().toString()
-        position = entity.position().toProto()
-        rotation = rotationOf(entity.yRot, entity.xRot)
-        velocity = entity.deltaMovement.toProto()
-        onGround = entity.onGround()
-        alive = entity.isAlive
-        tags += entity.entityTags()
+fun Entity.toInfo(): EntityInfo {
+    val living = this as? LivingEntity
 
-        if (entity is LivingEntity) {
-            health = entity.health
-            maxHealth = entity.maxHealth
-        }
-
-        passengers += entity.passengers.map { it.stringUUID }
-        entity.vehicle?.let { vehicle = it.stringUUID }
-    }
+    return EntityInfo(
+        uuid = stringUUID,
+        networkId = id,
+        type = BuiltInRegistries.ENTITY_TYPE.getKey(type).toString(),
+        name = name.string,
+        customName = customName?.string,
+        dimension = level().dimension().identifier().toString(),
+        position = position().toVector(),
+        rotation = Rotation(yRot, xRot),
+        velocity = deltaMovement.toVector(),
+        onGround = onGround(),
+        alive = isAlive,
+        tags = entityTags().toList(),
+        health = living?.health,
+        maxHealth = living?.maxHealth,
+        passengers = passengers.map { it.stringUUID },
+        vehicle = vehicle?.stringUUID,
+    )
 }
 
-fun MobEffectInstance.toProto(): ProtoStatusEffect {
-    val effect = this
-    return statusEffect {
-        id = effect.effect.unwrapKey().getOrNull()?.identifier()?.toString() ?: ""
-        duration = effect.duration
-        amplifier = effect.amplifier
-        ambient = effect.isAmbient
-        visible = effect.isVisible
-        showIcon = effect.showIcon()
-    }
-}
+fun MobEffectInstance.toInfo(): EffectInfo =
+    EffectInfo(
+        id = effect.unwrapKey().getOrNull()?.identifier()?.toString() ?: "",
+        duration = duration,
+        amplifier = amplifier,
+        ambient = isAmbient,
+        visible = isVisible,
+        showIcon = showIcon(),
+    )
 
-fun LevelData.RespawnData.toProto(): SpawnPoint {
-    val data = this
-    return spawnPoint {
-        dimension = data.dimension().identifier().toString()
-        pos = data.pos().toProto()
-        yaw = data.yaw()
-        pitch = data.pitch()
-    }
-}
+fun LevelData.RespawnData.toSpawnPoint(): SpawnPoint =
+    SpawnPoint(
+        dimension = dimension().identifier().toString(),
+        pos = pos().toCoordinates(),
+        yaw = yaw(),
+        pitch = pitch(),
+    )

@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.madkarma.conduit.events.GameEvents;
 
-/** Player, console, command block and gRPC commands all pass through performCommand. */
+/** Player, console, command block and tool commands all pass through performCommand. */
 @Mixin(Commands.class)
 public abstract class CommandsMixin {
     @Inject(method = "performCommand", at = @At("HEAD"))

@@ -9,6 +9,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.Serializable
 import net.minecraft.commands.CommandSource
 import net.minecraft.commands.CommandSourceStack
 import net.minecraft.network.chat.Component
@@ -64,7 +65,7 @@ fun Throwable.asConduitError(): Throwable {
     }
 }
 
-fun MinecraftServer.level(dimension: String): ServerLevel =
+fun MinecraftServer.level(dimension: String?): ServerLevel =
     getLevel(dimensionKey(dimension)) ?: notFound("Unknown dimension: $dimension")
 
 fun MinecraftServer.player(ref: String): ServerPlayer {
@@ -97,7 +98,14 @@ fun permissionSet(level: Int): LevelBasedPermissionSet {
     return LevelBasedPermissionSet.forLevel(PermissionLevel.byId(level))
 }
 
-data class CommandResult(val success: Boolean, val result: Int, val output: List<String>)
+@Serializable
+data class CommandResult(
+    val success: Boolean,
+    /** The command's result value, e.g. the number of affected entities. */
+    val result: Int,
+    /** Feedback messages the command produced. */
+    val output: List<String>,
+)
 
 private class CapturingSource : CommandSource {
     val output = mutableListOf<String>()

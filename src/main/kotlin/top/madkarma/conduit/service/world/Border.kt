@@ -1,79 +1,106 @@
 package top.madkarma.conduit.service.world
 
 import kotlin.math.roundToLong
+import kotlinx.serialization.Serializable
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.border.WorldBorder
 import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.level
-import top.madkarma.conduit.proto.DimensionRef
-import top.madkarma.conduit.proto.SetWorldBorderRequest
-import top.madkarma.conduit.proto.WorldBorderInfo
-import top.madkarma.conduit.proto.worldBorderInfo
 
 private val CENTER_RANGE = -WorldBorder.MAX_CENTER_COORDINATE..WorldBorder.MAX_CENTER_COORDINATE
 private val SIZE_RANGE = 1.0..WorldBorder.MAX_SIZE
 
-internal fun MinecraftServer.worldBorderOf(request: DimensionRef): WorldBorderInfo {
-    val border = level(request.dimension).worldBorder
+@Serializable
+data class WorldBorderInfo(
+    val centerX: Double,
+    val centerZ: Double,
+    /** Current side length in blocks. */
+    val size: Double,
+    /** Size the border is moving towards, or the current size when it is not moving. */
+    val targetSize: Double,
+    /** Time until the border reaches the target size, at the current tick rate. */
+    val remainingTransitionMs: Long,
+    val damagePerBlock: Double,
+    /** Distance outside the border, in blocks, before players take damage. */
+    val damageSafeZone: Double,
+    val warningBlocks: Int,
+    val warningTimeTicks: Int,
+)
+
+/** Null fields stay unchanged. */
+data class WorldBorderChange(
+    val dimension: String?,
+    val centerX: Double? = null,
+    val centerZ: Double? = null,
+    val size: Double? = null,
+    /**
+     * Moves the border from its current size to size over this time, converted to ticks at the
+     * current tick rate. 0 changes it instantly.
+     */
+    val transitionMs: Long = 0,
+    val damagePerBlock: Double? = null,
+    val damageSafeZone: Double? = null,
+    val warningBlocks: Int? = null,
+    val warningTimeTicks: Int? = null,
+)
+
+internal fun MinecraftServer.worldBorderOf(dimension: String?): WorldBorderInfo {
+    val border = level(dimension).worldBorder
     val millisecondsPerTick = tickRateManager().millisecondsPerTick()
 
-    return worldBorderInfo {
-        centerX = border.centerX
-        centerZ = border.centerZ
-        size = border.size
-        targetSize = border.lerpTarget
-        remainingTransitionMs = (border.lerpTime * millisecondsPerTick).roundToLong()
-        damagePerBlock = border.damagePerBlock
-        damageSafeZone = border.safeZone
-        warningBlocks = border.warningBlocks
-        warningTimeTicks = border.warningTime
-    }
+    return WorldBorderInfo(
+        centerX = border.centerX,
+        centerZ = border.centerZ,
+        size = border.size,
+        targetSize = border.lerpTarget,
+        remainingTransitionMs = (border.lerpTime * millisecondsPerTick).roundToLong(),
+        damagePerBlock = border.damagePerBlock,
+        damageSafeZone = border.safeZone,
+        warningBlocks = border.warningBlocks,
+        warningTimeTicks = border.warningTime,
+    )
 }
 
-internal fun MinecraftServer.changeWorldBorder(request: SetWorldBorderRequest) {
-    validateWorldBorder(request)
+internal fun MinecraftServer.changeWorldBorder(change: WorldBorderChange) {
+    validateWorldBorder(change)
 
-    val level = level(request.dimension)
+    val level = level(change.dimension)
     val border = level.worldBorder
 
-    if (request.hasCenterX() || request.hasCenterZ()) {
-        val centerX = if (request.hasCenterX()) request.centerX else border.centerX
-        val centerZ = if (request.hasCenterZ()) request.centerZ else border.centerZ
-        border.setCenter(centerX, centerZ)
+    if (change.centerX != null || change.centerZ != null) {
+        border.setCenter(change.centerX ?: border.centerX, change.centerZ ?: border.centerZ)
     }
 
-    if (request.hasSize()) {
-        val ticks = (request.transitionMs / tickRateManager().millisecondsPerTick()).roundToLong()
+    if (change.size != null) {
+        val ticks = (change.transitionMs / tickRateManager().millisecondsPerTick()).roundToLong()
 
         if (ticks > 0) {
-            border.lerpSizeBetween(border.size, request.size, ticks, level.gameTime)
+            border.lerpSizeBetween(border.size, change.size, ticks, level.gameTime)
         } else {
-            border.size = request.size
+            border.size = change.size
         }
     }
 
-    if (request.hasDamagePerBlock()) border.damagePerBlock = request.damagePerBlock
-    if (request.hasDamageSafeZone()) border.safeZone = request.damageSafeZone
-    if (request.hasWarningBlocks()) border.warningBlocks = request.warningBlocks
-    if (request.hasWarningTimeTicks()) border.warningTime = request.warningTimeTicks
+    change.damagePerBlock?.let { border.damagePerBlock = it }
+    change.damageSafeZone?.let { border.safeZone = it }
+    change.warningBlocks?.let { border.warningBlocks = it }
+    change.warningTimeTicks?.let { border.warningTime = it }
 }
 
-// This checks everything before the first change, so an invalid request changes nothing.
-private fun validateWorldBorder(request: SetWorldBorderRequest) {
-    if (request.hasCenterX()) requireInRange(request.centerX, CENTER_RANGE, "center_x")
-    if (request.hasCenterZ()) requireInRange(request.centerZ, CENTER_RANGE, "center_z")
-    if (request.hasSize()) requireInRange(request.size, SIZE_RANGE, "size")
+// This checks everything before the first change, so an invalid change changes nothing.
+private fun validateWorldBorder(change: WorldBorderChange) {
+    change.centerX?.let { requireInRange(it, CENTER_RANGE, "center_x") }
+    change.centerZ?.let { requireInRange(it, CENTER_RANGE, "center_z") }
+    change.size?.let { requireInRange(it, SIZE_RANGE, "size") }
 
-    if (request.transitionMs < 0) invalidInput("transition_ms must not be negative")
-    if (request.transitionMs > 0 && !request.hasSize()) {
-        invalidInput("transition_ms requires size")
-    }
+    if (change.transitionMs < 0) invalidInput("transition_ms must not be negative")
+    if (change.transitionMs > 0 && change.size == null) invalidInput("transition_ms requires size")
 
-    if (request.hasDamagePerBlock()) requireNonNegative(request.damagePerBlock, "damage_per_block")
-    if (request.hasDamageSafeZone()) requireNonNegative(request.damageSafeZone, "damage_safe_zone")
+    change.damagePerBlock?.let { requireNonNegative(it, "damage_per_block") }
+    change.damageSafeZone?.let { requireNonNegative(it, "damage_safe_zone") }
 
-    if (request.warningBlocks < 0) invalidInput("warning_blocks must not be negative")
-    if (request.warningTimeTicks < 0) invalidInput("warning_time_ticks must not be negative")
+    if ((change.warningBlocks ?: 0) < 0) invalidInput("warning_blocks must not be negative")
+    if ((change.warningTimeTicks ?: 0) < 0) invalidInput("warning_time_ticks must not be negative")
 }
 
 private fun requireInRange(value: Double, range: ClosedRange<Double>, name: String) {

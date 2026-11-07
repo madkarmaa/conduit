@@ -1,4 +1,3 @@
-import com.google.protobuf.gradle.id
 import org.gradle.plugins.ide.eclipse.model.Classpath
 import org.gradle.plugins.ide.eclipse.model.Library
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -8,7 +7,7 @@ plugins {
     `maven-publish`
     eclipse
     id("org.jetbrains.kotlin.jvm") version "2.4.21"
-    id("com.google.protobuf") version "0.10.1"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.4.21"
     id("com.diffplug.spotless") version "8.11.0"
 }
 
@@ -33,7 +32,6 @@ val minecraftVersion = providers.gradleProperty("minecraft_version").get()
 val loaderVersion = providers.gradleProperty("loader_version").get()
 val fabricApiVersion = providers.gradleProperty("fabric_api_version").get()
 val fabricKotlinVersion = providers.gradleProperty("fabric_kotlin_version").get()
-val protobufVersion = providers.gradleProperty("protobuf_version").get()
 
 dependencies {
     // gradle.properties sets the versions.
@@ -44,19 +42,11 @@ dependencies {
     implementation("net.fabricmc.fabric-api:fabric-api:$fabricApiVersion")
     implementation("net.fabricmc:fabric-language-kotlin:$fabricKotlinVersion")
 
-    bundled("com.google.protobuf:protobuf-java:$protobufVersion")
-    bundled("com.google.protobuf:protobuf-kotlin:$protobufVersion")
-
     // Loom's include configuration is not transitive, so this lists every resolved module.
     bundled.resolvedConfiguration.resolvedArtifacts
         .map { it.moduleVersion.id }
         .filter { it.group !in providedGroups }
         .forEach { include("${it.group}:${it.name}:${it.version}") }
-}
-
-protobuf {
-    protoc { artifact = "com.google.protobuf:protoc:$protobufVersion" }
-    generateProtoTasks { all().configureEach { builtins { id("kotlin") } } }
 }
 
 tasks.processResources {
@@ -122,7 +112,7 @@ spotless {
 
     kotlin {
         target("**/*.kt")
-        // Eclipse-based tooling such as jdtls copies the generated proto sources into bin.
+        // Eclipse-based tooling such as jdtls copies the sources into bin.
         targetExclude("**/build/**", "**/bin/**")
 
         ktfmt().configure {

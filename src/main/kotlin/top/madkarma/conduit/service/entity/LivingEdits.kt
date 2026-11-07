@@ -1,5 +1,6 @@
 package top.madkarma.conduit.service.entity
 
+import kotlinx.serialization.Serializable
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
 import net.minecraft.resources.ResourceKey
@@ -8,41 +9,47 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.LivingEntity
-import top.madkarma.conduit.game.entity
-import top.madkarma.conduit.game.failedPrecondition
-import top.madkarma.conduit.game.invalidInput
-import top.madkarma.conduit.game.parseId
-import top.madkarma.conduit.game.toProto
-import top.madkarma.conduit.proto.*
+import top.madkarma.conduit.game.*
 
 private const val DEFAULT_EFFECT_TICKS = 600
+
+@Serializable data class EffectList(val effects: List<EffectInfo>)
+
+@Serializable data class AttributeInfo(val id: String, val base: Double, val value: Double)
+
+@Serializable data class AttributeList(val attributes: List<AttributeInfo>)
 
 internal fun MinecraftServer.living(uuid: String): LivingEntity =
     entity(uuid) as? LivingEntity ?: failedPrecondition("Entity $uuid is not a living entity")
 
-internal fun MinecraftServer.changeHealth(request: SetHealthRequest) {
-    living(request.uuid).health = request.health
+internal fun MinecraftServer.changeHealth(uuid: String, health: Float) {
+    living(uuid).health = health
 }
 
-internal fun MinecraftServer.damage(request: DamageRequest) {
-    val entity = entity(request.uuid)
-    val typeId = request.damageType.ifBlank { "minecraft:generic" }
+/** Hurts the entity like an attack. The attacker is an optional entity UUID. */
+internal fun MinecraftServer.damage(
+    uuid: String,
+    amount: Float,
+    damageType: String?,
+    attacker: String?,
+) {
+    val entity = entity(uuid)
+    val typeId = damageType.orEmpty().ifBlank { "minecraft:generic" }
     val type =
         registryAccess()
             .lookupOrThrow(Registries.DAMAGE_TYPE)
             .get(ResourceKey.create(Registries.DAMAGE_TYPE, parseId(typeId)))
             .orElseGet { invalidInput("Unknown damage type: $typeId") }
-    val attacker = if (request.hasAttacker()) entity(request.attacker) else null
+    val source = DamageSource(type, attacker?.let { entity(it) })
 
-    entity.hurtServer(entity.level() as ServerLevel, DamageSource(type, attacker), request.amount)
+    entity.hurtServer(entity.level() as ServerLevel, source, amount)
 }
 
-internal fun MinecraftServer.effectsOf(request: EntityRef): EffectList = effectList {
-    effects += living(request.uuid).activeEffects.map { it.toProto() }
-}
+internal fun MinecraftServer.effectsOf(uuid: String): EffectList =
+    EffectList(living(uuid).activeEffects.map { it.toInfo() })
 
-internal fun MinecraftServer.addEffect(request: AddEffectRequest) {
-    val effect = request.effect
+/** A duration of 0 ticks means 30 seconds, and -1 means infinite. */
+internal fun MinecraftServer.addEffect(uuid: String, effect: EffectInfo) {
     val holder =
         BuiltInRegistries.MOB_EFFECT.get(parseId(effect.id)).orElseGet {
             invalidInput("Unknown effect: ${effect.id}")
@@ -58,20 +65,21 @@ internal fun MinecraftServer.addEffect(request: AddEffectRequest) {
             effect.showIcon,
         )
 
-    living(request.uuid).addEffect(instance)
+    living(uuid).addEffect(instance)
 }
 
-internal fun MinecraftServer.removeEffect(request: RemoveEffectRequest) {
-    val entity = living(request.uuid)
+/** A null effect clears all effects. */
+internal fun MinecraftServer.removeEffect(uuid: String, effect: String?) {
+    val entity = living(uuid)
 
-    if (request.effect.isBlank()) {
+    if (effect.isNullOrBlank()) {
         entity.removeAllEffects()
         return
     }
 
     val holder =
-        BuiltInRegistries.MOB_EFFECT.get(parseId(request.effect)).orElseGet {
-            invalidInput("Unknown effect: ${request.effect}")
+        BuiltInRegistries.MOB_EFFECT.get(parseId(effect)).orElseGet {
+            invalidInput("Unknown effect: $effect")
         }
 
     entity.removeEffect(holder)
@@ -80,28 +88,24 @@ internal fun MinecraftServer.removeEffect(request: RemoveEffectRequest) {
 internal fun MinecraftServer.attributesOf(uuid: String): AttributeList {
     val entity = living(uuid)
 
-    return attributeList {
-        BuiltInRegistries.ATTRIBUTE.listElements().forEach { holder ->
-            val instance = entity.getAttribute(holder) ?: return@forEach
-
-            attributes += attribute {
-                id = holder.key().identifier().toString()
-                base = instance.baseValue
-                value = instance.value
-            }
+    val attributes =
+        BuiltInRegistries.ATTRIBUTE.listElements().toList().mapNotNull { holder ->
+            val instance = entity.getAttribute(holder) ?: return@mapNotNull null
+            AttributeInfo(holder.key().identifier().toString(), instance.baseValue, instance.value)
         }
-    }
+
+    return AttributeList(attributes)
 }
 
-internal fun MinecraftServer.changeAttributeBase(request: SetAttributeBaseRequest) {
+internal fun MinecraftServer.changeAttributeBase(uuid: String, attribute: String, base: Double) {
     val holder =
-        BuiltInRegistries.ATTRIBUTE.get(parseId(request.attribute)).orElseGet {
-            invalidInput("Unknown attribute: ${request.attribute}")
+        BuiltInRegistries.ATTRIBUTE.get(parseId(attribute)).orElseGet {
+            invalidInput("Unknown attribute: $attribute")
         }
 
     val instance =
-        living(request.uuid).getAttribute(holder)
-            ?: failedPrecondition("Entity has no attribute ${request.attribute}")
+        living(uuid).getAttribute(holder)
+            ?: failedPrecondition("Entity has no attribute $attribute")
 
-    instance.baseValue = request.base
+    instance.baseValue = base
 }

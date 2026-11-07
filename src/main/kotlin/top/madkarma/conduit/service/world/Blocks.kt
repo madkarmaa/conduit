@@ -1,5 +1,7 @@
 package top.madkarma.conduit.service.world
 
+import kotlin.jvm.optionals.getOrNull
+import kotlinx.serialization.Serializable
 import net.minecraft.core.BlockPos
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.TagParser
@@ -10,60 +12,71 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.storage.TagValueInput
 import top.madkarma.conduit.game.*
-import top.madkarma.conduit.game.invalidInput
-import top.madkarma.conduit.game.notFound
-import top.madkarma.conduit.proto.*
-import top.madkarma.conduit.proto.BlockPos as ProtoBlockPos
 
-internal fun MinecraftServer.readBlock(request: GetBlockRequest): BlockInfo {
-    val level = level(request.dimension)
-    val position = request.pos.toMc()
+@Serializable
+data class BlockDetails(
+    val pos: BlockCoordinates,
+    val state: BlockStateInfo,
+    val hasBlockEntity: Boolean,
+    val loaded: Boolean,
+    val biome: String,
+    /** SNBT of the block entity, such as a chest or sign, if the block has one. */
+    val blockEntity: String?,
+)
 
-    return blockInfo {
-        this.pos = request.pos
-        state = level.getBlockState(position).toProto()
-        hasBlockEntity = level.getBlockEntity(position) != null
-        loaded = level.isLoaded(position)
+@Serializable data class BlockChange(val pos: BlockCoordinates, val state: String)
+
+internal fun MinecraftServer.describeBlock(
+    dimension: String?,
+    pos: BlockCoordinates,
+): BlockDetails {
+    val level = level(dimension)
+    val position = pos.toMc()
+    val blockEntity = level.getBlockEntity(position)
+
+    return BlockDetails(
+        pos = pos,
+        state = level.getBlockState(position).toInfo(),
+        hasBlockEntity = blockEntity != null,
+        loaded = level.isLoaded(position),
+        biome = level.getBiome(position).unwrapKey().getOrNull()?.identifier()?.toString() ?: "",
+        blockEntity = blockEntity?.saveWithFullMetadata(registryAccess())?.toString(),
+    )
+}
+
+/** Places the block states in one tick and returns how many blocks changed. */
+internal fun MinecraftServer.writeBlocks(
+    dimension: String?,
+    changes: List<BlockChange>,
+    noUpdates: Boolean,
+): Int {
+    val level = level(dimension)
+    val parsed = HashMap<String, ParsedBlock>()
+
+    return changes.count { change ->
+        val block = parsed.getOrPut(change.state) { parseBlock(registryAccess(), change.state) }
+        place(level, change.pos.toMc(), block, updateFlags(noUpdates))
     }
 }
 
-internal fun MinecraftServer.writeBlock(request: SetBlockRequest) {
-    val block = parseBlock(registryAccess(), request.state)
-    place(level(request.dimension), request.pos.toMc(), block, updateFlags(request.noUpdates))
+internal fun MinecraftServer.breakBlock(
+    dimension: String?,
+    pos: BlockCoordinates,
+    dropItems: Boolean,
+) {
+    level(dimension).destroyBlock(pos.toMc(), dropItems)
 }
 
-internal fun MinecraftServer.writeBlocks(request: SetBlocksRequest): SetBlocksResponse {
-    val level = level(request.dimension)
-    val parsed = HashMap<String, ParsedBlock>()
-
-    val changed =
-        request.changesList.count { change ->
-            val block = parsed.getOrPut(change.state) { parseBlock(registryAccess(), change.state) }
-            place(level, change.pos.toMc(), block, updateFlags(request.noUpdates))
-        }
-
-    return setBlocksResponse { this.changed = changed }
-}
-
-internal fun MinecraftServer.breakBlock(request: BreakBlockRequest) {
-    level(request.dimension).destroyBlock(request.pos.toMc(), request.dropItems)
-}
-
-internal fun MinecraftServer.readBlockEntity(request: GetBlockRequest): Nbt {
-    val blockEntity = blockEntityAt(level(request.dimension), request.pos)
-    return nbt { snbt = blockEntity.saveWithFullMetadata(registryAccess()).toString() }
-}
-
-internal fun MinecraftServer.mergeBlockEntity(request: SetBlockEntityRequest) {
-    val level = level(request.dimension)
-    val blockEntity = blockEntityAt(level, request.pos)
+internal fun MinecraftServer.mergeBlockEntity(
+    dimension: String?,
+    pos: BlockCoordinates,
+    snbt: String,
+) {
+    val level = level(dimension)
+    val blockEntity = blockEntityAt(level, pos)
 
     val merged =
-        blockEntity
-            .saveWithoutMetadata(
-                registryAccess(),
-            )
-            .merge(TagParser.parseCompoundFully(request.snbt))
+        blockEntity.saveWithoutMetadata(registryAccess()).merge(TagParser.parseCompoundFully(snbt))
 
     loadBlockEntity(level, blockEntity, merged)
 }
@@ -74,11 +87,7 @@ internal fun MinecraftServer.place(
     block: ParsedBlock,
     flags: Int,
 ): Boolean {
-    if (
-        !level.isInWorldBounds(
-            position,
-        )
-    ) {
+    if (!level.isInWorldBounds(position)) {
         invalidInput("Position ${position.x} ${position.y} ${position.z} is outside the world")
     }
 
@@ -108,7 +117,7 @@ private fun MinecraftServer.loadBlockEntity(
     level.sendBlockUpdated(blockEntity.blockPos, state, state, Block.UPDATE_ALL)
 }
 
-private fun blockEntityAt(level: ServerLevel, position: ProtoBlockPos): BlockEntity =
+private fun blockEntityAt(level: ServerLevel, position: BlockCoordinates): BlockEntity =
     level.getBlockEntity(position.toMc())
         ?: notFound("No block entity at ${position.x} ${position.y} ${position.z}")
 

@@ -1,19 +1,34 @@
 package top.madkarma.conduit.service.registry
 
 import kotlin.jvm.optionals.getOrNull
+import kotlinx.serialization.Serializable
 import net.minecraft.core.HolderLookup
 import net.minecraft.core.Registry
 import net.minecraft.resources.Identifier
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.MinecraftServer
 import net.minecraft.tags.TagKey
-import top.madkarma.conduit.game.invalidInput
-import top.madkarma.conduit.game.notFound
-import top.madkarma.conduit.game.parseId
-import top.madkarma.conduit.proto.*
+import top.madkarma.conduit.game.*
 
 private const val DEFAULT_PAGE_SIZE = 1000
 private const val MAX_PAGE_SIZE = 10000
+
+@Serializable
+data class RegistryInfo(
+    /** Registry id, e.g. "minecraft:block" or "minecraft:worldgen/biome". */
+    val id: String,
+    val entryCount: Int,
+)
+
+@Serializable
+data class TagInfo(
+    /** Tag id without "#", e.g. "minecraft:logs". */
+    val id: String,
+    val entries: List<String>,
+)
+
+/** One page of ids, with the number of matching ids before paging. */
+@Serializable data class IdPage(val total: Int, val ids: List<String>)
 
 internal fun requireId(id: String, kind: String): Identifier {
     if (id.isBlank()) invalidInput("A $kind id is required")
@@ -27,48 +42,40 @@ internal fun <T> List<T>.page(offset: Int, limit: Int): List<T> {
     return drop(offset).take(if (limit == 0) DEFAULT_PAGE_SIZE else limit)
 }
 
-internal fun MinecraftServer.describeRegistries(): RegistryList {
+internal fun MinecraftServer.describeRegistries(): List<RegistryInfo> {
     val lookups =
         registryAccess().listRegistries().toList() +
             reloadableRegistries().lookup().listRegistries().toList()
 
     val infos = lookups.map { lookup ->
-        registryInfo {
-            id = lookup.key().identifier().toString()
-            entryCount = lookup.listElementIds().count().toInt()
-        }
+        RegistryInfo(lookup.key().identifier().toString(), lookup.listElementIds().count().toInt())
     }
 
-    return registryList { registries += infos.distinctBy { it.id }.sortedBy { it.id } }
+    return infos.distinctBy { it.id }.sortedBy { it.id }
 }
 
+/**
+ * Entry ids of a registry in id order, filtered by a case-insensitive substring and optionally by a
+ * tag such as "#minecraft:logs".
+ */
 internal fun MinecraftServer.readRegistryEntries(
-    request: ListRegistryEntriesRequest,
-): RegistryEntryList {
-    val ids =
-        memberIds(request.registry, request.tag).filter {
-            it.contains(
-                request.filter,
-                ignoreCase = true,
-            )
-        }
-
-    return registryEntryList {
-        total = ids.size
-        entries += ids.page(request.offset, request.limit).map { registryEntry { id = it } }
-    }
+    registry: String,
+    filter: String,
+    tag: String?,
+    offset: Int,
+    limit: Int,
+): IdPage {
+    val ids = memberIds(registry, tag.orEmpty()).filter { it.contains(filter, ignoreCase = true) }
+    return IdPage(ids.size, ids.page(offset, limit))
 }
 
-internal fun MinecraftServer.readTags(request: ListTagsRequest): TagList {
+internal fun MinecraftServer.readTags(registry: String): List<TagInfo> {
     val tags =
-        taggedRegistry(request.registry).getTags().map { named ->
-            tag {
-                id = named.key().location().toString()
-                entries += named.map { it.registeredName }.sorted()
-            }
+        taggedRegistry(registry).getTags().map { named ->
+            TagInfo(named.key().location().toString(), named.map { it.registeredName }.sorted())
         }
 
-    return tagList { this.tags += tags.toList().sortedBy { it.id } }
+    return tags.toList().sortedBy { it.id }
 }
 
 private fun MinecraftServer.memberIds(registryId: String, tag: String): List<String> {

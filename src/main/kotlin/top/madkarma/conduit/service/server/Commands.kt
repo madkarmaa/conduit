@@ -5,40 +5,35 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.phys.Vec2
 import top.madkarma.conduit.game.*
-import top.madkarma.conduit.game.invalidInput
-import top.madkarma.conduit.proto.BroadcastRequest
-import top.madkarma.conduit.proto.ExecuteCommandRequest
-import top.madkarma.conduit.proto.ExecuteCommandResponse
-import top.madkarma.conduit.proto.executeCommandResponse
 
 private const val OWNER_PERMISSION_LEVEL = 4
 
-internal fun MinecraftServer.executeCommand(
-    request: ExecuteCommandRequest,
-): ExecuteCommandResponse {
+data class CommandRequest(
+    /** Command with or without the leading slash. */
+    val command: String,
+    /** Player name or UUID, or entity UUID to run as. Null runs as the server console. */
+    val runAs: String? = null,
+    val dimension: String? = null,
+    val position: Vector3? = null,
+    val rotation: Rotation? = null,
+    val permissionLevel: Int = OWNER_PERMISSION_LEVEL,
+)
+
+internal fun MinecraftServer.executeCommand(request: CommandRequest): CommandResult {
     if (request.command.isBlank()) invalidInput("Command must not be empty")
 
-    val result = runCommand(request.command, commandSource(request))
-
-    return executeCommandResponse {
-        success = result.success
-        this.result = result.result
-        output += result.output
-    }
+    return runCommand(request.command, commandSource(request))
 }
 
-internal fun MinecraftServer.broadcast(request: BroadcastRequest) {
-    playerList.broadcastSystemMessage(
-        request.message.toComponent(registryAccess()),
-        request.overlay,
-    )
+internal fun MinecraftServer.broadcast(message: String, overlay: Boolean) {
+    playerList.broadcastSystemMessage(textComponent(message, registryAccess()), overlay)
 }
 
-private fun MinecraftServer.commandSource(request: ExecuteCommandRequest): CommandSourceStack {
+private fun MinecraftServer.commandSource(request: CommandRequest): CommandSourceStack {
     var source = createCommandSourceStack()
 
-    if (request.hasAs()) {
-        val entity = entityOrPlayer(request.`as`)
+    if (request.runAs != null) {
+        val entity = entityOrPlayer(request.runAs)
 
         source =
             source
@@ -48,12 +43,9 @@ private fun MinecraftServer.commandSource(request: ExecuteCommandRequest): Comma
                 .withLevel(entity.level() as ServerLevel)
     }
 
-    if (request.hasDimension()) source = source.withLevel(level(request.dimension))
-    if (request.hasPosition()) source = source.withPosition(request.position.toMc())
-    if (request.hasRotation()) source = source.withRotation(request.rotation.toVec2())
+    if (request.dimension != null) source = source.withLevel(level(request.dimension))
+    if (request.position != null) source = source.withPosition(request.position.toMc())
+    if (request.rotation != null) source = source.withRotation(request.rotation.toVec2())
 
-    val permissionLevel =
-        if (request.hasPermissionLevel()) request.permissionLevel else OWNER_PERMISSION_LEVEL
-
-    return source.withPermission(permissionSet(permissionLevel))
+    return source.withPermission(permissionSet(request.permissionLevel))
 }

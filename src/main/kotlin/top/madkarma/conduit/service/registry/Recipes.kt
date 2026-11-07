@@ -2,6 +2,7 @@ package top.madkarma.conduit.service.registry
 
 import com.mojang.serialization.JsonOps
 import kotlin.jvm.optionals.getOrNull
+import kotlinx.serialization.Serializable
 import net.minecraft.core.HolderLookup
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
@@ -13,28 +14,39 @@ import net.minecraft.world.item.crafting.BrewingRecipe
 import net.minecraft.world.item.crafting.Recipe
 import net.minecraft.world.item.crafting.RecipeHolder
 import net.minecraft.world.item.crafting.display.SlotDisplay
+import top.madkarma.conduit.game.ItemInfo
 import top.madkarma.conduit.game.notFound
-import top.madkarma.conduit.game.toProto
-import top.madkarma.conduit.proto.ListRecipesRequest
-import top.madkarma.conduit.proto.Recipe as ProtoRecipe
-import top.madkarma.conduit.proto.RecipeList
-import top.madkarma.conduit.proto.recipe
-import top.madkarma.conduit.proto.recipeList
+import top.madkarma.conduit.game.toInfo
 
-internal fun MinecraftServer.readRecipes(request: ListRecipesRequest): RecipeList {
+@Serializable
+data class RecipeInfo(
+    val id: String,
+    val type: String,
+    val group: String,
+    /** Set when the result does not depend on the crafting input. */
+    val result: ItemInfo?,
+    /** The full recipe in the datapack JSON format. */
+    val json: String,
+)
+
+@Serializable data class RecipePage(val total: Int, val recipes: List<RecipeInfo>)
+
+/**
+ * Recipes in id order, optionally only of one type as in the recipe JSON, such as
+ * "minecraft:smelting", or only those producing one item.
+ */
+internal fun MinecraftServer.readRecipes(
+    type: String?,
+    resultItem: String?,
+    offset: Int,
+    limit: Int,
+): RecipePage {
     val serializer =
-        request.type
-            .ifBlank { null }
-            ?.let {
-                BuiltInRegistries.RECIPE_SERIALIZER.requireValue(it, "recipe type")
-            }
+        type
+            ?.ifBlank { null }
+            ?.let { BuiltInRegistries.RECIPE_SERIALIZER.requireValue(it, "recipe type") }
 
-    val item =
-        request.resultItem
-            .ifBlank { null }
-            ?.let {
-                BuiltInRegistries.ITEM.requireValue(it, "item")
-            }
+    val item = resultItem?.ifBlank { null }?.let { BuiltInRegistries.ITEM.requireValue(it, "item") }
 
     val matching =
         recipeManager.recipes
@@ -43,17 +55,14 @@ internal fun MinecraftServer.readRecipes(request: ListRecipesRequest): RecipeLis
             .sortedBy { it.id().identifier().toString() }
 
     val registries = registryAccess()
-    return recipeList {
-        total = matching.size
-        recipes += matching.page(request.offset, request.limit).map { it.toProto(registries) }
-    }
+    return RecipePage(matching.size, matching.page(offset, limit).map { it.toInfo(registries) })
 }
 
-internal fun MinecraftServer.readRecipe(id: String): ProtoRecipe {
+internal fun MinecraftServer.readRecipe(id: String): RecipeInfo {
     val key = ResourceKey.create(Registries.RECIPE, requireId(id, "recipe"))
     val holder = recipeManager.byKey(key).getOrNull() ?: notFound("Unknown recipe: $id")
 
-    return holder.toProto(registryAccess())
+    return holder.toInfo(registryAccess())
 }
 
 private fun <T : Any> Registry<T>.requireValue(id: String, kind: String): T {
@@ -61,21 +70,19 @@ private fun <T : Any> Registry<T>.requireValue(id: String, kind: String): T {
     return holder.value()
 }
 
-private fun RecipeHolder<*>.toProto(registries: HolderLookup.Provider): ProtoRecipe {
+private fun RecipeHolder<*>.toInfo(registries: HolderLookup.Provider): RecipeInfo {
     val recipeId = id().identifier().toString()
     val definition = value()
     val resultStack = definition.fixedResult()
     val context = registries.createSerializationContext(JsonOps.INSTANCE)
 
-    return recipe {
-        id = recipeId
-        type = BuiltInRegistries.RECIPE_SERIALIZER.getKey(definition.serializer).toString()
-        group = definition.group()
-
-        if (resultStack != null) result = resultStack.toProto(registries)
-
-        json = Recipe.DIRECT_CODEC.encodeStart(context, definition).getOrThrow().toString()
-    }
+    return RecipeInfo(
+        id = recipeId,
+        type = BuiltInRegistries.RECIPE_SERIALIZER.getKey(definition.serializer).toString(),
+        group = definition.group(),
+        result = resultStack?.toInfo(registries),
+        json = Recipe.DIRECT_CODEC.encodeStart(context, definition).getOrThrow().toString(),
+    )
 }
 
 // Special recipes, such as firework rockets, compute their result from the crafting input.

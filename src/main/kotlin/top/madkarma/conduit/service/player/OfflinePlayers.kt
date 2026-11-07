@@ -1,57 +1,69 @@
 package top.madkarma.conduit.service.player
 
 import java.util.*
+import kotlinx.serialization.Serializable
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.TagParser
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.ProblemReporter
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.storage.TagValueInput
-import top.madkarma.conduit.game.failedPrecondition
-import top.madkarma.conduit.game.invalidInput
-import top.madkarma.conduit.game.toMc
-import top.madkarma.conduit.proto.*
+import top.madkarma.conduit.game.*
 import top.madkarma.conduit.service.entity.saveEntity
 
-internal fun MinecraftServer.offlinePlayer(request: PlayerRef): OfflinePlayerInfo {
-    val id = resolvePlayerId(request.player)
+// Saved player data works for offline players too. Reads of online players return their live
+// data. Edits of online or joining players fail, and the others take effect at the next login.
+
+@Serializable
+data class KnownPlayer(
+    val uuid: String,
+    /** Last known name, empty if the server does not know it. */
+    val name: String,
+    /** Unix milliseconds of the last save, or the current time for online players. */
+    val lastPlayed: Long,
+    val online: Boolean,
+)
+
+internal fun MinecraftServer.offlinePlayer(ref: String): OfflinePlayerInfo {
+    val id = resolvePlayerId(ref)
     return describePlayerData(id, currentPlayerData(id), ProblemReporter.DISCARDING)
 }
 
-internal fun MinecraftServer.offlinePlayerNbt(request: PlayerRef): Nbt = nbt {
-    snbt = currentPlayerData(resolvePlayerId(request.player)).toString()
+/** The full saved data as SNBT, updated to the current game version. */
+internal fun MinecraftServer.offlinePlayerNbt(ref: String): String =
+    currentPlayerData(resolvePlayerId(ref)).toString()
+
+/** Merges SNBT into the saved data, like /data merge. */
+internal fun MinecraftServer.mergeOfflinePlayerNbt(ref: String, snbt: String) {
+    val patch = TagParser.parseCompoundFully(snbt)
+    editPlayerData(ref) { it.merge(patch) }
 }
 
-internal fun MinecraftServer.mergeOfflinePlayerNbt(request: MergeOfflinePlayerNbtRequest) {
-    val patch = TagParser.parseCompoundFully(request.snbt)
-    editPlayerData(request.player) { it.merge(patch) }
-}
-
-internal fun MinecraftServer.changeOfflineInventorySlot(request: SetInventorySlotRequest) {
-    if (request.slot !in 0 until INVENTORY_SLOTS) {
-        invalidInput("Slot ${request.slot} is out of range")
-    }
+/** Uses the same slot numbers as the online inventory. A null item empties the slot. */
+internal fun MinecraftServer.changeOfflineInventorySlot(ref: String, slot: Int, item: ItemInfo?) {
+    if (slot !in 0 until INVENTORY_SLOTS) invalidInput("Slot $slot is out of range")
 
     val registries = registryAccess()
-    val stack = request.item.toMc(registries)
+    val stack = item?.toMc(registries) ?: ItemStack.EMPTY
 
-    editPlayerData(request.player) { data ->
+    editPlayerData(ref) { data ->
         val input = TagValueInput.create(ProblemReporter.DISCARDING, registries, data)
         val inventory = readInventory(input)
-        inventory.setItem(request.slot, stack)
+        inventory.setItem(slot, stack)
         writeInventory(data, inventory, registries)
     }
 }
 
-internal fun MinecraftServer.listKnownPlayers(): KnownPlayerList = knownPlayerList {
-    for (id in knownPlayerIds()) {
-        players += knownPlayer {
-            uuid = id.toString()
-            name = lastKnownName(id)
-            lastPlayed = lastPlayed(id)
-            online = isOnline(id)
-        }
+/** Every player with saved data. */
+internal fun MinecraftServer.listKnownPlayers(): List<KnownPlayer> =
+    knownPlayerIds().map { id ->
+        KnownPlayer(
+            uuid = id.toString(),
+            name = lastKnownName(id),
+            lastPlayed = lastPlayed(id),
+            online = isOnline(id),
+        )
     }
-}
 
 // Reads save online players first, so they always see the current state.
 private fun MinecraftServer.currentPlayerData(id: UUID): CompoundTag =

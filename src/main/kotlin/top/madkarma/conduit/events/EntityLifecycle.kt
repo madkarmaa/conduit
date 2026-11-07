@@ -1,64 +1,36 @@
 package top.madkarma.conduit.events
 
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents
+import kotlinx.serialization.Serializable
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.entity.Entity
-import top.madkarma.conduit.game.toProto
-import top.madkarma.conduit.proto.*
+import top.madkarma.conduit.game.EntityInfo
+import top.madkarma.conduit.game.toInfo
 
-/** Publishes EVENT_TYPE_ENTITY_SPAWN and EVENT_TYPE_ENTITY_REMOVE. */
+// Item entities and experience orbs come and go constantly, and player events already cover
+// players.
+private val IGNORED_TYPES = setOf("minecraft:item", "minecraft:experience_orb", "minecraft:player")
+
+/** A new entity was added to the world. Entities that load with their chunk are not reported. */
+@Serializable
+data class EntitySpawnEvent(
+    val entity: EntityInfo,
+    /**
+     * How a mob or other entity type was created, e.g. "natural", "breeding" or "command". Not set
+     * for entities the game creates directly, such as projectiles.
+     */
+    val spawnReason: String?,
+)
+
+/** Publishes ENTITY_SPAWN. */
 object EntityLifecycle {
-    fun register() {
-        ServerEntityEvents.ENTITY_UNLOAD.register { entity, _ ->
-            if (!EventBus.wants(EventType.EVENT_TYPE_ENTITY_REMOVE)) return@register
-
-            val type = typeOf(entity)
-            EventBus.publish(
-                EventType.EVENT_TYPE_ENTITY_REMOVE,
-                accepts = { it.wantsEntityType(type) },
-            ) {
-                entityRemove = removePayload(entity)
-            }
-        }
-    }
-
     // Called from the fresh entity mixin, only for entities that were actually added.
     @JvmStatic
     fun onEntitySpawned(entity: Entity) {
-        if (!EventBus.wants(EventType.EVENT_TYPE_ENTITY_SPAWN)) return
+        if (!EventBus.wants()) return
+        if (BuiltInRegistries.ENTITY_TYPE.getKey(entity.type).toString() in IGNORED_TYPES) return
 
-        val type = typeOf(entity)
-        EventBus.publish(
-            EventType.EVENT_TYPE_ENTITY_SPAWN,
-            accepts = { it.wantsEntityType(type) },
-        ) {
-            entitySpawn = spawnPayload(entity)
+        EventBus.publish(EventType.ENTITY_SPAWN) {
+            EntitySpawnEvent(entity.toInfo(), entity.spawnReason()?.name?.lowercase())
         }
     }
-
-    private fun typeOf(entity: Entity): String =
-        BuiltInRegistries.ENTITY_TYPE.getKey(entity.type).toString()
-
-    private fun spawnPayload(entity: Entity): EntitySpawnEvent = entitySpawnEvent {
-        this.entity = entity.toProto()
-        entity.spawnReason()?.let { spawnReason = it.name.lowercase() }
-    }
-
-    private fun removePayload(entity: Entity): EntityRemoveEvent = entityRemoveEvent {
-        this.entity = entity.toProto()
-        reason = removalReasonOf(entity)
-    }
-
-    // The game stops tracking entities as soon as their chunk becomes inaccessible, and only sets
-    // UNLOADED_TO_CHUNK later when it saves the chunk, so a missing reason means the same thing.
-    private fun removalReasonOf(entity: Entity): RemovalReason =
-        when (entity.removalReason) {
-            Entity.RemovalReason.KILLED -> RemovalReason.REMOVAL_REASON_KILLED
-            Entity.RemovalReason.DISCARDED -> RemovalReason.REMOVAL_REASON_DISCARDED
-            Entity.RemovalReason.UNLOADED_TO_CHUNK,
-            null -> RemovalReason.REMOVAL_REASON_UNLOADED_TO_CHUNK
-            Entity.RemovalReason.UNLOADED_WITH_PLAYER ->
-                RemovalReason.REMOVAL_REASON_UNLOADED_WITH_PLAYER
-            Entity.RemovalReason.CHANGED_DIMENSION -> RemovalReason.REMOVAL_REASON_CHANGED_DIMENSION
-        }
 }

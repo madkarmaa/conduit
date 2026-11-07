@@ -1,18 +1,33 @@
 package top.madkarma.conduit.events
 
+import kotlinx.serialization.Serializable
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.Container
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.RecipeCraftingHolder
 import net.minecraft.world.item.ItemStack
-import top.madkarma.conduit.game.toProto
-import top.madkarma.conduit.proto.EventType
-import top.madkarma.conduit.proto.ItemCraftEvent
-import top.madkarma.conduit.proto.itemCraftEvent
+import top.madkarma.conduit.game.ItemInfo
+import top.madkarma.conduit.game.toInfo
 
 /**
- * Publishes EVENT_TYPE_ITEM_CRAFT and EVENT_TYPE_ITEM_SMELT. Shift-clicking a result slot takes one
- * batch after another within a single click, so this adds up the batches until the click ends.
+ * A player took the result out of a crafting grid or a furnace, blast furnace or smoker. Several
+ * batches taken with one shift-click are one event with the total.
+ */
+@Serializable
+data class ItemCraftEvent(
+    val player: String,
+    val playerUuid: String,
+    /** The item taken, with the total count. */
+    val result: ItemInfo,
+    /** Recipe used, e.g. "minecraft:crafting_table". Not set for smelting. */
+    val recipeId: String?,
+    /** Number of items taken. */
+    val count: Int,
+)
+
+/**
+ * Publishes ITEM_CRAFT and ITEM_SMELT. Shift-clicking a result slot takes one batch after another
+ * within a single click, so this adds up the batches until the click ends.
  */
 object CraftedItems {
     private class Take(
@@ -52,19 +67,19 @@ object CraftedItems {
     // Called from the crafting result slot mixin.
     @JvmStatic
     fun onCrafted(player: Player, result: ItemStack, count: Int, resultContainer: Container) {
-        if (player !is ServerPlayer || !EventBus.wants(EventType.EVENT_TYPE_ITEM_CRAFT)) return
+        if (player !is ServerPlayer || !EventBus.wants()) return
 
         val recipe = (resultContainer as? RecipeCraftingHolder)?.recipeUsed
         val recipeId = recipe?.id()?.identifier()?.toString()
-        add(Take(EventType.EVENT_TYPE_ITEM_CRAFT, player, result.copyWithCount(count), recipeId))
+        add(Take(EventType.ITEM_CRAFT, player, result.copyWithCount(count), recipeId))
     }
 
     // Called from the furnace result slot mixin.
     @JvmStatic
     fun onSmelted(player: Player, result: ItemStack, count: Int) {
-        if (player !is ServerPlayer || !EventBus.wants(EventType.EVENT_TYPE_ITEM_SMELT)) return
+        if (player !is ServerPlayer || !EventBus.wants()) return
 
-        add(Take(EventType.EVENT_TYPE_ITEM_SMELT, player, result.copyWithCount(count), null))
+        add(Take(EventType.ITEM_SMELT, player, result.copyWithCount(count), null))
     }
 
     private fun add(take: Take) {
@@ -83,20 +98,15 @@ object CraftedItems {
         val take = pendingTake ?: return
         pendingTake = null
 
-        EventBus.publish(take.type, accepts = { it.wantsPlayer(take.player) }) {
-            if (take.type == EventType.EVENT_TYPE_ITEM_CRAFT) {
-                itemCraft = craftPayload(take)
-            } else {
-                itemSmelt = craftPayload(take)
-            }
-        }
+        EventBus.publish(take.type) { craftPayload(take) }
     }
 
-    private fun craftPayload(take: Take): ItemCraftEvent = itemCraftEvent {
-        player = take.player.gameProfile.name
-        playerUuid = take.player.stringUUID
-        result = take.result.toProto(take.player.registryAccess())
-        take.recipeId?.let { recipeId = it }
-        count = take.result.count
-    }
+    private fun craftPayload(take: Take) =
+        ItemCraftEvent(
+            player = take.player.gameProfile.name,
+            playerUuid = take.player.stringUUID,
+            result = take.result.toInfo(take.player.registryAccess()),
+            recipeId = take.recipeId,
+            count = take.result.count,
+        )
 }

@@ -13,80 +13,64 @@ import net.minecraft.world.entity.Relative
 import net.minecraft.world.level.storage.TagValueInput
 import net.minecraft.world.level.storage.TagValueOutput
 import top.madkarma.conduit.game.*
-import top.madkarma.conduit.game.failedPrecondition
-import top.madkarma.conduit.proto.*
 
-internal fun MinecraftServer.removeEntity(request: RemoveEntityRequest) {
-    val entity = entity(request.uuid)
+/** Removes an entity without a trace, or kills it, with loot and death effects. */
+internal fun MinecraftServer.removeEntity(uuid: String, kill: Boolean) {
+    val entity = entity(uuid)
 
     when {
-        request.kill -> entity.kill(entity.level() as ServerLevel)
+        kill -> entity.kill(entity.level() as ServerLevel)
 
         entity is ServerPlayer ->
-            failedPrecondition(
-                "Players cannot be discarded; use kill or PlayerService.Kick",
-            )
+            failedPrecondition("Players cannot be removed; kill them or use the kick action")
 
         else -> entity.discard()
     }
 }
 
-internal fun MinecraftServer.teleportEntity(request: TeleportRequest): EntityInfo {
-    val entity = entity(request.uuid)
-    val current = entity.level() as ServerLevel
-    val level = if (request.dimension.isBlank()) current else level(request.dimension)
-    val yaw = if (request.hasRotation()) request.rotation.yaw else entity.yRot
-    val pitch = if (request.hasRotation()) request.rotation.pitch else entity.xRot
-    val position = request.position
+/** Moves an entity, players included, also across dimensions. Null keeps the dimension. */
+internal fun MinecraftServer.teleportEntity(
+    uuid: String,
+    dimension: String?,
+    position: Vector3,
+    rotation: Rotation?,
+): EntityInfo {
+    val entity = entity(uuid)
+    val level = if (dimension.isNullOrBlank()) entity.level() as ServerLevel else level(dimension)
+    val yaw = rotation?.yaw ?: entity.yRot
+    val pitch = rotation?.pitch ?: entity.xRot
 
     if (entity !is ServerPlayer) requireEntityTicking(level, position.toMc())
 
     if (
-        !entity.teleportTo(
-            level,
-            position.x,
-            position.y,
-            position.z,
-            emptySet(),
-            yaw,
-            pitch,
-            true,
-        )
+        !entity.teleportTo(level, position.x, position.y, position.z, emptySet(), yaw, pitch, true)
     ) {
         failedPrecondition("Teleport was rejected")
     }
 
     // The game recreates entities other than players when they change dimension.
-    return entity(request.uuid).toProto()
+    return entity(uuid).toInfo()
 }
 
-internal fun MinecraftServer.changeVelocity(request: SetVelocityRequest) {
-    val entity = entity(request.uuid)
-    val velocity = request.velocity.toMc()
+/** Sets the velocity in blocks per tick, or adds to the current velocity. */
+internal fun MinecraftServer.changeVelocity(uuid: String, velocity: Vector3, add: Boolean) {
+    val entity = entity(uuid)
+    val change = velocity.toMc()
 
-    entity.deltaMovement = if (request.add) entity.deltaMovement.add(velocity) else velocity
+    entity.deltaMovement = if (add) entity.deltaMovement.add(change) else change
     entity.syncVelocity = true
 }
 
-internal fun MinecraftServer.changeRotation(request: SetRotationRequest) {
-    rotate(entity(request.uuid), request.rotation.yaw, request.rotation.pitch)
+internal fun MinecraftServer.changeRotation(uuid: String, rotation: Rotation) {
+    rotate(entity(uuid), rotation.yaw, rotation.pitch)
 }
 
 internal fun rotate(entity: Entity, yaw: Float, pitch: Float) {
     if (entity is ServerPlayer) {
         // The client controls a player's rotation, so the server sends it as a relative teleport
         // that keeps the position.
-        entity.teleportTo(
-            entity.level(),
-            0.0,
-            0.0,
-            0.0,
-            setOf(Relative.X, Relative.Y, Relative.Z),
-            yaw,
-            pitch,
-            true,
-        )
-
+        val relative = setOf(Relative.X, Relative.Y, Relative.Z)
+        entity.teleportTo(entity.level(), 0.0, 0.0, 0.0, relative, yaw, pitch, true)
         return
     }
 
@@ -103,42 +87,41 @@ internal fun MinecraftServer.saveEntity(entity: Entity): CompoundTag {
     return output.buildResult()
 }
 
-internal fun MinecraftServer.entityNbt(request: EntityRef): Nbt = nbt {
-    snbt = saveEntity(entity(request.uuid)).toString()
-}
+/** The entity's complete data as SNBT. */
+internal fun MinecraftServer.entityNbt(uuid: String): String = saveEntity(entity(uuid)).toString()
 
-internal fun MinecraftServer.mergeEntityNbt(request: MergeNbtRequest) {
-    val entity = entity(request.uuid)
-    if (entity is ServerPlayer) failedPrecondition("Player data is read-only; use PlayerService")
+/** Merges SNBT into the entity data, like /data merge entity. */
+internal fun MinecraftServer.mergeEntityNbt(uuid: String, snbt: String) {
+    val entity = entity(uuid)
+    if (entity is ServerPlayer) failedPrecondition("Player data is read-only here")
 
-    val merged = saveEntity(entity).merge(TagParser.parseCompoundFully(request.snbt))
+    val merged = saveEntity(entity).merge(TagParser.parseCompoundFully(snbt))
     merged.store("UUID", UUIDUtil.CODEC, entity.uuid)
 
     entity.load(TagValueInput.create(ProblemReporter.DISCARDING, registryAccess(), merged))
 }
 
-internal fun MinecraftServer.changeCustomName(request: SetCustomNameRequest) {
-    val entity = entity(request.uuid)
+/** A null name clears the custom name. */
+internal fun MinecraftServer.changeCustomName(uuid: String, name: String?, visible: Boolean) {
+    val entity = entity(uuid)
 
-    entity.customName = if (request.hasName()) request.name.toComponent(registryAccess()) else null
-    entity.isCustomNameVisible = request.visible
+    entity.customName = name?.let { textComponent(it, registryAccess()) }
+    entity.isCustomNameVisible = visible
 }
 
-internal fun MinecraftServer.changeTags(request: SetTagsRequest) {
-    val entity = entity(request.uuid)
+internal fun MinecraftServer.changeTags(uuid: String, add: List<String>, remove: List<String>) {
+    val entity = entity(uuid)
 
-    request.removeList.forEach { entity.removeTag(it) }
-    request.addList.forEach { entity.addTag(it) }
+    remove.forEach { entity.removeTag(it) }
+    add.forEach { entity.addTag(it) }
 }
 
-internal fun MinecraftServer.mount(request: MountRequest) {
-    val passenger = entity(request.passenger)
-
-    if (!passenger.startRiding(entity(request.vehicle), true, true)) {
-        failedPrecondition("Entity cannot ride ${request.vehicle}")
+internal fun MinecraftServer.mount(passenger: String, vehicle: String) {
+    if (!entity(passenger).startRiding(entity(vehicle), true, true)) {
+        failedPrecondition("Entity cannot ride $vehicle")
     }
 }
 
-internal fun MinecraftServer.dismount(request: EntityRef) {
-    entity(request.uuid).stopRiding()
+internal fun MinecraftServer.dismount(uuid: String) {
+    entity(uuid).stopRiding()
 }

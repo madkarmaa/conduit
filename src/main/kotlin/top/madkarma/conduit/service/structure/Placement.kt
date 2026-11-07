@@ -1,5 +1,6 @@
 package top.madkarma.conduit.service.structure
 
+import kotlinx.serialization.Serializable
 import net.minecraft.core.BlockPos
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerLevel
@@ -12,24 +13,62 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.world.level.levelgen.structure.templatesystem.BlockRotProcessor
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate
+import top.madkarma.conduit.game.BlockCoordinates
 import top.madkarma.conduit.game.failedPrecondition
 import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.level
+import top.madkarma.conduit.game.toCoordinates
 import top.madkarma.conduit.game.toMc
 import top.madkarma.conduit.mixin.StructureTemplateAccessor
-import top.madkarma.conduit.proto.*
+
+enum class StructureRotation(val rotation: Rotation) {
+    NONE(Rotation.NONE),
+    CLOCKWISE_90(Rotation.CLOCKWISE_90),
+    CLOCKWISE_180(Rotation.CLOCKWISE_180),
+    COUNTERCLOCKWISE_90(Rotation.COUNTERCLOCKWISE_90),
+}
+
+enum class StructureMirror(val mirror: Mirror) {
+    NONE(Mirror.NONE),
+    LEFT_RIGHT(Mirror.LEFT_RIGHT),
+    FRONT_BACK(Mirror.FRONT_BACK),
+}
+
+data class StructurePlacement(
+    val dimension: String?,
+    /**
+     * Where the structure's lowest corner goes. Rotation and mirroring pivot around it, like /place
+     * template.
+     */
+    val origin: BlockCoordinates,
+    val rotation: StructureRotation = StructureRotation.NONE,
+    val mirror: StructureMirror = StructureMirror.NONE,
+    val includeEntities: Boolean = true,
+    /** Chance between 0 and 1 that each block is placed. */
+    val integrity: Float = 1f,
+    /** Skips neighbor updates and physics, like /place template with strict. */
+    val noUpdates: Boolean = false,
+)
+
+@Serializable
+data class PlacementResult(
+    /** Size of the placed structure, after rotation. */
+    val size: BlockCoordinates,
+    /** Blocks in the structure, including air. With an integrity below 1, fewer are placed. */
+    val blockCount: Int,
+    /** Entities in the structure, or 0 without entities. */
+    val entityCount: Int,
+)
 
 /** Checks the placement options before any structure data is received or loaded. */
 internal fun checkPlacement(placement: StructurePlacement) {
-    if (placement.hasIntegrity() && placement.integrity !in 0f..1f) {
-        invalidInput("Integrity must be between 0 and 1")
-    }
+    if (placement.integrity !in 0f..1f) invalidInput("Integrity must be between 0 and 1")
 }
 
 internal fun MinecraftServer.placeStructure(
     template: StructureTemplate,
     placement: StructurePlacement,
-): ImportStructureResponse {
+): PlacementResult {
     checkVolume(template.size.volume)
 
     val level = level(placement.dimension)
@@ -51,22 +90,22 @@ internal fun MinecraftServer.placeStructure(
         template.placeInWorld(level, origin, origin, settings, level.random, flags)
     }
 
-    return importStructureResponse {
-        size = template.getSize(settings.rotation).toProto()
-        this.blockCount = blockCount
-        entityCount = if (settings.isIgnoreEntities) 0 else contents.entityInfoList.size
-    }
+    return PlacementResult(
+        size = template.getSize(settings.rotation).toCoordinates(),
+        blockCount = blockCount,
+        entityCount = if (settings.isIgnoreEntities) 0 else contents.entityInfoList.size,
+    )
 }
 
 private fun placeSettings(placement: StructurePlacement): StructurePlaceSettings {
     val settings =
         StructurePlaceSettings()
-            .setRotation(placement.rotation.toMc())
-            .setMirror(placement.mirror.toMc())
+            .setRotation(placement.rotation.rotation)
+            .setMirror(placement.mirror.mirror)
             .setIgnoreEntities(!placement.includeEntities)
             .setKnownShape(placement.noUpdates)
 
-    if (placement.hasIntegrity() && placement.integrity < 1f) {
+    if (placement.integrity < 1f) {
         settings.addProcessor(BlockRotProcessor(placement.integrity))
     }
 
@@ -98,22 +137,3 @@ private fun ServerLevel.withChunksForced(box: BoundingBox, placement: () -> Unit
 private fun BoundingBox.minCorner(): BlockPos = BlockPos(minX(), minY(), minZ())
 
 private fun BoundingBox.maxCorner(): BlockPos = BlockPos(maxX(), maxY(), maxZ())
-
-private fun StructureRotation.toMc(): Rotation =
-    when (this) {
-        StructureRotation.STRUCTURE_ROTATION_UNSPECIFIED,
-        StructureRotation.STRUCTURE_ROTATION_NONE -> Rotation.NONE
-        StructureRotation.STRUCTURE_ROTATION_CLOCKWISE_90 -> Rotation.CLOCKWISE_90
-        StructureRotation.STRUCTURE_ROTATION_CLOCKWISE_180 -> Rotation.CLOCKWISE_180
-        StructureRotation.STRUCTURE_ROTATION_COUNTERCLOCKWISE_90 -> Rotation.COUNTERCLOCKWISE_90
-        StructureRotation.UNRECOGNIZED -> invalidInput("Unknown rotation")
-    }
-
-private fun StructureMirror.toMc(): Mirror =
-    when (this) {
-        StructureMirror.STRUCTURE_MIRROR_UNSPECIFIED,
-        StructureMirror.STRUCTURE_MIRROR_NONE -> Mirror.NONE
-        StructureMirror.STRUCTURE_MIRROR_LEFT_RIGHT -> Mirror.LEFT_RIGHT
-        StructureMirror.STRUCTURE_MIRROR_FRONT_BACK -> Mirror.FRONT_BACK
-        StructureMirror.UNRECOGNIZED -> invalidInput("Unknown mirror")
-    }

@@ -74,7 +74,7 @@ internal fun MinecraftServer.knownPlayerIds(): List<UUID> {
 }
 
 internal fun MinecraftServer.requireOffline(id: UUID) {
-    if (isOnline(id)) failedPrecondition("Player is online, use the online RPCs")
+    if (isOnline(id)) failedPrecondition("Player is online; use the tools for online players")
     if (isJoining(id)) failedPrecondition("Player is joining, try again once they are online")
 }
 

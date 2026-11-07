@@ -1,24 +1,38 @@
 package top.madkarma.conduit.events
 
 import java.util.*
+import kotlinx.serialization.Serializable
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.ItemStack
-import top.madkarma.conduit.game.toProto
-import top.madkarma.conduit.proto.EventType
-import top.madkarma.conduit.proto.InventoryChangeEvent
-import top.madkarma.conduit.proto.inventoryChangeEvent
+import top.madkarma.conduit.game.ItemInfo
+import top.madkarma.conduit.game.toInfo
 
-// Hotbar, main inventory, armor and offhand, numbered like PlayerService.
+// Hotbar, main inventory, armor and offhand, numbered like the player tools.
 private const val SLOT_COUNT = Inventory.SLOT_OFFHAND + 1
 
 /**
- * Publishes EVENT_TYPE_INVENTORY_CHANGE by comparing each inventory with the previous tick.
- * Commands, mods and creative mode change inventories without a common hook, so comparing is the
- * only way to see every change.
+ * A slot of a player's inventory changed. Inventories are compared once per tick, so several
+ * changes to one slot within a tick are one event, and a change undone within the tick is not
+ * reported.
+ */
+@Serializable
+data class InventoryChangeEvent(
+    val player: String,
+    val playerUuid: String,
+    /** 0-8 hotbar, 9-35 main, 36-39 armor, 40 offhand. */
+    val slot: Int,
+    val oldItem: ItemInfo,
+    val newItem: ItemInfo,
+)
+
+/**
+ * Publishes INVENTORY_CHANGE by comparing each inventory with the previous tick. Commands, mods and
+ * creative mode change inventories without a common hook, so comparing is the only way to see every
+ * change.
  */
 object InventoryChanges {
     // Contents of each player's inventory at the end of the previous tick, as copies.
@@ -29,8 +43,8 @@ object InventoryChanges {
         ServerPlayerEvents.LEAVE.register { player -> snapshots.remove(player.uuid) }
     }
 
-    // Snapshots stay current even without subscribers, so a new subscription receives every change
-    // from its first tick on.
+    // Snapshots stay current even without listeners, so a new listener receives every change from
+    // its first tick on.
     private fun publishChanges(server: MinecraftServer) {
         for (player in server.playerList.players) publishChanges(player)
     }
@@ -49,11 +63,8 @@ object InventoryChanges {
             if (ItemStack.matches(oldItem, newItem)) continue
 
             snapshot[slot] = newItem.copy()
-            EventBus.publish(
-                EventType.EVENT_TYPE_INVENTORY_CHANGE,
-                accepts = { it.wantsPlayer(player) },
-            ) {
-                inventoryChange = changePayload(player, slot, oldItem, newItem)
+            EventBus.publish(EventType.INVENTORY_CHANGE) {
+                changePayload(player, slot, oldItem, newItem)
             }
         }
     }
@@ -66,13 +77,15 @@ object InventoryChanges {
         slot: Int,
         oldItem: ItemStack,
         newItem: ItemStack,
-    ): InventoryChangeEvent = inventoryChangeEvent {
-        this.player = player.gameProfile.name
-        playerUuid = player.stringUUID
-        this.slot = slot
-
+    ): InventoryChangeEvent {
         val registries = player.registryAccess()
-        this.oldItem = oldItem.toProto(registries)
-        this.newItem = newItem.toProto(registries)
+
+        return InventoryChangeEvent(
+            player = player.gameProfile.name,
+            playerUuid = player.stringUUID,
+            slot = slot,
+            oldItem = oldItem.toInfo(registries),
+            newItem = newItem.toInfo(registries),
+        )
     }
 }

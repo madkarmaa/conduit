@@ -10,18 +10,17 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate
 import top.madkarma.conduit.Conduit
+import top.madkarma.conduit.game.BlockCoordinates
 import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.level
 import top.madkarma.conduit.game.parseId
-import top.madkarma.conduit.proto.BlockPos as ProtoBlockPos
-import top.madkarma.conduit.proto.blockPos
 
 internal fun MinecraftServer.captureStructure(
-    dimension: String,
-    from: ProtoBlockPos,
-    to: ProtoBlockPos,
+    dimension: String?,
+    from: BlockCoordinates,
+    to: BlockCoordinates,
     includeEntities: Boolean,
-    ignoreBlock: String,
+    ignoreBlock: String?,
 ): StructureTemplate {
     val level = level(dimension)
     val ignoredBlocks = ignoredBlocks(ignoreBlock)
@@ -48,14 +47,8 @@ internal fun checkVolume(volume: Long) {
 internal val Vec3i.volume: Long
     get() = x.toLong() * y * z
 
-internal fun Vec3i.toProto(): ProtoBlockPos = blockPos {
-    x = this@toProto.x
-    y = this@toProto.y
-    z = this@toProto.z
-}
-
-private fun ignoredBlocks(id: String): List<Block> {
-    if (id.isBlank()) return emptyList()
+private fun ignoredBlocks(id: String?): List<Block> {
+    if (id.isNullOrBlank()) return emptyList()
 
     val block = BuiltInRegistries.BLOCK.getOptional(parseId(id)).getOrNull()
     return listOf(block ?: invalidInput("Unknown block: $id"))

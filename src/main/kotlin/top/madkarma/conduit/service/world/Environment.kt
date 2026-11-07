@@ -1,126 +1,134 @@
 package top.madkarma.conduit.service.world
 
+import kotlinx.serialization.Serializable
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.gamerules.GameRule
 import net.minecraft.world.level.storage.LevelData
 import top.madkarma.conduit.game.*
-import top.madkarma.conduit.game.invalidInput
-import top.madkarma.conduit.game.notFound
-import top.madkarma.conduit.proto.*
 
 // Time and weather changes go through the vanilla commands, which keep world clocks and clients
 // in sync.
 
 private const val TICKS_PER_DAY = 24000
 
-internal fun MinecraftServer.timeOf(request: DimensionRef): TimeInfo {
-    val level = level(request.dimension)
-    val clock = level.defaultClockTime
+@Serializable data class TimeInfo(val gameTime: Long, val dayTime: Long, val day: Long)
 
-    return timeInfo {
-        gameTime = level.gameTime
-        dayTime = clock % TICKS_PER_DAY
-        day = clock / TICKS_PER_DAY
-    }
+@Serializable data class WeatherInfo(val raining: Boolean, val thundering: Boolean)
+
+@Serializable
+data class WorldInfo(
+    val time: TimeInfo,
+    val weather: WeatherInfo,
+    val spawn: SpawnPoint,
+    val worldBorder: WorldBorderInfo,
+)
+
+enum class Weather(val command: String) {
+    CLEAR("clear"),
+    RAIN("rain"),
+    THUNDER("thunder"),
 }
 
-internal fun MinecraftServer.changeTime(request: SetTimeRequest) {
+internal fun MinecraftServer.describeWorld(dimension: String?): WorldInfo =
+    WorldInfo(timeOf(dimension), weatherOf(dimension), spawnPoint(), worldBorderOf(dimension))
+
+private fun MinecraftServer.timeOf(dimension: String?): TimeInfo {
+    val level = level(dimension)
+    val clock = level.defaultClockTime
+
+    return TimeInfo(
+        gameTime = level.gameTime,
+        dayTime = clock % TICKS_PER_DAY,
+        day = clock / TICKS_PER_DAY,
+    )
+}
+
+/** Sets the time of day to time, adds add to it, or sets a named preset such as "noon". */
+internal fun MinecraftServer.changeTime(
+    dimension: String?,
+    time: Long?,
+    add: Long?,
+    preset: String?,
+) {
+    if (listOfNotNull(time, add, preset).size != 1) {
+        invalidInput("Set exactly one of time, add or preset")
+    }
+
     val command =
-        when (request.valueCase) {
-            SetTimeRequest.ValueCase.TIME -> "time set ${request.time}"
-            SetTimeRequest.ValueCase.ADD -> "time add ${request.add}"
-            SetTimeRequest.ValueCase.PRESET -> "time set ${request.preset}"
-            else -> invalidInput("One of time, add or preset is required")
+        when {
+            time != null -> "time set $time"
+            add != null -> "time add $add"
+            else -> "time set $preset"
         }
 
-    if (request.dimension.isBlank()) {
+    if (dimension.isNullOrBlank()) {
         runCommandOrFail(command)
         return
     }
 
-    val dimension = level(request.dimension).dimension().identifier()
-    runCommandOrFail("execute in $dimension run $command")
+    val id = level(dimension).dimension().identifier()
+    runCommandOrFail("execute in $id run $command")
 }
 
 // The visible rain level only fades towards the stored weather state over several ticks.
-internal fun MinecraftServer.weatherOf(request: DimensionRef): WeatherInfo {
-    val weather = level(request.dimension).weatherData
-    return weatherInfo {
-        raining = weather.isRaining
-        thundering = weather.isThundering
-    }
+private fun MinecraftServer.weatherOf(dimension: String?): WeatherInfo {
+    val weather = level(dimension).weatherData
+    return WeatherInfo(raining = weather.isRaining, thundering = weather.isThundering)
 }
 
-internal fun MinecraftServer.changeWeather(request: SetWeatherRequest) {
-    val name =
-        when (request.weather) {
-            SetWeatherRequest.Weather.WEATHER_RAIN -> "rain"
-            SetWeatherRequest.Weather.WEATHER_THUNDER -> "thunder"
-            else -> "clear"
-        }
-
-    val duration = if (request.duration > 0) " ${request.duration}t" else ""
-
-    runCommandOrFail("weather $name$duration")
+/** A duration of 0 ticks picks a random duration. */
+internal fun MinecraftServer.changeWeather(weather: Weather, durationTicks: Int) {
+    val duration = if (durationTicks > 0) " ${durationTicks}t" else ""
+    runCommandOrFail("weather ${weather.command}$duration")
 }
 
-internal fun MinecraftServer.listGameRules(): GameRules {
+internal fun MinecraftServer.listGameRules(): Map<String, String> {
     val rules = gameRules
-    return gameRules {
-        rules.availableRules().forEach { rule -> this.rules[rule.id()] = rules.getAsString(rule) }
-    }
+    return rules.availableRules().toList().associate { it.id() to rules.getAsString(it) }
 }
 
-internal fun MinecraftServer.changeGameRule(request: SetGameRuleRequest) {
+internal fun MinecraftServer.changeGameRule(name: String, value: String) {
     val rule =
         gameRules
             .availableRules()
-            .filter { it.id() == request.name || it.identifier.toString() == request.name }
+            .filter { it.id() == name || it.identifier.toString() == name }
             .findFirst()
-            .orElse(null) ?: notFound("Unknown game rule: ${request.name}")
+            .orElse(null) ?: notFound("Unknown game rule: $name")
 
-    setRule(rule, request.value)
+    setRule(rule, value)
 }
 
 private fun <T : Any> MinecraftServer.setRule(rule: GameRule<T>, value: String) {
     val parsed =
-        rule.deserialize(value).getOrThrow {
-            invalidInput("Invalid value for ${rule.id()}: $it")
-        }
+        rule.deserialize(value).getOrThrow { invalidInput("Invalid value for ${rule.id()}: $it") }
 
     gameRules.set(rule, parsed, this)
 }
 
-internal fun MinecraftServer.spawnPoint(): SpawnPoint = overworld().respawnData.toProto()
+private fun MinecraftServer.spawnPoint(): SpawnPoint = overworld().respawnData.toSpawnPoint()
 
-internal fun MinecraftServer.changeSpawnPoint(request: SpawnPoint) {
-    level(request.dimension)
-
-    val data =
-        LevelData.RespawnData.of(
-            dimensionKey(request.dimension),
-            request.pos.toMc(),
-            request.yaw,
-            request.pitch,
-        )
-
-    overworld().respawnData = data
+internal fun MinecraftServer.changeSpawnPoint(
+    dimension: String?,
+    pos: BlockCoordinates,
+    yaw: Float,
+    pitch: Float,
+) {
+    level(dimension)
+    overworld().respawnData =
+        LevelData.RespawnData.of(dimensionKey(dimension), pos.toMc(), yaw, pitch)
 }
 
-internal fun MinecraftServer.explode(request: ExplodeRequest) {
+/** Interaction is NONE, BLOCK, MOB, TNT or TRIGGER, and decides what the explosion breaks. */
+internal fun MinecraftServer.explode(
+    dimension: String?,
+    position: Vector3,
+    power: Float,
+    fire: Boolean,
+    interaction: String?,
+) {
     val default = Level.ExplosionInteraction.TNT
-    val interaction = enumByName(request.interaction, default, "explosion interaction")
-    val level = level(request.dimension)
-    val position = request.position
+    val chosen = enumByName(interaction, default, "explosion interaction")
 
-    level.explode(
-        null,
-        position.x,
-        position.y,
-        position.z,
-        request.power,
-        request.fire,
-        interaction,
-    )
+    level(dimension).explode(null, position.x, position.y, position.z, power, fire, chosen)
 }

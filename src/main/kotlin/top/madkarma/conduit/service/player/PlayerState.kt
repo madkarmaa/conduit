@@ -1,70 +1,85 @@
 package top.madkarma.conduit.service.player
 
+import kotlinx.serialization.Serializable
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.GameType
-import top.madkarma.conduit.game.invalidInput
-import top.madkarma.conduit.game.player
-import top.madkarma.conduit.game.toComponent
-import top.madkarma.conduit.game.toProto
-import top.madkarma.conduit.proto.*
+import top.madkarma.conduit.game.*
 
-internal fun MinecraftServer.listPlayers(): PlayerList {
-    val online = playerList.players
-    return playerList { players += online.map { describePlayer(it) } }
-}
+@Serializable
+data class PlayerInfo(
+    val name: String,
+    val entity: EntityInfo,
+    val gameMode: String,
+    val foodLevel: Int,
+    val saturation: Float,
+    val experienceLevel: Int,
+    val experienceProgress: Float,
+    val totalExperience: Int,
+    val selectedSlot: Int,
+    val pingMs: Int,
+    val operator: Boolean,
+    val ipAddress: String,
+    val mainHand: ItemInfo,
+    val offHand: ItemInfo,
+)
 
-internal fun MinecraftServer.describePlayer(request: PlayerRef): PlayerInfo =
-    describePlayer(player(request.player))
+@Serializable data class PlayerList(val players: List<PlayerInfo>)
+
+internal fun MinecraftServer.listPlayers(): PlayerList =
+    PlayerList(playerList.players.map { describePlayer(it) })
+
+internal fun MinecraftServer.describePlayer(ref: String): PlayerInfo = describePlayer(player(ref))
 
 internal fun MinecraftServer.describePlayer(player: ServerPlayer): PlayerInfo {
     val registries = registryAccess()
 
-    return playerInfo {
-        name = player.gameProfile.name
-        entity = player.toProto()
-        gameMode = player.gameMode().serializedName
-        foodLevel = player.foodData.foodLevel
-        saturation = player.foodData.saturationLevel
-        experienceLevel = player.experienceLevel
-        experienceProgress = player.experienceProgress
-        totalExperience = player.totalExperience
-        selectedSlot = player.inventory.selectedSlot
-        pingMs = player.connection.latency()
-        operator = playerList.isOp(player.nameAndId())
-        ipAddress = player.ipAddress
-        mainHand = player.mainHandItem.toProto(registries)
-        offHand = player.offhandItem.toProto(registries)
-    }
+    return PlayerInfo(
+        name = player.gameProfile.name,
+        entity = player.toInfo(),
+        gameMode = player.gameMode().serializedName,
+        foodLevel = player.foodData.foodLevel,
+        saturation = player.foodData.saturationLevel,
+        experienceLevel = player.experienceLevel,
+        experienceProgress = player.experienceProgress,
+        totalExperience = player.totalExperience,
+        selectedSlot = player.inventory.selectedSlot,
+        pingMs = player.connection.latency(),
+        operator = playerList.isOp(player.nameAndId()),
+        ipAddress = player.ipAddress,
+        mainHand = player.mainHandItem.toInfo(registries),
+        offHand = player.offhandItem.toInfo(registries),
+    )
 }
 
-internal fun MinecraftServer.changeGameMode(request: SetGameModeRequest) {
+/** Game mode is survival, creative, adventure or spectator. */
+internal fun MinecraftServer.changeGameMode(ref: String, gameMode: String) {
     val mode =
-        GameType.byName(request.gameMode.lowercase(), null)
-            ?: invalidInput("Unknown game mode: ${request.gameMode}")
+        GameType.byName(gameMode.lowercase(), null) ?: invalidInput("Unknown game mode: $gameMode")
 
-    player(request.player).setGameMode(mode)
+    player(ref).setGameMode(mode)
 }
 
-internal fun MinecraftServer.changeFood(request: SetFoodRequest) {
-    val food = player(request.player).foodData
+internal fun MinecraftServer.changeFood(ref: String, foodLevel: Int?, saturation: Float?) {
+    val food = player(ref).foodData
 
-    if (request.hasFoodLevel()) food.foodLevel = request.foodLevel
-    if (request.hasSaturation()) food.setSaturation(request.saturation)
+    foodLevel?.let { food.foodLevel = it }
+    saturation?.let { food.setSaturation(it) }
 }
 
-internal fun MinecraftServer.changeExperience(request: SetExperienceRequest) {
-    val player = player(request.player)
+/** Points are the experience within the current level. */
+internal fun MinecraftServer.changeExperience(ref: String, levels: Int?, points: Int?) {
+    val player = player(ref)
 
-    if (request.hasLevels()) player.setExperienceLevels(request.levels)
-    if (request.hasPoints()) player.setExperiencePoints(request.points)
+    levels?.let { player.setExperienceLevels(it) }
+    points?.let { player.setExperiencePoints(it) }
 }
 
-internal fun MinecraftServer.changeOperator(request: SetOperatorRequest) {
-    val id = player(request.player).nameAndId()
-    if (request.operator) playerList.op(id) else playerList.deop(id)
+internal fun MinecraftServer.changeOperator(ref: String, operator: Boolean) {
+    val id = player(ref).nameAndId()
+    if (operator) playerList.op(id) else playerList.deop(id)
 }
 
-internal fun MinecraftServer.kick(request: KickRequest) {
-    player(request.player).connection.disconnect(request.reason.toComponent(registryAccess()))
+internal fun MinecraftServer.kick(ref: String, reason: String) {
+    player(ref).connection.disconnect(textComponent(reason, registryAccess()))
 }

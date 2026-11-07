@@ -1,9 +1,12 @@
 package top.madkarma.conduit.game
 
+import com.google.gson.JsonParseException
 import com.google.gson.JsonParser
 import com.mojang.serialization.JsonOps
-import net.minecraft.core.BlockPos as McBlockPos
+import kotlinx.serialization.Serializable
+import net.minecraft.core.BlockPos
 import net.minecraft.core.HolderLookup
+import net.minecraft.core.Vec3i
 import net.minecraft.core.registries.Registries
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.ComponentSerialization
@@ -11,61 +14,56 @@ import net.minecraft.resources.Identifier
 import net.minecraft.resources.ResourceKey
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.Vec2
-import net.minecraft.world.phys.Vec3 as McVec3
-import top.madkarma.conduit.proto.BlockPos as ProtoBlockPos
-import top.madkarma.conduit.proto.Rotation as ProtoRotation
-import top.madkarma.conduit.proto.Text
-import top.madkarma.conduit.proto.Vec3 as ProtoVec3
-import top.madkarma.conduit.proto.blockPos
-import top.madkarma.conduit.proto.rotation
-import top.madkarma.conduit.proto.vec3
+import net.minecraft.world.phys.Vec3
 
-fun McVec3.toProto(): ProtoVec3 = vec3 {
-    x = this@toProto.x
-    y = this@toProto.y
-    z = this@toProto.z
-}
+@Serializable data class Vector3(val x: Double, val y: Double, val z: Double)
 
-fun ProtoVec3.toMc(): McVec3 = McVec3(x, y, z)
+@Serializable data class BlockCoordinates(val x: Int, val y: Int, val z: Int)
 
-fun McBlockPos.toProto(): ProtoBlockPos = blockPos {
-    x = this@toProto.x
-    y = this@toProto.y
-    z = this@toProto.z
-}
+/** Degrees, as in Minecraft. Yaw 0 faces south and pitch -90 faces up. */
+@Serializable data class Rotation(val yaw: Float, val pitch: Float)
 
-fun ProtoBlockPos.toMc(): McBlockPos = McBlockPos(x, y, z)
+fun Vec3.toVector(): Vector3 = Vector3(x, y, z)
 
-fun rotationOf(yaw: Float, pitch: Float): ProtoRotation = rotation {
-    this.yaw = yaw
-    this.pitch = pitch
-}
+fun Vector3.toMc(): Vec3 = Vec3(x, y, z)
+
+fun Vec3i.toCoordinates(): BlockCoordinates = BlockCoordinates(x, y, z)
+
+fun BlockCoordinates.toMc(): BlockPos = BlockPos(x, y, z)
 
 /** Minecraft stores rotations as (pitch, yaw) vectors. */
-fun ProtoRotation.toVec2(): Vec2 = Vec2(pitch, yaw)
+fun Rotation.toVec2(): Vec2 = Vec2(pitch, yaw)
 
 fun parseId(id: String): Identifier =
     Identifier.tryParse(id) ?: invalidInput("Invalid identifier: $id")
 
-fun dimensionKey(id: String): ResourceKey<Level> =
-    ResourceKey.create(Registries.DIMENSION, parseId(id.ifBlank { "minecraft:overworld" }))
+fun dimensionKey(id: String?): ResourceKey<Level> =
+    ResourceKey.create(
+        Registries.DIMENSION,
+        parseId(id.orEmpty().ifBlank { "minecraft:overworld" }),
+    )
 
-fun Text.toComponent(registries: HolderLookup.Provider): Component =
-    when (contentCase) {
-        Text.ContentCase.JSON ->
-            ComponentSerialization.CODEC.parse(
-                    registries.createSerializationContext(JsonOps.INSTANCE),
-                    JsonParser.parseString(json),
-                )
-                .getOrThrow { invalidInput("Invalid text component: $it") }
+/** Plain text, or a JSON text component when it starts with { or [. */
+fun textComponent(text: String, registries: HolderLookup.Provider): Component {
+    val trimmed = text.trimStart()
+    if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) return Component.literal(text)
 
-        Text.ContentCase.PLAIN -> Component.literal(plain)
+    val json =
+        try {
+            JsonParser.parseString(text)
+        } catch (exception: JsonParseException) {
+            invalidInput("Invalid text component: ${exception.message}")
+        }
 
-        else -> Component.empty()
-    }
+    return ComponentSerialization.CODEC.parse(
+            registries.createSerializationContext(JsonOps.INSTANCE),
+            json,
+        )
+        .getOrThrow { invalidInput("Invalid text component: $it") }
+}
 
-inline fun <reified E : Enum<E>> enumByName(name: String, default: E, kind: String): E {
-    if (name.isBlank()) return default
+inline fun <reified E : Enum<E>> enumByName(name: String?, default: E, kind: String): E {
+    if (name.isNullOrBlank()) return default
 
     return enumValues<E>().firstOrNull { it.name == name.uppercase() }
         ?: invalidInput("Unknown $kind: $name")

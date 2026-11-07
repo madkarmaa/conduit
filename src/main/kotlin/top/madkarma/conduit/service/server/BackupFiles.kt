@@ -6,10 +6,16 @@ import java.nio.file.StandardCopyOption
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import kotlinx.serialization.Serializable
 import net.minecraft.world.level.storage.LevelResource
-import top.madkarma.conduit.proto.BackupList
-import top.madkarma.conduit.proto.backupFile
-import top.madkarma.conduit.proto.backupList
+
+@Serializable
+data class BackupFile(
+    val name: String,
+    val sizeBytes: Long,
+    /** Unix time in milliseconds. */
+    val createdTimestampMs: Long,
+)
 
 /** Zips the world folder into target and returns the size of the zip file. */
 internal fun zipWorld(world: Path, target: Path): Long {
@@ -28,8 +34,8 @@ internal fun zipWorld(world: Path, target: Path): Long {
     return Files.size(target)
 }
 
-internal fun listBackupFiles(directory: Path): BackupList {
-    if (!Files.isDirectory(directory)) return BackupList.getDefaultInstance()
+internal fun listBackupFiles(directory: Path): List<BackupFile> {
+    if (!Files.isDirectory(directory)) return emptyList()
 
     val files =
         Files.list(directory).use { paths ->
@@ -39,16 +45,13 @@ internal fun listBackupFiles(directory: Path): BackupList {
                 .toList()
         }
 
-    return backupList {
-        for (file in files) {
-            val attributes = Files.readAttributes(file, BasicFileAttributes::class.java)
-
-            backups += backupFile {
-                name = file.fileName.toString()
-                sizeBytes = attributes.size()
-                createdTimestampMs = attributes.creationTime().toMillis()
-            }
-        }
+    return files.map { file ->
+        val attributes = Files.readAttributes(file, BasicFileAttributes::class.java)
+        BackupFile(
+            name = file.fileName.toString(),
+            sizeBytes = attributes.size(),
+            createdTimestampMs = attributes.creationTime().toMillis(),
+        )
     }
 }
 

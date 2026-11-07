@@ -13,7 +13,6 @@
         "PlayerAdvancementsMixin",
         "ResultSlotMixin",
         "ServerCommonPacketListenerImplMixin",
-        "ServerGamePacketListenerImplMixin",
         "ServerLevelMixin",
         "ServerPlayerMixin",
         "StructureTemplateAccessor"

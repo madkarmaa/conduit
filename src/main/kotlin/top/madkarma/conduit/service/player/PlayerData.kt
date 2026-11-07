@@ -2,6 +2,7 @@ package top.madkarma.conduit.service.player
 
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
+import kotlinx.serialization.Serializable
 import net.minecraft.core.HolderLookup
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.server.MinecraftServer
@@ -21,15 +22,36 @@ import net.minecraft.world.level.storage.TagValueOutput
 import net.minecraft.world.level.storage.ValueInput
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
-import top.madkarma.conduit.game.invalidInput
-import top.madkarma.conduit.game.rotationOf
-import top.madkarma.conduit.game.toProto
-import top.madkarma.conduit.proto.OfflinePlayerInfo
-import top.madkarma.conduit.proto.offlinePlayerInfo
+import top.madkarma.conduit.game.*
 
 // Saved player data is read with the same keys and codecs the game loads players with.
 
 internal val INVENTORY_SLOTS = Inventory.INVENTORY_SIZE + Inventory.EQUIPMENT_SLOT_MAPPING.size
+
+@Serializable
+data class OfflinePlayerInfo(
+    val uuid: String,
+    /** Last known name, empty if the server does not know it. */
+    val name: String,
+    /** Unix milliseconds of the last save, or the current time for online players. */
+    val lastPlayed: Long,
+    val online: Boolean,
+    val dimension: String,
+    val position: Vector3,
+    val rotation: Rotation,
+    val gameMode: String,
+    val health: Float,
+    val foodLevel: Int,
+    val saturation: Float,
+    val experienceLevel: Int,
+    val experienceProgress: Float,
+    val totalExperience: Int,
+    val inventory: InventoryContents,
+    val enderChest: InventoryContents,
+    val effects: List<EffectInfo>,
+    /** Bed or respawn anchor, if the player has one. */
+    val spawnPoint: SpawnPoint?,
+)
 
 internal fun MinecraftServer.describePlayerData(
     id: UUID,
@@ -52,29 +74,31 @@ internal fun MinecraftServer.describePlayerData(
             fromSlots(input.listOrEmpty("EnderItems", ItemStackWithSlot.CODEC))
         }
 
-    return offlinePlayerInfo {
-        uuid = id.toString()
-        name = lastKnownName(id)
-        lastPlayed = lastPlayed(id)
-        online = isOnline(id)
-        dimension = input.getStringOr("Dimension", "minecraft:overworld")
-        position = (input.read("Pos", Vec3.CODEC).getOrNull() ?: Vec3.ZERO).toProto()
-        rotation = rotationOf(facing.x, facing.y)
-        gameMode = gameType.serializedName
-        health = input.getFloatOr("Health", Player.MAX_HEALTH.toFloat())
-        foodLevel = food.foodLevel
-        saturation = food.saturationLevel
-        experienceLevel = input.getIntOr("XpLevel", 0)
-        experienceProgress = input.getFloatOr("XpP", 0f)
-        totalExperience = input.getIntOr("XpTotal", 0)
-        inventory = contents(readInventory(input), input.getIntOr("SelectedItemSlot", 0))
-        this.enderChest = contents(enderChest, 0)
-        this.effects += effects.map { it.toProto() }
-
-        input.read("respawn", ServerPlayer.RespawnConfig.CODEC).ifPresent {
-            spawnPoint = it.respawnData().toProto()
-        }
-    }
+    return OfflinePlayerInfo(
+        uuid = id.toString(),
+        name = lastKnownName(id),
+        lastPlayed = lastPlayed(id),
+        online = isOnline(id),
+        dimension = input.getStringOr("Dimension", "minecraft:overworld"),
+        position = (input.read("Pos", Vec3.CODEC).getOrNull() ?: Vec3.ZERO).toVector(),
+        rotation = Rotation(facing.x, facing.y),
+        gameMode = gameType.serializedName,
+        health = input.getFloatOr("Health", Player.MAX_HEALTH.toFloat()),
+        foodLevel = food.foodLevel,
+        saturation = food.saturationLevel,
+        experienceLevel = input.getIntOr("XpLevel", 0),
+        experienceProgress = input.getFloatOr("XpP", 0f),
+        totalExperience = input.getIntOr("XpTotal", 0),
+        inventory = contents(readInventory(input), input.getIntOr("SelectedItemSlot", 0)),
+        enderChest = contents(enderChest, 0),
+        effects = effects.map { it.toInfo() },
+        spawnPoint =
+            input
+                .read("respawn", ServerPlayer.RespawnConfig.CODEC)
+                .getOrNull()
+                ?.respawnData()
+                ?.toSpawnPoint(),
+    )
 }
 
 /** Returns the problems the game would have loading the data, or null if there are none. */

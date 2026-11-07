@@ -9,57 +9,43 @@ import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.server.MinecraftServer
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundSource
-import top.madkarma.conduit.game.invalidInput
-import top.madkarma.conduit.game.parseId
-import top.madkarma.conduit.game.player
-import top.madkarma.conduit.game.toComponent
-import top.madkarma.conduit.game.toMc
-import top.madkarma.conduit.proto.PlaySoundRequest
-import top.madkarma.conduit.proto.SendMessageRequest
-import top.madkarma.conduit.proto.SendTitleRequest
+import top.madkarma.conduit.game.*
 
-internal fun MinecraftServer.sendMessage(request: SendMessageRequest) {
-    val message = request.message.toComponent(registryAccess())
-    player(request.player).sendSystemMessage(message, request.overlay)
+/** Sends a chat message, or an action bar message with overlay. */
+internal fun MinecraftServer.sendMessage(ref: String, message: String, overlay: Boolean) {
+    player(ref).sendSystemMessage(textComponent(message, registryAccess()), overlay)
 }
 
-internal fun MinecraftServer.sendTitle(request: SendTitleRequest) {
-    val connection = player(request.player).connection
+/** Shows a title and subtitle, with the game's default timing. */
+internal fun MinecraftServer.sendTitle(ref: String, title: String?, subtitle: String?) {
+    val connection = player(ref).connection
     val registries = registryAccess()
 
-    val fadeIn = if (request.hasFadeIn()) request.fadeIn else 10
-    val stay = if (request.hasStay()) request.stay else 70
-    val fadeOut = if (request.hasFadeOut()) request.fadeOut else 20
-
-    connection.send(ClientboundSetTitlesAnimationPacket(fadeIn, stay, fadeOut))
-
-    if (request.hasSubtitle()) {
-        connection.send(
-            ClientboundSetSubtitleTextPacket(request.subtitle.toComponent(registries)),
-        )
+    connection.send(ClientboundSetTitlesAnimationPacket(10, 70, 20))
+    subtitle?.let {
+        connection.send(ClientboundSetSubtitleTextPacket(textComponent(it, registries)))
     }
-
-    if (request.hasTitle()) {
-        connection.send(
-            ClientboundSetTitleTextPacket(request.title.toComponent(registries)),
-        )
-    }
+    title?.let { connection.send(ClientboundSetTitleTextPacket(textComponent(it, registries))) }
 }
 
-internal fun MinecraftServer.playSound(request: PlaySoundRequest) {
-    val player = player(request.player)
-
-    val position = if (request.hasPosition()) request.position.toMc() else player.position()
-    val volume = if (request.volume > 0) request.volume else 1f
-    val pitch = if (request.pitch > 0) request.pitch else 1f
+/** Plays a sound to one player, at their position unless one is given. */
+internal fun MinecraftServer.playSound(
+    ref: String,
+    sound: String,
+    position: Vector3?,
+    volume: Float,
+    pitch: Float,
+) {
+    val player = player(ref)
+    val at = position?.toMc() ?: player.position()
 
     val packet =
         ClientboundSoundPacket(
-            soundEvent(request.sound),
-            soundCategory(request.category),
-            position.x,
-            position.y,
-            position.z,
+            soundEvent(sound),
+            SoundSource.MASTER,
+            at.x,
+            at.y,
+            at.z,
             volume,
             pitch,
             player.random.nextLong(),
@@ -74,10 +60,4 @@ private fun soundEvent(sound: String): Holder<SoundEvent> {
     return BuiltInRegistries.SOUND_EVENT.get(id)
         .map<Holder<SoundEvent>> { it }
         .orElseGet { Holder.direct(SoundEvent.createVariableRangeEvent(id)) }
-}
-
-private fun soundCategory(category: String): SoundSource {
-    if (category.isBlank()) return SoundSource.MASTER
-    return SoundSource.entries.firstOrNull { it.getName() == category.lowercase() }
-        ?: invalidInput("Unknown sound category: $category")
 }
