@@ -8,7 +8,10 @@ import { log } from "./log.ts";
 import { Cli } from "./requests.ts";
 
 const HOME = process.env.HOME ?? "/home/agent";
-const NPM_PREFIX = process.env.NPM_CONFIG_PREFIX ?? join(HOME, ".npm-global");
+// Bun installs the CLIs here, and their launchers into the bin folder.
+const BUN_INSTALL = process.env.BUN_INSTALL ?? join(HOME, ".bun");
+const BIN = process.env.BUN_INSTALL_BIN ?? join(BUN_INSTALL, "bin");
+const GLOBAL_PACKAGES = join(BUN_INSTALL, "install", "global", "node_modules");
 
 const UPDATE_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const UPDATE_RETRY_MS = 60 * 1000;
@@ -32,7 +35,7 @@ export function currentMaintenance(): string | undefined {
 }
 
 export function cliPath(cli: Cli): string {
-    return join(NPM_PREFIX, "bin", cli);
+    return join(BIN, cli);
 }
 
 export function installed(cli: Cli): boolean {
@@ -50,7 +53,7 @@ export async function ensureInstalled(cli: Cli): Promise<void> {
     }
 
     log(`Installing ${PACKAGES[cli]}`);
-    await npmInstall(PACKAGES[cli]);
+    await bunInstall(PACKAGES[cli]);
     versions[cli] = await versionOf(cli);
     log(`Installed ${cli} ${versions[cli]}`);
 }
@@ -84,7 +87,7 @@ async function updateInstalled(): Promise<void> {
             // Reinstalling the same version would download it again, and the CLI is missing meanwhile.
             const latest = await latestVersion(cli);
             if (latest !== (await installedVersion(cli)))
-                await npmInstall(`${PACKAGES[cli]}@${latest}`);
+                await bunInstall(`${PACKAGES[cli]}@${latest}`);
 
             versions[cli] = await versionOf(cli);
             log(`${cli} is at ${versions[cli]}`);
@@ -94,19 +97,20 @@ async function updateInstalled(): Promise<void> {
     }
 }
 
-// The download cache would only take space in the home volume.
-async function npmInstall(spec: string): Promise<void> {
-    await execute("npm", ["install", "--global", spec], { maxBuffer: 16 * 1024 * 1024 });
-    await execute("npm", ["cache", "clean", "--force"]);
+// Some CLIs set up their native binary in a postinstall script, which Bun only runs for trusted
+// packages. The download cache would only take space in the home volume.
+async function bunInstall(spec: string): Promise<void> {
+    await execute("bun", ["add", "--global", "--trust", spec], { maxBuffer: 16 * 1024 * 1024 });
+    await execute("bun", ["pm", "cache", "rm"]);
 }
 
-// The version npm installed, from the package's own manifest.
+// The version Bun installed, from the package's own manifest.
 async function installedVersion(cli: Cli): Promise<string> {
-    const manifest = join(NPM_PREFIX, "lib", "node_modules", PACKAGES[cli], "package.json");
+    const manifest = join(GLOBAL_PACKAGES, PACKAGES[cli], "package.json");
     return JSON.parse(await readFile(manifest, "utf8")).version;
 }
 
 async function latestVersion(cli: Cli): Promise<string> {
-    const { stdout } = await execute("npm", ["view", PACKAGES[cli], "version"]);
+    const { stdout } = await execute("bun", ["info", PACKAGES[cli], "version"]);
     return stdout.trim();
 }
