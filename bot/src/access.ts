@@ -1,7 +1,7 @@
 import { call, type CallError, type ConduitClients } from "@conduit/client";
 import { Ok, type AsyncResult } from "results-ts";
 import type { ChatMessage } from "./chat.ts";
-import type { Config } from "./config.ts";
+import { chatAgent, type Config } from "./config.ts";
 
 // Full mode controls the game. Chat mode lets everyone else read it, but only their own player data.
 export type Mode = "full" | "chat";
@@ -24,18 +24,19 @@ export const DEFAULT_CHAT_TOOLS = [
 // chat mode if it is on, or no answer.
 export function accessMode(
     players: ConduitClients["player"],
-    config: Pick<Config, "allow" | "operators" | "chat">,
+    config: Pick<Config, "access" | "agents">,
     sender: ChatMessage,
 ): AsyncResult<Mode | undefined, CallError> {
-    const fallback: Mode | undefined = config.chat?.enabled ? "chat" : undefined;
+    const { allow, operators } = config.access;
+    const fallback: Mode | undefined = chatAgent(config) ? "chat" : undefined;
 
-    const listed = config.allow.some(
+    const listed = allow.some(
         (entry) =>
             entry.toLowerCase() === sender.playerUuid.toLowerCase() ||
             entry.toLowerCase() === sender.player.toLowerCase(),
     );
 
-    if (listed || !config.operators) {
+    if (listed || !operators) {
         const mode: Mode | undefined = listed ? "full" : fallback;
         return Ok(mode).mapAsync((value) => Promise.resolve(value));
     }
@@ -47,13 +48,13 @@ export function accessMode(
 
 // Settings for the Conduit MCP server that serves one request.
 export function toolPolicy(
-    config: Pick<Config, "readOnly" | "chat">,
+    tools: Config["tools"],
     mode: Mode,
     sender: ChatMessage,
 ): Record<string, string> {
-    if (mode === "full" || !config.chat) return { CONDUIT_MCP_READ_ONLY: String(config.readOnly) };
+    if (mode === "full") return { CONDUIT_MCP_READ_ONLY: String(tools.readOnly) };
 
-    const { allow, deny } = config.chat;
+    const { allow, deny } = tools.chat;
     // A deny list on its own allows every other tool, otherwise the default list applies.
     const allowed = allow ?? (deny.length > 0 ? [] : DEFAULT_CHAT_TOOLS);
 

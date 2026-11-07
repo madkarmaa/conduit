@@ -4,10 +4,10 @@ import { call, close, connect, connectionFromEnv, type ConnectionOptions } from 
 import type { AsyncResult } from "results-ts";
 import type { Mode } from "./access.ts";
 import { createAgent, type Agent, type McpServer } from "./agents.ts";
-import { describeCall, handleChat, type Bot } from "./bot.ts";
+import { describeCall, handleChat, type AgentRunner, type Bot } from "./bot.ts";
 import { log } from "./log.ts";
 import { listenToChat } from "./chat.ts";
-import { loadConfig, type Config } from "./config.ts";
+import { chatAgent, loadConfig, type Config } from "./config.ts";
 import { Conversations } from "./conversations.ts";
 import { installedMcpServer } from "./mcp-server.ts";
 import { builtFiles, homeFiles, passedVariables, referencedVariables } from "./sandbox/host.ts";
@@ -30,7 +30,7 @@ void loadConfig(configPath)
             .mapErr((message) => `Cannot find the Conduit MCP server: ${message}`)
             .map((mcp) => ({ ...setup, mcp, agents: agentsFor(setup.config) })),
     )
-    .andThenAsync((setup) => prepareImage(setup.agents.full).map((): Setup => setup))
+    .andThenAsync((setup) => prepareImages(setup.agents).map((): Setup => setup))
     .match({
         Ok: start,
         Err: (message) => {
@@ -39,42 +39,36 @@ void loadConfig(configPath)
         },
     });
 
-// Chat mode can use another model or effort, but always the same agent CLI and image.
+// Chat mode can use another agent CLI, model or effort.
 function agentsFor(config: Config): Record<Mode, Agent> {
-    const { agent, model, effort, args } = config;
-    const full = createAgent(agent, { model, effort, args });
-    const chat = config.chat && createAgent(agent, { ...config.chat, args });
-    return { full, chat: chat ?? full };
+    const full = createAgent(config.agents.full);
+    const chat = chatAgent(config);
+    return { full, chat: chat ? createAgent(chat) : full };
 }
 
-function prepareImage({ image }: Agent): AsyncResult<undefined, string> {
-    return checkDocker().andThenAsync(() =>
-        ensureImage(image, () => log(`Building the agent image ${image.name}, this takes a while`)),
+// Both modes can share one agent and its image.
+function prepareImages(agents: Record<Mode, Agent>): AsyncResult<undefined, string> {
+    const images = new Map(Object.values(agents).map(({ image }) => [image.name, image]));
+
+    return [...images.values()].reduce(
+        (previous, image) =>
+            previous.andThenAsync(() =>
+                ensureImage(image, () =>
+                    log(`Building the agent image ${image.name}, this takes a while`),
+                ),
+            ),
+        checkDocker(),
     );
 }
 
 function start({ config, connection, mcp, agents }: Setup) {
-    const agent = agents.full;
     const clients = connect(connection);
-    const files = homeFiles(agent.files, config.files);
-    // A variable that the config lists must be set. A variable that a copied config file reads is
-    // optional.
-    const referenced = referencedVariables(files.values()).filter((name) => name in process.env);
-    const variables = [...new Set([...config.env, ...referenced])];
 
     const bot: Bot = {
         clients,
         config,
-        agents,
+        agents: { full: runnerFor(agents.full, config), chat: runnerFor(agents.chat, config) },
         conversations: new Conversations(config.stateDirectory, config.memory),
-        container: {
-            image: agent.image.name,
-            offline: config.offline,
-            env: { ...passedVariables(variables), ...agent.env },
-            assets: builtFiles(),
-            timeoutSeconds: config.timeoutSeconds,
-        },
-        logins: files,
         // Only the MCP server outside the container gets the variables with the host and the token.
         // Each request adds its mode's tool policy.
         mcp: { server: mcp, env: process.env },
@@ -99,4 +93,23 @@ function start({ config, connection, mcp, agents }: Setup) {
             close(clients);
         });
     }
+}
+
+function runnerFor(agent: Agent, config: Config): AgentRunner {
+    const { sandbox } = config;
+    const logins = homeFiles(agent.files, sandbox.files);
+    // A copied config file can read variables, which the agent then needs too, if they are set.
+    const referenced = referencedVariables(logins.values()).filter((name) => name in process.env);
+
+    return {
+        agent,
+        logins,
+        container: {
+            image: agent.image.name,
+            offline: sandbox.offline,
+            env: { ...passedVariables(referenced), ...sandbox.env, ...agent.env },
+            assets: builtFiles(),
+            timeoutSeconds: sandbox.timeoutSeconds,
+        },
+    };
 }

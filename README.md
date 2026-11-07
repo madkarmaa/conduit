@@ -211,60 +211,66 @@ The config file defaults to `conduit-bot.json` in the working directory. `CONDUI
 
 ```json
 {
-    "agent": "claude",
-    "model": "sonnet",
-    "effort": "high",
-    "allow": ["Steve"],
-    "chat": { "model": "haiku", "effort": "low" }
+    "agents": {
+        "full": { "agent": "claude", "model": "sonnet", "effort": "medium" },
+        "chat": {
+            "agent": "opencode",
+            "model": "opencode-go/deepseek-v4.1-flash",
+            "effort": "high"
+        }
+    },
+    "access": { "allow": ["Steve"] }
 }
 ```
 
-| Key              | Default        | Description                                                      |
-| ---------------- | -------------- | ---------------------------------------------------------------- |
-| `agent`          |                | Agent CLI, see [Agents](#agents)                                 |
-| `model`          |                | Model, as the agent CLI names it                                 |
-| `effort`         |                | Reasoning effort, as the agent CLI names it                      |
-| `args`           | `[]`           | Extra arguments for the agent CLI                                |
-| `keyword`        | `conduit`      | Word that players mention with `@`                               |
-| `memory`         | `player`       | `player` keeps one conversation per player, `shared` one for all |
-|                  |                | players, and `none` starts a new one for every request           |
-| `operators`      | `true`         | Server operators get full mode                                   |
-| `allow`          | `[]`           | Players who get full mode, by name or UUID                       |
-| `readOnly`       | `false`        | Only give full mode tools that read state                        |
-| `chat`           |                | Chat mode for everyone else, see [Modes](#modes)                 |
-| `offline`        | `false`        | Cut the agent's container off from every network                 |
-| `files`          | `[]`           | More login files to copy into the agent's home, relative to `~`  |
-| `env`            | `[]`           | Names of variables to pass to the agent, such as API keys        |
-| `instructions`   |                | Extra instructions for the agent                                 |
-| `timeoutSeconds` | `300`          | Time limit for one request                                       |
-| `maxReplyLength` | `1000`         | The bot cuts longer answers                                      |
-| `stateDirectory` | `.conduit-bot` | Where the bot keeps conversations, relative to the config file   |
+Any string in the config can read a variable with `${NAME}`, or with `${NAME:-default}` when it has
+a default. The bot does not start while a variable without a default is not set. It also loads the
+`.env` file next to the config file, if there is one. Variables that are already set keep their
+value.
 
-`agent`, `model` and `effort` are required.
+| Key                      | Default        | Description                                          |
+| ------------------------ | -------------- | ---------------------------------------------------- |
+| `keyword`                | `conduit`      | Word that players mention with `@`                   |
+| `memory`                 | `player`       | `player` keeps one conversation per player, `shared` |
+|                          |                | one for all players, and `none` starts a new one for |
+|                          |                | every request                                        |
+| `instructions`           |                | Extra instructions for the agent                     |
+| `agents.full`            |                | Agent for full mode, see [Agents](#agents)           |
+| `agents.chat`            |                | Agent for chat mode, which is off without it         |
+| `access.operators`       | `true`         | Server operators get full mode                       |
+| `access.allow`           | `[]`           | Players who get full mode, by name or UUID           |
+| `access.chat`            | `true`         | Answer everyone else in [chat mode](#modes)          |
+| `tools.readOnly`         | `false`        | Only give full mode tools that read state            |
+| `tools.chat.allow`       |                | Only these tools in chat mode, instead of the        |
+|                          |                | default list                                         |
+| `tools.chat.deny`        | `[]`           | Never these tools in chat mode. On its own, it       |
+|                          |                | allows every other read tool                         |
+| `sandbox.offline`        | `false`        | Cut the agent's container off from every network     |
+| `sandbox.timeoutSeconds` | `300`          | Time limit for one request                           |
+| `sandbox.files`          | `[]`           | More login files to copy into the agent's home,      |
+|                          |                | relative to `~`                                      |
+| `sandbox.env`            | `{}`           | Variables for the agent by name, such as API keys    |
+| `replies.maxLength`      | `1000`         | The bot cuts longer answers                          |
+| `stateDirectory`         | `.conduit-bot` | Where the bot keeps conversations, relative to the   |
+|                          |                | config file                                          |
+
+Each agent has an `agent`, a `model` and an `effort`, which are required, and optional `args`.
 
 ### Modes
 
-Operators and the players in `allow` get full mode, where the agent controls the game. Anyone in
-full mode controls the agent and every tool it has, so keep the list short or turn on `readOnly`.
-With `shared` memory, full mode answers go to everyone.
+Operators and the players in `access.allow` get full mode, where the agent controls the game.
+Anyone in full mode controls the agent and every tool it has, so keep the list short or turn on
+`tools.readOnly`. With `shared` memory, full mode answers go to everyone.
 
-Chat mode lets every other player ask questions. The `chat` section turns it on, and its `model`
-and `effort` are required. In chat mode the agent can only read the game. The player tools only
-show the asking player's own data, such as their inventory, position and statistics, and never
-another player's data or an IP address. Each player has a chat mode conversation of their own,
-separate from full mode, and only that player sees its answers.
+Chat mode lets every other player ask questions. `agents.chat` turns it on and picks its agent,
+which can be another CLI or a cheaper model than full mode's. In chat mode the agent can only read
+the game. The player tools only show the asking player's own data, such as their inventory,
+position and statistics, and never another player's data or an IP address. Each player has a chat
+mode conversation of their own, separate from full mode, and only that player sees its answers.
 
-| Key            | Default | Description                                                  |
-| -------------- | ------- | ------------------------------------------------------------ |
-| `chat.enabled` | `true`  | Answer players who do not get full mode                      |
-| `chat.model`   |         | Model for chat mode, such as a cheaper one                   |
-| `chat.effort`  |         | Reasoning effort for chat mode                               |
-| `chat.allow`   |         | Only these tools. Defaults to a list of safe read tools      |
-| `chat.deny`    | `[]`    | Never these tools. On its own, every other read tool applies |
-
-The default tools are `server_info`, `world_info`, `game_rules`, `get_block`, `get_region`,
-`terrain`, `registry`, `recipes`, `structures` and `get_player`. Chat mode never gets the tools that
-list other players or entities.
+The default chat mode tools are `server_info`, `world_info`, `game_rules`, `get_block`,
+`get_region`, `terrain`, `registry`, `recipes`, `structures` and `get_player`. Chat mode never gets
+the tools that list other players or entities.
 
 ### Isolation
 
@@ -272,12 +278,12 @@ Every request runs the agent in a new Docker container. The container sees only 
 home, with the conversation, and a copy of its login files. It cannot see the host's files, other
 processes or the Docker socket, and its root filesystem is read-only. The Conduit MCP server runs in
 the bot, outside the container, and the agent reaches it through the container's input and output.
-The gRPC token never enters the container, and the agent cannot turn off `readOnly` or the chat mode
-limits from inside it.
+The gRPC token never enters the container, and the agent cannot turn off `tools.readOnly` or the
+chat mode limits from inside it.
 
-The container can reach the internet, which the agent needs for its model's API, unless `offline`
-is on. It cannot reach services that only listen on the host's loopback interface, such as the
-mod's gRPC server by default.
+The container can reach the internet, which the agent needs for its model's API, unless
+`sandbox.offline` is on. It cannot reach services that only listen on the host's loopback interface,
+such as the mod's gRPC server by default.
 
 The bot copies the login files into the agent's home before each run and deletes them after it. If
 the agent's CLI refreshed a token during the run, the bot copies it back, unless the host file
@@ -285,25 +291,25 @@ changed in the meantime.
 
 ### Agents
 
-`agent` is `claude`, `codex` or `opencode`. To use another agent CLI, open an issue. The bot builds
-an image with the latest version of the CLI the first time it runs, and again after each bot update.
-It copies the CLI's logins from the host into the container, so log in on the host first. It also
-turns off the CLI's own tools, so the agent only uses the Conduit tools. The bot passes `model`,
-`effort` and `args` to the CLI as given.
+An agent's `agent` is `claude`, `codex` or `opencode`. To use another agent CLI, open an issue. The
+bot builds an image with the latest version of each CLI it uses the first time it runs, and again
+after each bot update. It copies the CLI's logins from the host into the container, so log in on
+the host first. It also turns off the CLI's own tools, so the agent only uses the Conduit tools. The
+bot passes `model`, `effort` and `args` to the CLI as given.
 
 #### Claude Code
 
 [Claude Code](https://claude.com/claude-code) logs in with `claude` on the host. Where it keeps the
-login in the system keychain instead of `~/.claude/.credentials.json`, as on macOS, pass an API key
-or a token from `claude setup-token` with `"env": ["ANTHROPIC_API_KEY"]` or
-`"env": ["CLAUDE_CODE_OAUTH_TOKEN"]`.
+login in the system keychain instead of `~/.claude/.credentials.json`, as on macOS, pass a token
+from `claude setup-token` or an API key, such as
+`"sandbox": { "env": { "CLAUDE_CODE_OAUTH_TOKEN": "${CLAUDE_CODE_OAUTH_TOKEN}" } }`.
 
 ```json
 {
-    "agent": "claude",
-    "model": "sonnet",
-    "effort": "high",
-    "chat": { "model": "haiku", "effort": "low" }
+    "agents": {
+        "full": { "agent": "claude", "model": "sonnet", "effort": "high" },
+        "chat": { "agent": "claude", "model": "haiku", "effort": "low" }
+    }
 }
 ```
 
@@ -313,18 +319,18 @@ or a token from `claude setup-token` with `"env": ["ANTHROPIC_API_KEY"]` or
 
 ```json
 {
-    "agent": "codex",
-    "model": "gpt-6.1-sol",
-    "effort": "high",
-    "chat": { "model": "gpt-6-luna", "effort": "low" }
+    "agents": {
+        "full": { "agent": "codex", "model": "gpt-6.1-sol", "effort": "high" },
+        "chat": { "agent": "codex", "model": "gpt-6-luna", "effort": "low" }
+    }
 }
 ```
 
 #### OpenCode
 
-[OpenCode](https://opencode.ai) logs in with `opencode auth login` on the host. It keeps those logins
-in the same database as every session, so the bot exports them with `opencode auth export` before
-each run and imports them in the container. Without a login, free models such as
+[OpenCode](https://opencode.ai) logs in with `opencode auth login` on the host. It keeps those
+logins in the same database as every session, so the bot exports them with `opencode auth export`
+before each run and imports them in the container. Without a login, free models such as
 `opencode/beam-free` work too.
 
 The bot also copies OpenCode's config file, so custom providers work, and passes the variables that
@@ -333,10 +339,10 @@ them, and the effort is one of the model's variants.
 
 ```json
 {
-    "agent": "opencode",
-    "model": "opencode-go/glm-5.3",
-    "effort": "high",
-    "chat": { "model": "opencode-go/glm-5.3-flash", "effort": "low" }
+    "agents": {
+        "full": { "agent": "opencode", "model": "opencode-go/glm-5.3", "effort": "high" },
+        "chat": { "agent": "opencode", "model": "opencode-go/glm-5.3-flash", "effort": "low" }
+    }
 }
 ```
 

@@ -127,8 +127,8 @@ const AGENTS: Record<AgentName, (options: AgentOptions) => Agent> = {
     },
 };
 
-export function createAgent(name: AgentName, options: AgentOptions): Agent {
-    return AGENTS[name](options);
+export function createAgent({ agent, ...options }: AgentOptions & { agent: AgentName }): Agent {
+    return AGENTS[agent](options);
 }
 
 // The mcpServers format that Claude Code reads.

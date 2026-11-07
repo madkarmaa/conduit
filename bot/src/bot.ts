@@ -18,11 +18,16 @@ import { withLogins } from "./sandbox/logins.ts";
 export interface Bot {
     readonly clients: ConduitClients;
     readonly config: Config;
-    readonly agents: Readonly<Record<Mode, Agent>>;
+    readonly agents: Readonly<Record<Mode, AgentRunner>>;
     readonly conversations: Conversations;
+    readonly mcp: McpHost;
+}
+
+// What a mode needs to run its agent.
+export interface AgentRunner {
+    readonly agent: Agent;
     // Every container setting except the home, which depends on the conversation.
     readonly container: Omit<Container, "home">;
-    readonly mcp: McpHost;
     // Login files in the host's home, by their path relative to it.
     readonly logins: ReadonlyMap<string, string>;
 }
@@ -75,7 +80,7 @@ function answer(bot: Bot, request: Request): PromiseLike<void> {
             Ok: (reply) => {
                 // Only full mode shares conversations, so only its answers are for everyone.
                 const shared = request.mode === "full" && bot.config.memory === "shared";
-                const text = toChatText(reply, bot.config.maxReplyLength);
+                const text = toChatText(reply, bot.config.replies.maxLength);
                 void say(speaker(bot), shared ? "everyone" : sender.playerUuid, text).inspectErr(
                     (error) => log(`Could not post the answer: ${describeCall(error)}`),
                 );
@@ -88,14 +93,14 @@ function answer(bot: Bot, request: Request): PromiseLike<void> {
 }
 
 function ask(bot: Bot, conversation: Conversation, request: Request) {
-    const agent = bot.agents[request.mode];
+    const { agent, logins, ...runner } = bot.agents[request.mode];
     const prompt = buildPrompt(bot.config, request.sender, request.text, request.mode);
     const command = agent.command(prompt, conversation.started);
-    const container = { ...bot.container, home: conversation.directory };
-    const policy = toolPolicy(bot.config, request.mode, request.sender);
+    const container = { ...runner.container, home: conversation.directory };
+    const policy = toolPolicy(bot.config.tools, request.mode, request.sender);
     const mcp = { ...bot.mcp, env: { ...bot.mcp.env, ...policy } };
 
-    return withLogins(conversation.directory, bot.logins, agent.exportedLogins, (setup) =>
+    return withLogins(conversation.directory, logins, agent.exportedLogins, (setup) =>
         runInContainer(container, mcp, { setup, command }),
     ).map((output) => output.trim() || "Done.");
 }
