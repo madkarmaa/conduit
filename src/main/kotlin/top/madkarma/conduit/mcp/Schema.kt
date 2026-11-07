@@ -1,7 +1,6 @@
 package top.madkarma.conduit.mcp
 
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
@@ -104,4 +103,4 @@ private fun schema(type: String, description: String?, extra: JsonObjectBuilder.
         description?.let { put("description", it) }
     }
 
-val EMPTY_ARRAY = JsonArray(emptyList<JsonElement>())
+val EMPTY_ARRAY = JsonArray(emptyList())

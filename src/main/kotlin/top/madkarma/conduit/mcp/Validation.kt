@@ -63,10 +63,10 @@ private fun withDefaults(schema: JsonObject, value: JsonObject): JsonObject {
 
 private fun withNestedDefaults(schema: JsonObject, value: JsonElement): JsonElement {
     val items = schema["items"] as? JsonObject
-    return when {
-        value is JsonObject -> withDefaults(schema, value)
-        value is JsonArray && items != null ->
-            JsonArray(value.map { withNestedDefaults(items, it) })
+    return when (value) {
+        is JsonObject -> withDefaults(schema, value)
+        is JsonArray if items != null -> JsonArray(value.map { withNestedDefaults(items, it) })
+
         else -> value
     }
 }
