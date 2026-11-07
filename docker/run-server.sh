@@ -16,12 +16,26 @@ rm -f "$dir"/mods/conduit-*.jar
 find /mod -maxdepth 1 -name "conduit-*+$MC_VERSION.jar" \
     -exec cp {} "$dir/mods/" \;
 
-# The test token reaches the mod through a variable, like a real deployment's secrets.
-config="$dir/config/conduit.json"
-if [ ! -f "$config" ]; then
-    mkdir -p "$dir/config"
-    echo '{"mcp": {"tokens": [{"name": "test", "token": "${CONDUIT_TEST_TOKEN}"}]}}' > "$config"
+# Secrets reach the mod through variables, like in a real deployment. The agents are on when their
+# secrets are set, which the agent compose file needs too.
+agents=false
+if [ -n "${CONDUIT_FULL_SECRET:-}" ] && [ -n "${CONDUIT_CHAT_SECRET:-}" ]; then
+    agents=true
 fi
+
+mkdir -p "$dir/config"
+cat > "$dir/config/conduit.json" <<EOF
+{
+    "mcp": {
+        "allowedHosts": ["server", "localhost", "127.0.0.1"],
+        "tokens": [{ "name": "test", "token": "\${CONDUIT_TEST_TOKEN}" }]
+    },
+    "agents": {
+        "full": { "enabled": $agents, "mcpUrl": "http://server:25585/mcp" },
+        "chat": { "enabled": $agents, "mcpUrl": "http://server:25585/mcp" }
+    }
+}
+EOF
 
 properties="$dir/server.properties"
 touch "$properties"
