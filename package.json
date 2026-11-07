@@ -22,9 +22,6 @@
         "lint-staged": "^17.6.0",
         "semantic-release": "^25.0.9"
     },
-    "lint-staged": {
-        "*": "sh -c './gradlew spotlessApply' lint-staged"
-    },
     "commitlint": {
         "extends": [
             "@commitlint/config-conventional"
