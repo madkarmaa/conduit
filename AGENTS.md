@@ -16,19 +16,23 @@
 
 - Run Entanglement against a baseline regularly and refactor based on its results. Every edited file must stay green, with a maintainability index of at least 20.
 
-# Minecraft and gRPC standards
+# Minecraft, MCP and agent standards
 
 - Target the Minecraft version in `gradle.properties` (unobfuscated Mojang names). Verify game and Fabric API signatures against the actual jars instead of relying on memory.
 
 - Access game state only on the server thread, through `GameServer.run`.
 
-- Keep gRPC service implementations thin. They delegate to files in the same service package, grouped by topic, which hold the game logic.
+- Keep MCP tool definitions thin. They live next to the game logic in their service package and delegate to the files there, grouped by topic.
 
-- Report expected failures with the gRPC status code that fits them, such as `INVALID_ARGUMENT`, `NOT_FOUND` or `FAILED_PRECONDITION`, never with `INTERNAL`.
+- Report expected failures with the `ConduitError` kind that fits them, such as `InvalidInput`, `NotFound` or `FailedPrecondition`. Only unexpected exceptions may end up as internal errors.
 
-- Keep the protobuf API backwards compatible. Never renumber or reuse field numbers.
+- Keep the MCP tools backwards compatible: their names, actions, arguments and output format. Mark every action as read, write or destructive, so approvals and MCP hosts can rely on the marks.
 
-- Keep `buf lint` passing with the rules in `buf.yaml`.
+- Never log or show secrets: runner secrets, MCP tokens and CLI logins.
+
+- Keep the runner in `agent/` free of dependencies. CLI flags belong in `agent/presets.mjs`, so a CLI change only needs a new image, not a new mod.
+
+- The mod never starts or stops the agent containers. It only talks to their runners over HTTP.
 
 # Testing standards
 
