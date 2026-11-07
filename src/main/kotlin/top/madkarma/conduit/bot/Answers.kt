@@ -78,6 +78,14 @@ object Answers {
                 exception.toString(),
             )
             return "Conduit cannot reach its agent right now."
+        } catch (exception: Exception) {
+            LOGGER.error(
+                "The {} request of {} failed",
+                request.mode.id,
+                request.asker.name,
+                exception,
+            )
+            return "Something went wrong. The server log has the details."
         } finally {
             AccessTokens.revoke(token)
         }
