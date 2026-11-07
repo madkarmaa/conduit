@@ -46,3 +46,6 @@ replay_*.log
 # node
 
 node_modules/
+
+# Rust build output
+rust/target/

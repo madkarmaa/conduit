@@ -1,0 +1,19 @@
+[package]
+name = "conduit-client"
+description = "Client for the Conduit mod's gRPC API"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+pbjson.workspace = true
+pbjson-types.workspace = true
+prost.workspace = true
+serde.workspace = true
+tonic.workspace = true
+tonic-prost.workspace = true
+
+[build-dependencies]
+pbjson-build = "0.9.0"
+tonic-prost-build = "0.14.9"
