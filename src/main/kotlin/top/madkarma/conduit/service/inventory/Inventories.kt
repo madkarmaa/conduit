@@ -3,10 +3,12 @@ package top.madkarma.conduit.service.inventory
 import kotlinx.serialization.Serializable
 import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket
 import net.minecraft.server.MinecraftServer
+import net.minecraft.server.level.ServerPlayer
 import net.minecraft.util.Prediction
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import top.madkarma.conduit.game.*
+import top.madkarma.conduit.service.player.PlayerItems
 
 @Serializable data class InventorySlot(val slot: Int, val item: ItemInfo)
 
@@ -27,14 +29,14 @@ internal fun MinecraftServer.enderChestOf(ref: String): InventoryContents =
 
 /** A null item empties the slot. */
 internal fun MinecraftServer.changeInventorySlot(ref: String, slot: Int, item: ItemInfo?) {
-    val inventory = player(ref).inventory
+    val inventory = player(ref).itemsBeforeEdit().inventory
     if (slot !in 0 until inventory.containerSize) invalidInput("Slot $slot is out of range")
     inventory.setItem(slot, item?.toMc(registryAccess()) ?: ItemStack.EMPTY)
 }
 
 /** Returns how many items did not fit and dropped at the player's feet. */
 internal fun MinecraftServer.giveItem(ref: String, item: ItemInfo): Int {
-    val player = player(ref)
+    val player = player(ref).itemsBeforeEdit()
     val stack = item.toMc(registryAccess())
 
     player.inventory.add(stack)
@@ -46,7 +48,13 @@ internal fun MinecraftServer.giveItem(ref: String, item: ItemInfo): Int {
 }
 
 internal fun MinecraftServer.clearInventory(ref: String) {
-    player(ref).inventory.clearContent()
+    player(ref).itemsBeforeEdit().inventory.clearContent()
+}
+
+// Undo puts the player's items back.
+private fun ServerPlayer.itemsBeforeEdit(): ServerPlayer {
+    EditJournal.before { PlayerItems.of(level().server, uuid) }
+    return this
 }
 
 internal fun MinecraftServer.selectHotbarSlot(ref: String, slot: Int) {

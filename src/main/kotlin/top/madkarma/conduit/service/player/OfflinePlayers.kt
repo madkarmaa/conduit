@@ -77,6 +77,7 @@ private fun MinecraftServer.editPlayerData(ref: String, edit: (CompoundTag) -> U
 
     val data = readPlayerData(id)
     problemsIn(id, data)?.let { failedPrecondition("Saved data of player $id is invalid: $it") }
+    EditJournal.before { PlayerItems.of(this, id) }
 
     edit(data)
     problemsIn(id, data)?.let { invalidInput("Edited player data is invalid: $it") }

@@ -8,8 +8,8 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.level.levelgen.structure.BoundingBox
 
 /**
- * One recorded tool call, with the blocks it changed as they were before, and the entities it
- * spawned or removed.
+ * One recorded tool call, with the blocks it changed as they were before, and its other changes,
+ * such as spawned entities or changed player items.
  */
 class EditGroup(
     val id: Int,
@@ -17,24 +17,24 @@ class EditGroup(
     val action: String,
     val time: Instant,
     val snapshots: List<BlockSnapshot>,
-    val entities: List<EntityChange>,
+    val changes: List<UndoableChange>,
 ) {
     val blocks: Long = snapshots.sumOf { it.size.toLong() }
 
-    fun overlaps(other: EditGroup): Boolean = snapshots.any { mine ->
-        other.snapshots.any { mine.overlaps(it) }
-    }
+    fun overlaps(other: EditGroup): Boolean =
+        snapshots.any { mine -> other.snapshots.any { mine.overlaps(it) } } ||
+            changes.any { mine -> other.changes.any { mine.overlaps(it) } }
 }
 
 /** What a recorded call returned, and whether undo can revert it. */
 class Recorded<T>(val result: T, val undoable: Boolean)
 
-/** The blocks that one call saves, per dimension, and the entities it spawns or removes. */
+/** The blocks that one call saves, per dimension, and its other changes. */
 internal class Recorder(private val limit: Long) {
     private val snapshots = LinkedHashMap<ServerLevel, BlockSnapshot>()
     private var count = 0L
 
-    val entities = mutableListOf<EntityChange>()
+    val changes = mutableListOf<UndoableChange>()
 
     var tooLarge = false
         private set

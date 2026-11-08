@@ -22,8 +22,8 @@ private constructor(
     val dimension: ResourceKey<Level>,
     private val uuid: UUID,
     private val removedData: CompoundTag?,
-) {
-    fun undo(server: MinecraftServer) {
+) : UndoableChange {
+    override fun undo(server: MinecraftServer) {
         if (removedData == null) {
             server.allLevels.firstNotNullOfOrNull { it.getEntity(uuid) }?.discard()
             return
