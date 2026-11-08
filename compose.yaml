@@ -4,6 +4,7 @@
 #
 #   MC_VERSION=<version> docker compose up -d server   # server only, MCP on localhost:25585/mcp
 #   MC_VERSION=<version> docker compose up -d          # server and a vanilla client that joins it
+#   MC_VERSION=<version> docker compose --profile players up -d   # also a second player, Alex
 #
 # The MCP endpoint takes the bearer token from CONDUIT_TEST_TOKEN, or dev-token when it is not set.
 # RCON on localhost:25575 runs console commands, with the password from RCON_PASSWORD or dev-rcon.
@@ -59,11 +60,15 @@ services:
         image: 3arthqu4ke/headlessmc:latest
         user: root
         entrypoint: ["/bin/bash", "-c"]
-        command: ["mkdir -p /home/default/game && chown 185:0 /home/default/game"]
+        command:
+            [
+                "mkdir -p /clients/first/game /clients/second/game && chown 185:0 /clients/first/game /clients/second/game",
+            ]
         volumes:
-            - client-data:/home/default
+            - client-data:/clients/first
+            - client2-data:/clients/second
 
-    client:
+    client: &client
         <<: *headlessmc
         command: ["/scripts/run-client.sh"]
         volumes:
@@ -71,7 +76,7 @@ services:
             - client-data:/home/default
             # Preconfigured so the first start skips the onboarding screens.
             - ./docker/options.txt:/home/default/game/options.txt:ro
-        environment:
+        environment: &client-environment
             <<: *environment
             HMC_FILES_GAME: /home/default/game
             MC_SERVER: server:25565
@@ -81,6 +86,19 @@ services:
             server:
                 condition: service_healthy
 
+    # A second player for tests that need two, such as what one player may see of another.
+    client2:
+        <<: *client
+        profiles: ["players"]
+        volumes:
+            - ./docker:/scripts:ro
+            - client2-data:/home/default
+            - ./docker/options.txt:/home/default/game/options.txt:ro
+        environment:
+            <<: *client-environment
+            MC_PLAYER: Alex
+
 volumes:
     server-data:
     client-data:
+    client2-data:

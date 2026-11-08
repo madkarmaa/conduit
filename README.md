@@ -261,6 +261,10 @@ MC_VERSION=<minecraft version> docker compose up -d server   # server only
 MC_VERSION=<minecraft version> docker compose up -d          # server and a client joining it
 ```
 
+The client plays as `Offline`. `--profile players` adds a second client that plays as `Alex`, for
+tests that need two players, such as what chat mode shows one player of another. `MC_PLAYER` sets a
+client's player name.
+
 The MCP server is at `http://localhost:25585/mcp` with the token `dev-token`, unless
 `CONDUIT_TEST_TOKEN` sets another. RCON on `localhost:25575` runs console commands, such as
 `execute as Offline run conduit hello`, with the password `dev-rcon`, unless `RCON_PASSWORD` sets
