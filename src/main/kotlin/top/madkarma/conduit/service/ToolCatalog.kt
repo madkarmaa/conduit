@@ -4,6 +4,7 @@ import top.madkarma.conduit.mcp.BATCH
 import top.madkarma.conduit.mcp.ToolDefinition
 import top.madkarma.conduit.service.entity.*
 import top.madkarma.conduit.service.events.EVENTS
+import top.madkarma.conduit.service.history.UNDO
 import top.madkarma.conduit.service.player.*
 import top.madkarma.conduit.service.registry.GAME_DATA
 import top.madkarma.conduit.service.server.DATAPACKS
@@ -25,6 +26,7 @@ val ALL_TOOLS: List<ToolDefinition> =
         GET_BLOCKS,
         EDIT_BLOCKS,
         STRUCTURES,
+        UNDO,
         ENTITIES,
         EDIT_ENTITY,
         MOVE_ENTITY,

@@ -142,4 +142,6 @@ enum class Memory {
 data class GameConfig(
     val backupDirectory: String = "backups",
     val maxStructureVolume: Long = 8_000_000,
+    /** The most changed blocks that undo keeps for all recent edits together. 0 turns undo off. */
+    val maxUndoBlocks: Long = 2_000_000,
 )

@@ -24,6 +24,10 @@ inline fun <reified T> json(value: T): Reply {
 
 fun done(text: String): Reply = Reply(text)
 
+/** Says when undo cannot revert an edit, because it changed more blocks than undo keeps. */
+fun Reply.noteUndo(undoable: Boolean): Reply =
+    if (undoable) this else Reply("$text\nThis change is too large to undo.", data)
+
 fun lines(header: String, rows: List<String>, data: JsonObject): Reply =
     Reply((listOf(header) + rows).joinToString("\n"), data)
 

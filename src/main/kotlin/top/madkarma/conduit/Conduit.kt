@@ -15,6 +15,7 @@ import top.madkarma.conduit.config.ConfigFile
 import top.madkarma.conduit.config.GameConfig
 import top.madkarma.conduit.config.InvalidConfig
 import top.madkarma.conduit.events.GameEvents
+import top.madkarma.conduit.game.EditJournal
 import top.madkarma.conduit.game.GameServer
 import top.madkarma.conduit.mcp.AccessTokens
 import top.madkarma.conduit.mcp.McpHost
@@ -50,6 +51,7 @@ object Conduit : ModInitializer {
         GameEvents.register()
         trackDatapackReloads()
         config = readConfig()
+        EditJournal.maxBlocks = { gameConfig.maxUndoBlocks }
 
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             ConduitCommand.register(dispatcher)
@@ -68,6 +70,7 @@ object Conduit : ModInitializer {
 
         ServerLifecycleEvents.SERVER_STOPPED.register { server ->
             McpHost.stop()
+            EditJournal.clear()
             if (GameServer.current === server) GameServer.current = null
         }
     }

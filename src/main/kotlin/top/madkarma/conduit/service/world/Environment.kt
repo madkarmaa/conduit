@@ -1,9 +1,12 @@
 package top.madkarma.conduit.service.world
 
+import kotlin.math.ceil
 import kotlinx.serialization.Serializable
+import net.minecraft.core.BlockPos
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.gamerules.GameRule
+import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.world.level.storage.LevelData
 import top.madkarma.conduit.game.*
 
@@ -129,6 +132,15 @@ internal fun MinecraftServer.explode(
 ) {
     val default = Level.ExplosionInteraction.TNT
     val chosen = enumByName(interaction, default, "explosion interaction")
+    val level = level(dimension)
 
-    level(dimension).explode(null, position.x, position.y, position.z, power, fire, chosen)
+    EditJournal.beforeBox(level, explosionReach(position, power))
+    level.explode(null, position.x, position.y, position.z, power, fire, chosen)
+}
+
+// An explosion's rays reach at most about 1.75 blocks per point of power.
+private fun explosionReach(position: Vector3, power: Float): BoundingBox {
+    val reach = ceil(power * 1.75).toInt() + 1
+    val center = BlockPos.containing(position.x, position.y, position.z)
+    return BoundingBox(center).inflatedBy(reach)
 }

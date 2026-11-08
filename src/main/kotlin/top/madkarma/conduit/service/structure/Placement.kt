@@ -14,6 +14,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.BlockRotProce
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate
 import top.madkarma.conduit.game.BlockCoordinates
+import top.madkarma.conduit.game.EditJournal
 import top.madkarma.conduit.game.failedPrecondition
 import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.level
@@ -86,6 +87,7 @@ internal fun MinecraftServer.placeStructure(
     val sideEffects = if (placement.noUpdates) Block.UPDATE_SKIP_ALL_SIDEEFFECTS else 0
 
     level.withChunksForced(box) {
+        EditJournal.beforeBox(level, box)
         val flags = Block.UPDATE_CLIENTS or sideEffects
         template.placeInWorld(level, origin, origin, settings, level.random, flags)
     }

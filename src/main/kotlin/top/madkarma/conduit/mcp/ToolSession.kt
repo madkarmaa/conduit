@@ -49,7 +49,7 @@ class ToolSession(val policy: ToolPolicy, tools: List<ToolDefinition>) {
 
     private suspend fun run(call: PreparedCall): Reply =
         when (val action = call.action) {
-            is GameAction -> GameServer.run { action.run(it, call.input) }
+            is GameAction -> GameServer.run { call.runGameAction(it) }
             is AsyncAction -> action.run(call.input, this)
         }
 

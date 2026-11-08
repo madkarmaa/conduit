@@ -122,6 +122,7 @@ command lists the problems and keeps the old config.
 | `replies.maxLength`                                   | `1000`                                                        | Longest answer the bot posts                                                          |
 | `game.backupDirectory`                                | `backups`                                                     | Where backups go, relative to the server folder                                       |
 | `game.maxStructureVolume`                             | `8000000`                                                     | Largest structure the tools save or place, in blocks                                  |
+| `game.maxUndoBlocks`                                  | `2000000`                                                     | Most changed blocks that `undo` keeps for recent edits. `0` turns it off              |
 
 Chat mode gets `server_info`, `world_info`, `get_blocks`, `structures`, `entities`, `get_player`,
 `inventory` and `game_data` by default, and never the tools that list other players. It only gets
@@ -168,13 +169,13 @@ claude mcp add --transport http conduit http://localhost:25585/mcp \
 
 The host name in the URL must be in `mcp.allowedHosts`.
 
-The server has 21 tools. Tools with several operations take an `action` argument.
+The server has 22 tools. Tools with several operations take an `action` argument.
 
 | Area      | Read                                      | Write                                              |
 | --------- | ----------------------------------------- | -------------------------------------------------- |
 | Server    | `server_info`, `datapacks`                | `server_admin`, `run_command`, `datapacks`         |
 | World     | `world_info`                              | `edit_world`                                       |
-| Blocks    | `get_blocks`, `structures`                | `edit_blocks`, `structures`                        |
+| Blocks    | `get_blocks`, `structures`, `undo`        | `edit_blocks`, `structures`, `undo`                |
 | Entities  | `entities`                                | `edit_entity`, `move_entity`                       |
 | Players   | `list_players`, `get_player`, `inventory` | `edit_player`, `moderation`, `inventory`, `notify` |
 | Game data | `game_data`                               |                                                    |

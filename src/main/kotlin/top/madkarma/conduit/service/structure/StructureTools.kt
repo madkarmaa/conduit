@@ -92,7 +92,9 @@ val STRUCTURES =
                                 includeEntities = input.boolean("include_entities"),
                                 integrity = input.float("integrity"),
                             )
-                        json(placeStoredStructure(input.string("id"), placement))
+                        val placed =
+                            placeStoredStructure(input.string("id"), placement, input.policy.name)
+                        json(placed.result).noteUndo(placed.undoable)
                     },
             ),
     )

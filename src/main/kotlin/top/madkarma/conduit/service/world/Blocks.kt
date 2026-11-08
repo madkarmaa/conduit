@@ -3,14 +3,11 @@ package top.madkarma.conduit.service.world
 import kotlin.jvm.optionals.getOrNull
 import kotlinx.serialization.Serializable
 import net.minecraft.core.BlockPos
-import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.TagParser
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerLevel
-import net.minecraft.util.ProblemReporter
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.entity.BlockEntity
-import net.minecraft.world.level.storage.TagValueInput
 import top.madkarma.conduit.game.*
 
 @Serializable
@@ -64,7 +61,9 @@ internal fun MinecraftServer.breakBlock(
     pos: BlockCoordinates,
     dropItems: Boolean,
 ) {
-    level(dimension).destroyBlock(pos.toMc(), dropItems)
+    val level = level(dimension)
+    EditJournal.before(level, pos.toMc())
+    level.destroyBlock(pos.toMc(), dropItems)
 }
 
 internal fun MinecraftServer.mergeBlockEntity(
@@ -74,11 +73,12 @@ internal fun MinecraftServer.mergeBlockEntity(
 ) {
     val level = level(dimension)
     val blockEntity = blockEntityAt(level, pos)
+    EditJournal.before(level, blockEntity.blockPos)
 
     val merged =
         blockEntity.saveWithoutMetadata(registryAccess()).merge(TagParser.parseCompoundFully(snbt))
 
-    loadBlockEntity(level, blockEntity, merged)
+    level.loadBlockEntity(blockEntity, merged)
 }
 
 internal fun MinecraftServer.place(
@@ -91,6 +91,7 @@ internal fun MinecraftServer.place(
         invalidInput("Position ${position.x} ${position.y} ${position.z} is outside the world")
     }
 
+    EditJournal.before(level, position)
     val changed = level.setBlock(position, block.state, flags)
     val nbt = block.nbt ?: return changed
 
@@ -98,23 +99,8 @@ internal fun MinecraftServer.place(
         level.getBlockEntity(position)
             ?: invalidInput("${block.state.block} has no block entity data")
 
-    loadBlockEntity(level, blockEntity, nbt)
+    level.loadBlockEntity(blockEntity, nbt)
     return true
-}
-
-private fun MinecraftServer.loadBlockEntity(
-    level: ServerLevel,
-    blockEntity: BlockEntity,
-    nbt: CompoundTag,
-) {
-    blockEntity.loadWithComponents(
-        TagValueInput.create(ProblemReporter.DISCARDING, registryAccess(), nbt),
-    )
-
-    blockEntity.setChanged()
-
-    val state = level.getBlockState(blockEntity.blockPos)
-    level.sendBlockUpdated(blockEntity.blockPos, state, state, Block.UPDATE_ALL)
 }
 
 private fun blockEntityAt(level: ServerLevel, position: BlockCoordinates): BlockEntity =

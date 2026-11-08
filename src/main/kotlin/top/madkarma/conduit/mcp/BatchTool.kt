@@ -115,7 +115,7 @@ private fun runInOneTick(
         if (failed && stopOnError) return@map BatchOutcome(call, "", "skipped")
 
         try {
-            val reply = (call.action as GameAction).run(server, call.input)
+            val reply = call.runGameAction(server)
             BatchOutcome(call, policy.redact(reply).text, "ok")
         } catch (exception: Exception) {
             failed = true

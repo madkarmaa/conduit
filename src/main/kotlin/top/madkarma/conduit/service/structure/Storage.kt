@@ -8,7 +8,9 @@ import net.minecraft.IdentifierException
 import net.minecraft.resources.Identifier
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager
 import top.madkarma.conduit.game.BlockCoordinates
+import top.madkarma.conduit.game.EditJournal
 import top.madkarma.conduit.game.GameServer
+import top.madkarma.conduit.game.Recorded
 import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.notFound
 import top.madkarma.conduit.game.parseId
@@ -39,11 +41,15 @@ internal suspend fun saveStructure(
     manager.remove(id)
 }
 
-/** Places a template saved in the world or one from a datapack, including the vanilla ones. */
+/**
+ * Places a template saved in the world or one from a datapack, including the vanilla ones. Undo
+ * records the placement as the caller's.
+ */
 internal suspend fun placeStoredStructure(
     templateId: String,
     placement: StructurePlacement,
-): PlacementResult {
+    caller: String,
+): Recorded<PlacementResult> {
     val id = parseId(templateId)
     checkPlacement(placement)
 
@@ -52,7 +58,11 @@ internal suspend fun placeStoredStructure(
         withContext(Dispatchers.IO) { manager.get(id).getOrNull() }
             ?: notFound("Unknown structure: $id")
 
-    return GameServer.run { it.placeStructure(template, placement) }
+    return GameServer.run { server ->
+        EditJournal.record(caller, "structures.place") {
+            server.placeStructure(template, placement)
+        }
+    }
 }
 
 /** Ids of the templates saved in the world and those from enabled datapacks, sorted. */

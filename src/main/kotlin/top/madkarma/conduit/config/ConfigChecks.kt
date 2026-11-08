@@ -21,6 +21,7 @@ fun ConduitConfig.problems(tools: Map<String, Set<String>>): List<String> {
     check(requests.timeoutSeconds > 0, "requests.timeoutSeconds must be positive")
     check(replies.maxLength >= 20, "replies.maxLength must be at least 20")
     check(game.maxStructureVolume > 0, "game.maxStructureVolume must be positive")
+    check(game.maxUndoBlocks >= 0, "game.maxUndoBlocks must not be negative")
 
     problems += tokenProblems(tools.keys)
     problems +=

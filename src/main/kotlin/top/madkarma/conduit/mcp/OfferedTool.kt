@@ -8,6 +8,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import net.minecraft.server.MinecraftServer
+import top.madkarma.conduit.game.EditJournal
 import top.madkarma.conduit.game.invalidInput
 
 // Lists each offered action of a tool with its access in the tool's _meta, so a client can ask for
@@ -79,4 +81,19 @@ class PreparedCall(
     val input: ToolInput,
 ) {
     fun called() = CalledAction(tool.name, actionName, action.access, input.arguments)
+
+    /**
+     * Runs a game action on the server thread. Undo can revert the blocks that actions which write
+     * change.
+     */
+    fun runGameAction(server: MinecraftServer): Reply {
+        val gameAction = action as GameAction
+        if (gameAction.access == Access.READ) return gameAction.run(server, input)
+
+        val recorded =
+            EditJournal.record(input.policy.name, "${tool.name}.$actionName") {
+                gameAction.run(server, input)
+            }
+        return recorded.result.noteUndo(recorded.undoable)
+    }
 }
