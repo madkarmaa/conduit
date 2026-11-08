@@ -1,4 +1,4 @@
-package top.madkarma.conduit.service.player
+package top.madkarma.conduit.service.inventory
 
 import kotlin.jvm.optionals.getOrNull
 import kotlinx.serialization.Serializable

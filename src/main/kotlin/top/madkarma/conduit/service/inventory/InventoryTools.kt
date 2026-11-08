@@ -1,4 +1,4 @@
-package top.madkarma.conduit.service.player
+package top.madkarma.conduit.service.inventory
 
 import net.minecraft.server.MinecraftServer
 import top.madkarma.conduit.game.BlockCoordinates

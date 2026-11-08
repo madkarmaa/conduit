@@ -5,6 +5,7 @@ import top.madkarma.conduit.mcp.ToolDefinition
 import top.madkarma.conduit.service.entity.*
 import top.madkarma.conduit.service.events.EVENTS
 import top.madkarma.conduit.service.history.UNDO
+import top.madkarma.conduit.service.inventory.INVENTORY
 import top.madkarma.conduit.service.player.*
 import top.madkarma.conduit.service.registry.GAME_DATA
 import top.madkarma.conduit.service.scoreboard.SCOREBOARD

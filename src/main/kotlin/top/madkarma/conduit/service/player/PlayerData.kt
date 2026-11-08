@@ -23,6 +23,8 @@ import net.minecraft.world.level.storage.ValueInput
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import top.madkarma.conduit.game.*
+import top.madkarma.conduit.service.inventory.InventoryContents
+import top.madkarma.conduit.service.inventory.contents
 
 // This reads saved player data with the same keys and codecs the game loads players with.
 

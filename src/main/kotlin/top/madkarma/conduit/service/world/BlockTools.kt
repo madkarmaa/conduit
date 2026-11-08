@@ -5,8 +5,8 @@ import net.minecraft.server.MinecraftServer
 import top.madkarma.conduit.game.BlockCoordinates
 import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.mcp.*
-import top.madkarma.conduit.service.player.containerContents
-import top.madkarma.conduit.service.player.describeInventory
+import top.madkarma.conduit.service.inventory.containerContents
+import top.madkarma.conduit.service.inventory.describeInventory
 
 // Drawn regions print one character per block, so they stay small enough to read.
 private const val MAX_DRAWN_VOLUME = 8192

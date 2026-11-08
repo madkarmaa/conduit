@@ -2,6 +2,7 @@ package top.madkarma.conduit.service.player
 
 import top.madkarma.conduit.game.ItemInfo
 import top.madkarma.conduit.mcp.*
+import top.madkarma.conduit.service.inventory.SLOT
 
 val EDIT_PLAYER =
     ToolDefinition(

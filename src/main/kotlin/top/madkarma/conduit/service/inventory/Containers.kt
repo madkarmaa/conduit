@@ -1,4 +1,4 @@
-package top.madkarma.conduit.service.player
+package top.madkarma.conduit.service.inventory
 
 import net.minecraft.core.BlockPos
 import net.minecraft.server.MinecraftServer

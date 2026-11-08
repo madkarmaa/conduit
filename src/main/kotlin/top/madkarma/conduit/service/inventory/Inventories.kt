@@ -1,4 +1,4 @@
-package top.madkarma.conduit.service.player
+package top.madkarma.conduit.service.inventory
 
 import kotlinx.serialization.Serializable
 import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket

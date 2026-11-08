@@ -6,7 +6,7 @@ import top.madkarma.conduit.game.BlockCoordinates
 import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.toMc
 import top.madkarma.conduit.mcp.*
-import top.madkarma.conduit.service.player.findItems
+import top.madkarma.conduit.service.inventory.findItems
 
 private const val MAX_RADIUS = 48
 
