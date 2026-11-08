@@ -87,15 +87,24 @@ internal fun MinecraftServer.saveEntity(entity: Entity): CompoundTag {
 /** The entity's complete data as SNBT. */
 internal fun MinecraftServer.entityNbt(uuid: String): String = saveEntity(entity(uuid)).toString()
 
-/** Merges SNBT into the entity data, like /data merge entity. */
+/**
+ * Merges SNBT into the entity data, like /data merge entity. The game skips data it cannot read,
+ * such as a broken villager trade, so such a merge puts the old data back and fails instead.
+ */
 internal fun MinecraftServer.mergeEntityNbt(uuid: String, snbt: String) {
     val entity = entity(uuid)
     if (entity is ServerPlayer) failedPrecondition("Player data is read-only here")
 
-    val merged = saveEntity(entity).merge(TagParser.parseCompoundFully(snbt))
+    val original = saveEntity(entity)
+    val merged = original.copy().merge(TagParser.parseCompoundFully(snbt))
     merged.store("UUID", UUIDUtil.CODEC, entity.uuid)
 
-    entity.load(TagValueInput.create(ProblemReporter.DISCARDING, registryAccess(), merged))
+    val problems = ProblemReporter.Collector()
+    entity.load(TagValueInput.create(problems, registryAccess(), merged))
+    if (problems.isEmpty) return
+
+    entity.load(TagValueInput.create(ProblemReporter.DISCARDING, registryAccess(), original))
+    invalidInput("Nothing changed, since the game cannot read this data: ${problems.report}")
 }
 
 /** A null name clears the custom name. */
