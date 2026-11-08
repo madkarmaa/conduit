@@ -7,11 +7,9 @@ import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.util.Base64
 import javax.imageio.ImageIO
-import org.slf4j.LoggerFactory
+import top.madkarma.conduit.LOGGER
 import top.madkarma.conduit.game.ConduitError
 import top.madkarma.conduit.game.asConduitError
-
-private val LOGGER = LoggerFactory.getLogger("conduit")
 
 /** The text a caller sees for a failed call. Unexpected failures also go to the log. */
 fun describeFailure(exception: Exception, tool: String): String {

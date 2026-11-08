@@ -7,7 +7,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.resources.Identifier
-import org.slf4j.LoggerFactory
 import top.madkarma.conduit.bot.Bot
 import top.madkarma.conduit.bot.ConduitCommand
 import top.madkarma.conduit.bot.Triggers
@@ -28,8 +27,6 @@ object Conduit : ModInitializer {
 
     // The action bar shows a message for about three seconds, so the status comes every two.
     private const val STATUS_INTERVAL_TICKS = 40
-
-    private val LOGGER = LoggerFactory.getLogger(MOD_ID)
 
     val version: String by lazy {
         FabricLoader.getInstance()

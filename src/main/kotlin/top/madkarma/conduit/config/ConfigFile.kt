@@ -9,7 +9,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import net.fabricmc.loader.api.FabricLoader
-import org.slf4j.LoggerFactory
+import top.madkarma.conduit.LOGGER
 
 class InvalidConfig(val problems: List<String>) : Exception(problems.joinToString("; "))
 
@@ -18,8 +18,6 @@ private val CONFIG_JSON = Json {
     prettyPrintIndent = "    "
     encodeDefaults = true
 }
-
-private val LOGGER = LoggerFactory.getLogger("conduit")
 
 object ConfigFile {
     val path: Path = FabricLoader.getInstance().configDir.resolve("conduit.json")

@@ -29,10 +29,8 @@ import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
 import kotlinx.serialization.json.JsonObject
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.core.config.Configurator
-import org.slf4j.LoggerFactory
+import top.madkarma.conduit.LOGGER
 import top.madkarma.conduit.config.McpConfig
-
-private val LOGGER = LoggerFactory.getLogger("conduit")
 
 private const val PATH = "/mcp"
 

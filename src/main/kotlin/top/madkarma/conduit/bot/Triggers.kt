@@ -3,13 +3,11 @@ package top.madkarma.conduit.bot
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import net.minecraft.server.MinecraftServer
-import org.slf4j.LoggerFactory
+import top.madkarma.conduit.LOGGER
 import top.madkarma.conduit.config.ConduitConfig
 import top.madkarma.conduit.config.TriggerConfig
 import top.madkarma.conduit.events.EventBus
 import top.madkarma.conduit.events.GameEvent
-
-private val LOGGER = LoggerFactory.getLogger("conduit")
 
 private const val TICKS_PER_SECOND = 20
 

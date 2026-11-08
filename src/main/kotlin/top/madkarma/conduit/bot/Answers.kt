@@ -7,13 +7,11 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.slf4j.LoggerFactory
 import top.madkarma.conduit.Conduit
+import top.madkarma.conduit.LOGGER
 import top.madkarma.conduit.config.ConduitConfig
 import top.madkarma.conduit.game.GameServer
 import top.madkarma.conduit.mcp.AccessTokens
-
-private val LOGGER = LoggerFactory.getLogger("conduit")
 
 // The runner stops a run on its own after this many request timeouts. The mod's deadline, which
 // waits for approvals, ends runs long before that by cancelling them.

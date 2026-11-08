@@ -3,11 +3,9 @@ package top.madkarma.conduit.mcp
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.serialization.json.JsonObject
-import org.slf4j.LoggerFactory
+import top.madkarma.conduit.LOGGER
 import top.madkarma.conduit.game.GameServer
 import top.madkarma.conduit.game.invalidInput
-
-private val LOGGER = LoggerFactory.getLogger("conduit")
 
 private const val LOGGED_ARGUMENTS_LENGTH = 500
 

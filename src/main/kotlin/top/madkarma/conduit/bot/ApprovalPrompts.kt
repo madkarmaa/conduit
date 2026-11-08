@@ -7,11 +7,9 @@ import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.server.MinecraftServer
-import org.slf4j.LoggerFactory
+import top.madkarma.conduit.LOGGER
 import top.madkarma.conduit.game.GameServer
 import top.madkarma.conduit.mcp.CalledAction
-
-private val LOGGER = LoggerFactory.getLogger("conduit")
 
 private const val ARGUMENTS_LENGTH = 200
 
