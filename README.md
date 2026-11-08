@@ -201,9 +201,6 @@ command lists the problems and keeps the old config.
 | `triggers`                                            | none                                                          | Runs that game events or a timer start, as [triggers](#triggers) describes            |
 | `telemetry`                                           | `false`                                                       | Writes each request, the agent's tool calls and its answer to the telemetry file      |
 
-For Antigravity CLI, `model` is a model such as `gemini-3.1-pro` and `effort` a thinking level that
-the model offers, such as `low` or `high`.
-
 Chat mode gets `server_info`, `world_info`, `get_blocks`, `structures`, `entities`, `get_player`,
 `inventory` and `game_data` by default, and never the tools that list other players. It only gets
 the actions that read, and only the asking player's own data, so `entities` leaves out the other
@@ -274,8 +271,9 @@ The server has 25 tools. Tools with several operations take an `action` argument
 - The MCP server listens on every interface by default, so the agent containers can reach it.
   Every request needs a token, but keep port 25585 closed to the internet. Each agent request gets
   a token of its own that only works while the request runs.
-- The agent only has the Conduit tools, and its container keeps it away from the rest of the
-  machine. [`agent/README.md`](./agent/README.md#security) has the details.
+- The agent only has the Conduit tools, and web search when `agents.<mode>.web` allows it. Its
+  container keeps it away from the rest of the machine.
+  [`agent/README.md`](./agent/README.md#security) has the details.
 
 ## Building
 

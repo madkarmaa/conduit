@@ -52,7 +52,7 @@ By default, every run uses the API key that the mod sends with it, `agents.<mode
 > against the terms of service of [Anthropic](https://www.anthropic.com/legal/consumer-terms),
 > [OpenAI](https://openai.com/policies/terms-of-use/) and
 > [OpenCode](https://opencode.ai/legal/terms-of-service). Anthropic also
-> [limits how subscription logins may be used](https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use),
+> [limits how people may use subscription logins](https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use),
 > and [Google's terms for Antigravity](https://antigravity.google/terms) apply to its Google login.
 > The provider can ban the account. Use API keys instead.
 
@@ -67,12 +67,12 @@ docker compose -f conduit-agents.yaml exec -it conduit-full conduit-login codex
 docker compose -f conduit-agents.yaml exec -it conduit-chat conduit-login opencode
 ```
 
-`conduit-login` installs the CLI first. Antigravity CLI shows a link to sign in to Google with and
-asks for the code it shows. Claude Code starts its interactive login, where `/login` signs in. Codex
-uses a device code, and OpenCode asks which account or provider to connect.
+`conduit-login` installs the CLI first. Antigravity CLI shows a Google sign-in link, then asks for
+the code that the sign-in page shows. Claude Code starts its interactive login, where `/login`
+signs in. Codex uses a device code, and OpenCode asks which account or provider to connect.
 
-The agent's conversations belong to the login store they started in. Turning the flag on or off,
-or switching the CLI, starts new conversations.
+Runs with an API key and runs with the subscription keep separate conversations, so turning the
+flag on or off starts new ones. So does switching the CLI.
 
 ## Networking
 
@@ -123,8 +123,8 @@ Each container may use 1 CPU and 1 GiB of memory. Set `CONDUIT_FULL_MEMORY`, `CO
   CPU and processes.
 - They can reach the internet, because the CLI needs its model's API. `agents.<mode>.web` decides
   whether the agent may also search and fetch the web.
-- The runner turns off the CLI's own tools, such as shell commands and file edits, so the agent
-  only has the Conduit tools.
+- The agent can't use the CLI's own tools, such as shell commands and file edits. It only has the
+  Conduit tools.
 
 ## Building
 
