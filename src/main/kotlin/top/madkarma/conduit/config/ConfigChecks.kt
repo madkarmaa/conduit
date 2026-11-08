@@ -92,14 +92,13 @@ private fun unknownTools(
     names: List<String>,
     tools: Map<String, Set<String>>,
 ): List<String> =
-    names
-        .filterNot { name ->
-            val tool = name.substringBefore('.')
-            val action = name.substringAfter('.', "")
-            val actions = tools[tool]
-            actions != null && (action.isEmpty() || action in actions)
-        }
-        .map { "$path names unknown tool or action $it" }
+    names.filterNot { isKnownTool(it, tools) }.map { "$path names unknown tool or action $it" }
+
+// A dot always needs an action after it, since "tool." would match nothing.
+private fun isKnownTool(name: String, tools: Map<String, Set<String>>): Boolean {
+    val actions = tools[name.substringBefore('.')] ?: return false
+    return '.' !in name || name.substringAfter('.') in actions
+}
 
 // Java's HTTP client, which reaches the runners, also needs URI.host, which is null for host names
 // with underscores. The agent CLIs reach mcpUrl with clients that accept those.

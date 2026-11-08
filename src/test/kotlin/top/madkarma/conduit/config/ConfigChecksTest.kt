@@ -161,13 +161,15 @@ class ConfigChecksTest {
                         chat =
                             ChatToolsConfig(allow = listOf("fly"), deny = listOf("get_player.fly")),
                     ),
-                approvals = ApprovalsConfig(remove = listOf("nope.stop")),
+                approvals =
+                    ApprovalsConfig(add = listOf("server_admin."), remove = listOf("nope.stop")),
             )
 
         val expected =
             listOf(
                 "tools.chat names unknown tool or action fly",
                 "tools.chat names unknown tool or action get_player.fly",
+                "approvals names unknown tool or action server_admin.",
                 "approvals names unknown tool or action nope.stop",
             )
         assertEquals(expected, problemsOf(config))
