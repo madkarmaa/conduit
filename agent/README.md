@@ -15,13 +15,9 @@ volume on first use and updates it once a day while idle, so a new CLI version n
 ## Setup
 
 1. Copy [`compose.yaml`](./compose.yaml) to the server, for example as `conduit-agents.yaml`, and
-   create a `.env` file next to it with two random secrets. Each needs at least 16 letters, digits
-   or `-._~+/` characters, such as the output of `openssl rand -hex 24`:
-
-    ```sh
-    CONDUIT_FULL_SECRET=<random string>
-    CONDUIT_CHAT_SECRET=<another random string>
-    ```
+   [`.env.example`](./.env.example) next to it as `.env`. Fill in the two random secrets. Each
+   needs at least 16 letters, digits or `-._~+/` characters, such as the output of
+   `openssl rand -hex 24`. The file also lists the image and the resource limits.
 
 2. Start the agents. They restart on their own, and the mod never starts or stops them.
 
