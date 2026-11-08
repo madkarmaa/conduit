@@ -72,9 +72,9 @@ val SCOREBOARD =
                         done("Objective removed")
                     },
                 "set_score" to
-                    writeAction { server, input -> changeScore(server, input, add = false) },
+                    writeAction { server, input -> server.scoreReply(input, add = false) },
                 "add_score" to
-                    writeAction { server, input -> changeScore(server, input, add = true) },
+                    writeAction { server, input -> server.scoreReply(input, add = true) },
                 "reset_score" to
                     writeAction { server, input ->
                         server.resetScore(input.string("holder"), input.stringOrNull("objective"))
