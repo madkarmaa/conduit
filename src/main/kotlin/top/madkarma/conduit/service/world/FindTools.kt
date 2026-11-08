@@ -73,7 +73,7 @@ val FIND =
                 "items" to readAction { server, input -> server.itemsReply(input) },
                 "structure" to
                     readAction { server, input ->
-                        located(
+                        locatedReply(
                             server.locateStructure(
                                 input.stringOrNull("dimension"),
                                 input.string("structure"),
@@ -83,7 +83,7 @@ val FIND =
                     },
                 "biome" to
                     readAction { server, input ->
-                        located(
+                        locatedReply(
                             server.locateBiome(
                                 input.stringOrNull("dimension"),
                                 input.string("biome"),
@@ -93,7 +93,7 @@ val FIND =
                     },
                 "poi" to
                     readAction { server, input ->
-                        located(
+                        locatedReply(
                             server.locatePoi(
                                 input.stringOrNull("dimension"),
                                 input.string("poi"),
@@ -146,7 +146,7 @@ private fun MinecraftServer.itemsReply(input: ToolInput): Reply {
 
 private fun center(input: ToolInput): BlockPos = input.decode<BlockCoordinates>("center").toMc()
 
-private fun located(found: Located): Reply =
+private fun locatedReply(found: Located): Reply =
     Reply(
         "Nearest ${found.id} at ${found.pos.x} ${found.pos.y} ${found.pos.z}, " +
             "${found.distance} blocks away",
