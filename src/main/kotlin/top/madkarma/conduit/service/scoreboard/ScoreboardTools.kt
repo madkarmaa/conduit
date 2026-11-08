@@ -7,9 +7,10 @@ val SCOREBOARD =
         name = "scoreboard",
         title = "Scoreboard and teams",
         description =
-            "objectives lists the objectives. scores reads the scores of a holder (a player " +
-                "name or entity UUID), of an objective, or both. add_objective, remove_objective, " +
-                "set_score, add_score and reset_score change them, and display shows an objective " +
+            "objectives lists the objectives. scores reads the scores of a holder, which is a " +
+                "player name or entity UUID, of an objective, or both. add_objective, " +
+                "remove_objective, set_score, add_score and reset_score change them, and display " +
+                "shows an objective " +
                 "in a slot such as sidebar, or clears the slot. teams lists the teams with their " +
                 "members. create_team, modify_team and remove_team change teams, and join_team " +
                 "and leave_team move members.",
@@ -33,7 +34,8 @@ val SCOREBOARD =
                 optional(
                     "slot",
                     stringSchema(
-                        "For display: \"sidebar\", \"list\", \"below_name\" or \"sidebar.team.red\".",
+                        "For display: \"sidebar\", \"list\", \"below_name\" or " +
+                            "\"sidebar.team.red\".",
                     ),
                 )
                 optional("team", stringSchema("Team name."))

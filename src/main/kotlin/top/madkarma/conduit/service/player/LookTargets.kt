@@ -24,7 +24,7 @@ data class LookedAtBlock(
 
 @Serializable data class LookedAtEntity(val uuid: String, val type: String, val name: String)
 
-/** What a player looks at within their reach: a block or an entity, whichever is nearer. */
+/** What a player looks at within their reach, which is the nearer of a block and an entity. */
 @Serializable
 data class LookTarget(
     /** Blocks from the player's eyes. */

@@ -9,13 +9,13 @@ val EDIT_ENTITY =
         name = "edit_entity",
         title = "Edit entity",
         description =
-            "spawn creates an entity in a loaded chunk and returns it; the force_chunk action " +
+            "spawn creates an entity in a loaded chunk and returns it. The force_chunk action " +
                 "of edit_world loads chunks away from players. remove takes an entity away " +
                 "silently, or kills it so it drops loot. name sets or clears the custom name. " +
-                "tags adds and removes scoreboard tags. health sets the health. damage hurts the " +
-                "entity like an attack. nbt merges SNBT into its data. add_effect and " +
-                "remove_effect change status effects. set_attribute sets an attribute base value " +
-                "such as \"minecraft:max_health\".",
+                "tags adds and removes scoreboard tags. health sets the health. damage hurts " +
+                "the entity like an attack. nbt merges SNBT into its data. add_effect and " +
+                "remove_effect change status effects. set_attribute sets an attribute base " +
+                "value such as \"minecraft:max_health\".",
         input =
             input {
                 optional("uuid", UUID.described("Required for every action but spawn."))

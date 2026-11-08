@@ -101,7 +101,7 @@ internal fun MinecraftServer.locateBiome(
     return located(found.second, found.first, center, horizontal = false)
 }
 
-/** Points of interest are only known in chunks that were loaded since they were placed. */
+/** The game only knows the points of interest of chunks loaded since they were placed. */
 internal fun MinecraftServer.locatePoi(dimension: String?, poi: String, center: BlockPos): Located {
     val types = holders(Registries.POINT_OF_INTEREST_TYPE, poi, "point of interest type")
     val found =

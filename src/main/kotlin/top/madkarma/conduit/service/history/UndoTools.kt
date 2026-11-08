@@ -23,12 +23,12 @@ val UNDO =
         name = "undo",
         title = "Undo edits",
         description =
-            "Block changes from edit_blocks, edit_world explode, structures place and copy, and " +
-                "containers edited with inventory are recorded, one edit per call. list shows " +
-                "the recent edits, newest first. undo " +
-                "restores the blocks and block entities of the given edits, or of your newest " +
-                "one. It does not bring back entities or dropped items, and it cannot undo " +
-                "run_command, fire spread, falling blocks or anything before a server restart.",
+            "The server records the block changes of edit_blocks, edit_world explode, " +
+                "structures place and copy, and inventory on containers, one edit per call. " +
+                "list shows the recent edits, newest first. undo restores the blocks and block " +
+                "entities of the given edits, or of your newest one. It does not bring back " +
+                "entities or dropped items, and it cannot undo run_command, fire spread, " +
+                "falling blocks or anything before a server restart.",
         seesOtherPlayers = true,
         input =
             input {

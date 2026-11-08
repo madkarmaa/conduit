@@ -9,9 +9,10 @@ val LIST_PLAYERS =
         name = "list_players",
         title = "List players",
         description =
-            "online: online players with game mode, position, health and food. known: every " +
-                "player with saved data, also offline ones. banned: player and IP bans. " +
-                "whitelisted: whether the whitelist is on, and who is on it.",
+            "online lists the online players with their game mode, position, health and food. " +
+                "known lists every player with saved data, also offline ones. banned lists the " +
+                "player and IP bans. whitelisted tells whether the whitelist is on, and who is " +
+                "on it.",
         seesOtherPlayers = true,
         input = input {},
         defaultAction = "online",
@@ -39,8 +40,9 @@ val LIST_PLAYERS =
                 "whitelisted" to
                     readAction { server, _ ->
                         val whitelist = server.listWhitelist()
+                        val state = if (whitelist.enabled) "on" else "off"
                         lines(
-                            "Whitelist ${if (whitelist.enabled) "on" else "off"}, ${whitelist.players.size} players",
+                            "Whitelist $state, ${whitelist.players.size} players",
                             whitelist.players,
                             encodedObject(whitelist),
                         )

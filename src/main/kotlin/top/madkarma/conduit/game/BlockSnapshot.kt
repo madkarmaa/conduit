@@ -16,8 +16,8 @@ import net.minecraft.world.level.block.state.BlockState
 private const val RESTORE_FLAGS = Block.UPDATE_CLIENTS or Block.UPDATE_SKIP_ALL_SIDEEFFECTS
 
 /**
- * The blocks of one dimension as they were before an edit. Positions are packed longs, and each
- * block entity's data is stored under the index of its position.
+ * The blocks of one dimension as they were before an edit. It packs positions into longs, and keeps
+ * each block entity's data under the index of its position.
  */
 class BlockSnapshot(val dimension: ResourceKey<Level>) {
     private val positions = LongArrayList()

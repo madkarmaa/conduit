@@ -11,7 +11,7 @@ val EDIT_WORLD =
                 "weather. spawn sets the world spawn. force_chunk force-loads or releases the " +
                 "chunk that contains a column, so entities can spawn or move there. border " +
                 "changes a dimension's world border and keeps the fields left out. game_rule " +
-                "sets a game rule. explode creates an explosion: TNT has power 4, a creeper 3.",
+                "sets a game rule. explode creates an explosion. TNT has power 4 and a creeper 3.",
         input =
             input {
                 optional("dimension", DIMENSION)

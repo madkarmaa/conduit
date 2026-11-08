@@ -20,9 +20,10 @@ val EVENTS =
         name = "events",
         title = "Game events",
         description =
-            "wait returns game events newer than a cursor, waiting up to timeout_seconds for one to " +
-                "happen. Pass the returned next cursor as after to continue where the last call " +
-                "stopped. Events are recorded from the first call on. Event types: " +
+            "wait returns game events newer than a cursor, waiting up to timeout_seconds for " +
+                "one to happen. Pass the returned next cursor as after to continue where the " +
+                "last call stopped. The server records events from the first call on. The event " +
+                "types are " +
                 "${EVENT_NAMES.joinToString(", ")}.",
         input =
             input {

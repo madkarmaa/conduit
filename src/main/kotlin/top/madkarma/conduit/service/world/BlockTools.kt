@@ -16,14 +16,14 @@ val GET_BLOCKS =
         name = "get_blocks",
         title = "Read blocks",
         description =
-            "block reads the block state, biome and block entity SNBT (chest, sign, ...) at pos. " +
-                "container lists the items of the chest, barrel, furnace or other container at " +
-                "pos; a double chest counts as one container. " +
-                "region reads a cuboid, corners inclusive: detail summary counts each block " +
-                "state, draw prints every y layer as a character grid, up to " +
-                "$MAX_DRAWN_VOLUME blocks, and image returns a top view as a PNG, the highest " +
-                "block of each column between the two y values in its map color, up to 256 by " +
-                "256 columns. An image one block tall shows that layer.",
+            "block reads the block state, biome and block entity SNBT, such as a chest's or a " +
+                "sign's, at pos. container lists the items of the chest, barrel, furnace or " +
+                "other container at pos, and counts a double chest as one container. region " +
+                "reads a cuboid, corners inclusive. Its detail summary counts each block state, " +
+                "draw prints every y layer as a character grid of up to $MAX_DRAWN_VOLUME " +
+                "blocks, and image returns a PNG top view of up to 256 by 256 columns. The " +
+                "image shows the highest block of each column between the two y values in its " +
+                "map color, so a cuboid one block tall shows that layer.",
         input =
             input {
                 optional("dimension", DIMENSION)

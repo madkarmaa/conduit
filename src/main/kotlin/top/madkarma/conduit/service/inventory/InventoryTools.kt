@@ -13,13 +13,13 @@ val INVENTORY =
         name = "inventory",
         title = "Inventory",
         description =
-            "Works on an online player's inventory, or with pos on a container such as a chest; " +
-                "a double chest counts as one container. read lists the items, or the player's " +
-                "ender chest. set_slot puts an item in a slot or empties it. clear empties it. " +
-                "select_slot picks a player's held hotbar slot. give adds an item stack: items " +
-                "that do not fit drop at a player's feet, or stay out of a container. Player " +
-                "slots 0-8 are the hotbar, 9-35 the main inventory, 36-39 armor (feet, legs, " +
-                "chest, head) and 40 the offhand.",
+            "Works on an online player's inventory, or with pos on a container such as a chest. " +
+                "A double chest counts as one container. read lists the items, or the player's " +
+                "ender chest. set_slot puts an item in a slot or empties it. clear empties " +
+                "every slot. select_slot picks a player's held hotbar slot. give adds an item " +
+                "stack. Items that do not fit drop at a player's feet, or stay out of a " +
+                "container. Player slots 0-8 are the hotbar, 9-35 the main inventory, 36-39 " +
+                "armor from feet to head and 40 the offhand.",
         input =
             input {
                 optional("player", PLAYER.described("Player name or UUID. Leave it out for pos."))

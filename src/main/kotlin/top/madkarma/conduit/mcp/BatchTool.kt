@@ -23,9 +23,9 @@ val BATCH =
         description =
             "Runs calls to other tools in order within one server tick, so no other game logic " +
                 "runs between them. Each call names a tool and its arguments, as a direct call " +
-                "would pass them. Every call is checked before the first one runs. A batch is not " +
-                "atomic: the calls before a failed one stay applied. Actions that wait or work " +
-                "with files, such as backups, datapack changes, structures and waiting for " +
+                "would pass them. The batch checks every call before the first one runs. It is " +
+                "not atomic, so the calls before a failed one stay applied. Actions that wait or " +
+                "work with files, such as backups, datapack changes, structures and waiting for " +
                 "events, cannot run in a batch.",
         input =
             input {
