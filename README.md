@@ -163,7 +163,7 @@ command lists the problems and keeps the old config.
 | `approvals.timeoutSeconds`                            | `30`                                                          | How long an approval waits for a click                                                |
 | `approvals.add`                                       | none                                                          | Tools or actions that also need approval                                              |
 | `approvals.remove`                                    | none                                                          | Tools or actions that never need approval                                             |
-| `requests.timeoutSeconds`                             | `300`                                                         | How long a request may run, not counting approvals                                    |
+| `requests.timeoutSeconds`                             | `900`                                                         | How long a request may run, not counting approvals                                    |
 | `requests.instructions`                               | none                                                          | Extra instructions for the agent, such as the server's rules                          |
 | `replies.maxLength`                                   | `1000`                                                        | Longest answer the bot posts                                                          |
 | `game.backupDirectory`                                | `backups`                                                     | Where backups go, relative to the server folder                                       |

@@ -136,7 +136,7 @@ data class ApprovalsConfig(
 
 @Serializable
 data class RequestsConfig(
-    val timeoutSeconds: Int = 300,
+    val timeoutSeconds: Int = 900,
     /** Added to the agent's instructions, such as the server's rules. */
     val instructions: String = "",
 )
