@@ -43,6 +43,8 @@ dependencies {
     bundled("io.modelcontextprotocol:kotlin-sdk-server:$mcpVersion")
     bundled("com.networknt:json-schema-validator:$jsonSchemaVersion")
 
+    testImplementation(kotlin("test"))
+
     // fabric-language-kotlin ships the Kotlin libraries its POM lists, such as coroutines and
     // kotlinx-serialization, so the mod uses those instead of bundling its own copies.
     val fabricKotlin = create("net.fabricmc:fabric-language-kotlin:$fabricKotlinVersion")
@@ -78,6 +80,13 @@ tasks.processResources {
 // The game version is part of the file name, since each build only supports one Minecraft version.
 tasks.withType<AbstractArchiveTask>().configureEach {
     archiveVersion = "${project.version}+$minecraftVersion"
+}
+
+tasks.test {
+    useJUnitPlatform()
+
+    // The game's logging config writes a logs folder into the working directory.
+    workingDir = layout.buildDirectory.get().asFile
 }
 
 tasks.withType<JavaCompile>().configureEach {
