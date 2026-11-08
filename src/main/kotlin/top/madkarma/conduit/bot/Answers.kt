@@ -84,7 +84,7 @@ object Answers {
                     timeoutSeconds = config.requests.timeoutSeconds * RUNNER_TIMEOUT_FACTOR,
                 )
 
-            return describe(runWithDeadline(runner, run, deadline), config)
+            return describe(runWithDeadline(runner, run, deadline), config, progress.changes())
         } catch (exception: CancellationException) {
             withContext(NonCancellable) { runCatching { runner.cancel() } }
             throw exception
@@ -137,11 +137,11 @@ object Answers {
         }
     }
 
-    private fun describe(outcome: Outcome, config: ConduitConfig): String {
+    private fun describe(outcome: Outcome, config: ConduitConfig, changes: List<String>): String {
         val result = outcome.result
         return when {
             outcome.pastDeadline || result.timedOut ->
-                "I ran out of time after ${config.requests.timeoutSeconds} seconds."
+                ranOutOfTime(config.requests.timeoutSeconds, changes)
 
             result.cancelled -> "The request was cancelled."
 
@@ -152,6 +152,15 @@ object Answers {
 
             else -> result.output.trim().ifEmpty { "Done." }
         }
+    }
+
+    // A run that ran out of time may have changed the game halfway, so the asker learns what.
+    private fun ranOutOfTime(seconds: Int, changes: List<String>): String {
+        val ranOut = "I ran out of time after $seconds seconds."
+        if (changes.isEmpty()) return ranOut
+
+        return "$ranOut Before that, I ran ${changes.joinToString(", ")}. Ask " +
+            "\"/conduit undo that\" to put the changed blocks back."
     }
 
     private suspend fun say(text: String) {
