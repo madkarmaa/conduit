@@ -82,7 +82,7 @@ object Approvals {
 
         try {
             GameServer.run { server ->
-                server.tellAudience(asker, prompt(nonce, asker, actions, calls))
+                server.tellAudience(asker, prompt(nonce, asker, actions, calls, timeoutSeconds))
             }
 
             val decision = withTimeoutOrNull(timeoutSeconds.seconds) { waiting.decision.await() }

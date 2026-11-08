@@ -26,6 +26,7 @@ internal fun prompt(
     asker: Asker,
     actions: String,
     calls: List<CalledAction>,
+    timeoutSeconds: Int,
 ): Component {
     val details = calls.joinToString(" ") { it.arguments.toString() }
     val shown =
@@ -37,7 +38,10 @@ internal fun prompt(
             .append("\n")
             .append(button("approve", nonce, "[Approve]", ChatFormatting.GREEN, "Run it"))
             .append(" ")
-            .append(button("deny", nonce, "[Deny]", ChatFormatting.RED, "Do not run it")),
+            .append(button("deny", nonce, "[Deny]", ChatFormatting.RED, "Do not run it"))
+            .append(
+                Component.literal(" $timeoutSeconds s to answer").withStyle(ChatFormatting.GRAY),
+            ),
     )
 }
 
