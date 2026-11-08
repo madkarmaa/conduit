@@ -14,8 +14,8 @@ val INVENTORY =
                 "and a lectern's book and a campfire's food count as containers of one item " +
                 "per slot. " +
                 "Entities name their slots like the /item command, such as \"container.3\", " +
-                "\"armor.head\", \"weapon.mainhand\", \"horse.saddle\", \"mob.inventory.0\" " +
-                "or an item frame's \"contents\", and read lists the slots that hold items. give " +
+                "\"armor.head\", \"weapon.mainhand\", \"saddle\" or \"mob.inventory.0\", and read " +
+                "lists the slots that hold items. give " +
                 "fills an entity's storage, such as a chest minecart's, a donkey's chest or a " +
                 "villager's inventory. With ender_chest, the actions but " +
                 "select_slot work on the player's ender chest, slots 0-26, instead. read lists " +

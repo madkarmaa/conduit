@@ -15,16 +15,28 @@ private const val MOB_INVENTORY = "mob.inventory."
 // The slots of an entity's own storage, which give fills. The others are equipment and the like.
 private val STORAGE_PREFIXES = listOf("container.", "horse.", MOB_INVENTORY)
 
-/** A slot by the name the /item command uses, such as "container.3" or "armor.head". */
-internal class NamedSlot(val name: String, val access: SlotAccess)
+// The /item command has several names for some slots, such as "container.0" and "hotbar.0". A
+// slot shows under the first of these kinds of names that it has.
+private val PREFERRED_PREFIXES = STORAGE_PREFIXES + listOf("armor.", "weapon.", "saddle")
+
+/**
+ * A slot by the name the /item command uses, such as "container.3" or "armor.head". Other names of
+ * the same slot work too.
+ */
+internal class NamedSlot(val names: List<String>, val access: SlotAccess) {
+    val name: String = names.minBy { name ->
+        PREFERRED_PREFIXES.indexOfFirst { name.startsWith(it) }.takeIf { it >= 0 }
+            ?: PREFERRED_PREFIXES.size
+    }
+}
 
 @Serializable data class EntitySlot(val slot: String, val item: ItemInfo)
 
 /**
  * The slots of the entity's items: the equipment of any living entity, such as an armor stand's
  * armor or a copper golem's held item, and the storage of chest minecarts and boats, donkeys and
- * llamas, villagers, pillagers, piglins and allays, and an item frame's contents. Players have
- * their own tools, which keep the limits of chat mode.
+ * llamas, villagers, pillagers, piglins and allays, and an item frame's item. Players have their
+ * own tools, which keep the limits of chat mode.
  */
 private fun MinecraftServer.slotsOf(uuid: String): List<NamedSlot> {
     val entity = entity(uuid)
@@ -33,11 +45,13 @@ private fun MinecraftServer.slotsOf(uuid: String): List<NamedSlot> {
 }
 
 internal fun Entity.namedSlots(): List<NamedSlot> {
-    val slots =
-        SlotRanges.singleSlotNames().toList().mapNotNull { name ->
-            val id = SlotRanges.nameToIds(name)?.slots()?.firstOrNull() ?: return@mapNotNull null
-            getSlot(id)?.let { NamedSlot(name, it) }
+    val namesById =
+        SlotRanges.singleSlotNames().toList().groupBy { name ->
+            SlotRanges.nameToIds(name)?.slots()?.firstOrNull()
         }
+    val slots = namesById.mapNotNull { (id, names) ->
+        id?.let(::getSlot)?.let { NamedSlot(names, it) }
+    }
 
     // Allays carry an inventory that the game gives no slot names, unlike villagers or pillagers.
     if (this !is InventoryCarrier || slots.any { it.name.startsWith(MOB_INVENTORY) }) return slots
@@ -45,7 +59,7 @@ internal fun Entity.namedSlots(): List<NamedSlot> {
     return slots +
         (0 until inventory.containerSize).map { index ->
             NamedSlot(
-                "$MOB_INVENTORY$index",
+                listOf("$MOB_INVENTORY$index"),
                 SlotAccess.of({ inventory.getItem(index) }, { inventory.setItem(index, it) }),
             )
         }
@@ -63,7 +77,7 @@ internal fun MinecraftServer.entityItems(uuid: String): List<EntitySlot> {
 internal fun MinecraftServer.changeEntitySlot(uuid: String, slotName: String, item: ItemInfo?) {
     val slots = slotsBeforeEdit(uuid)
     val slot =
-        slots.firstOrNull { it.name == slotName }
+        slots.firstOrNull { slotName in it.names }
             ?: invalidInput(
                 "Entity has no slot $slotName. It has ${slots.joinToString(", ") { it.name }}",
             )
@@ -95,7 +109,8 @@ internal fun MinecraftServer.giveEntityItem(uuid: String, item: ItemInfo): Int {
     }
     for (slot in storage) {
         if (stack.isEmpty) break
-        if (slot.access.get().isEmpty && slot.access.set(stack.copy())) stack.count = 0
+        val placed = stack.copyWithCount(minOf(stack.count, stack.maxStackSize))
+        if (slot.access.get().isEmpty && slot.access.set(placed)) stack.shrink(placed.count)
     }
 
     return stack.count
