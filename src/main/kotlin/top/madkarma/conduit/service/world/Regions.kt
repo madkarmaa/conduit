@@ -4,7 +4,9 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlinx.serialization.Serializable
 import net.minecraft.core.BlockPos
+import net.minecraft.core.registries.Registries
 import net.minecraft.server.MinecraftServer
+import net.minecraft.tags.TagKey
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import top.madkarma.conduit.game.*
@@ -70,7 +72,7 @@ internal fun MinecraftServer.fillRegion(
     val level = level(dimension)
     val (min, max) = bounds(from, to)
     val block = parseBlock(registryAccess(), state)
-    val replaces = replace?.let { replaceFilter(it) }
+    val replaces = replace?.let { blockFilter(it) }
     var changed = 0
 
     for (position in BlockPos.betweenClosed(min, max)) {
@@ -81,13 +83,24 @@ internal fun MinecraftServer.fillRegion(
     return changed
 }
 
-// A bare block id, such as "minecraft:furnace", matches all of its states.
-private fun MinecraftServer.replaceFilter(input: String): (BlockState) -> Boolean {
+/**
+ * Matches a block state, a block id such as "minecraft:furnace" with all of its states, or a block
+ * tag such as "#minecraft:logs".
+ */
+internal fun MinecraftServer.blockFilter(input: String): (BlockState) -> Boolean {
+    if (input.startsWith("#")) {
+        val tag = TagKey.create(Registries.BLOCK, parseId(input.removePrefix("#")))
+        if (registryAccess().lookupOrThrow(Registries.BLOCK).get(tag).isEmpty) {
+            notFound("Unknown block tag: $input")
+        }
+        return { it.`is`(tag) }
+    }
+
     val target = parseBlock(registryAccess(), input).state
     return if ('[' in input) ({ it == target }) else ({ it.block == target.block })
 }
 
-private fun bounds(from: BlockCoordinates, to: BlockCoordinates): Pair<BlockPos, BlockPos> {
+internal fun bounds(from: BlockCoordinates, to: BlockCoordinates): Pair<BlockPos, BlockPos> {
     val min = BlockPos(min(from.x, to.x), min(from.y, to.y), min(from.z, to.z))
     val max = BlockPos(max(from.x, to.x), max(from.y, to.y), max(from.z, to.z))
     val volume = (max.x - min.x + 1L) * (max.y - min.y + 1L) * (max.z - min.z + 1L)

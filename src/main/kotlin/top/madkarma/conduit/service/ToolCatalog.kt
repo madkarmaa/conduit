@@ -27,6 +27,7 @@ val ALL_TOOLS: List<ToolDefinition> =
         EDIT_BLOCKS,
         STRUCTURES,
         UNDO,
+        FIND,
         ENTITIES,
         EDIT_ENTITY,
         MOVE_ENTITY,

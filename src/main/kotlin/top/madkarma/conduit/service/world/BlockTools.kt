@@ -75,7 +75,9 @@ val EDIT_BLOCKS =
                 optional("state", BLOCK_STATE.described("Required for fill."))
                 optional(
                     "replace",
-                    stringSchema("fill only replaces blocks matching this block id or state."),
+                    stringSchema(
+                        "fill only replaces blocks matching this block id, state or #tag.",
+                    ),
                 )
                 optional("pos", BLOCK_POS.described("Required for break and merge_nbt."))
                 optional(

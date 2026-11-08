@@ -169,17 +169,17 @@ claude mcp add --transport http conduit http://localhost:25585/mcp \
 
 The host name in the URL must be in `mcp.allowedHosts`.
 
-The server has 22 tools. Tools with several operations take an `action` argument.
+The server has 23 tools. Tools with several operations take an `action` argument.
 
-| Area      | Read                                      | Write                                              |
-| --------- | ----------------------------------------- | -------------------------------------------------- |
-| Server    | `server_info`, `datapacks`                | `server_admin`, `run_command`, `datapacks`         |
-| World     | `world_info`                              | `edit_world`                                       |
-| Blocks    | `get_blocks`, `structures`, `undo`        | `edit_blocks`, `structures`, `undo`                |
-| Entities  | `entities`                                | `edit_entity`, `move_entity`                       |
-| Players   | `list_players`, `get_player`, `inventory` | `edit_player`, `moderation`, `inventory`, `notify` |
-| Game data | `game_data`                               |                                                    |
-| Other     | `events`                                  | `batch`                                            |
+| Area      | Read                                       | Write                                              |
+| --------- | ------------------------------------------ | -------------------------------------------------- |
+| Server    | `server_info`, `datapacks`                 | `server_admin`, `run_command`, `datapacks`         |
+| World     | `world_info`                               | `edit_world`                                       |
+| Blocks    | `get_blocks`, `find`, `structures`, `undo` | `edit_blocks`, `structures`, `undo`                |
+| Entities  | `entities`                                 | `edit_entity`, `move_entity`                       |
+| Players   | `list_players`, `get_player`, `inventory`  | `edit_player`, `moderation`, `inventory`, `notify` |
+| Game data | `game_data`                                |                                                    |
+| Other     | `events`                                   | `batch`                                            |
 
 ## Security
 
