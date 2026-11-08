@@ -124,7 +124,35 @@ the answer in the chat, and without it the answer only goes to the log.
 
 An event trigger starts no run within `cooldownSeconds` of its last one, and no trigger has two
 runs in line. Each trigger keeps a conversation of its own. Its runs show up as `trigger <name>`,
-and the online operators decide its approvals. The event types are the ones the `events` tool lists.
+and the online operators decide its approvals.
+
+These are the event types and the fields of their JSON. `player` and `playerUuid` name the player
+the event is about, and `entity` holds an entity's UUID, type, name, position, health and the like.
+
+| Event                     | When                                                             | Fields                                                             |
+| ------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `chat`                    | A player sends a chat message                                    | `player`, `playerUuid`, `message`                                  |
+| `command`                 | A player, the console, a command block or a tool runs a command  | `source`, `command`                                                |
+| `player_join`             | A player joins                                                   | `player`, `playerUuid`, `dimension`, `position`                    |
+| `player_leave`            | A player leaves                                                  | `player`, `playerUuid`, `dimension`, `position`                    |
+| `player_respawn`          | A player respawns                                                | `player`, `playerUuid`, `dimension`, `position`                    |
+| `player_change_dimension` | A player goes to another dimension                               | `player`, `playerUuid`, `from`, `to`                               |
+| `advancement`             | A player completes an advancement                                | `player`, `playerUuid`, `id`, `title`, `frame`, `announced`        |
+| `block_break`             | A player breaks a block                                          | `player`, `playerUuid`, `dimension`, `pos`, `state`                |
+| `block_place`             | A player or a dispenser places a block item                      | `player`, `playerUuid`, `dimension`, `pos`, `state`, `item`        |
+| `block_use`               | A player right-clicks a block                                    | `player`, `playerUuid`, `dimension`, `pos`, `state`, `item`        |
+| `entity_spawn`            | A new entity enters the world, not one that loads with its chunk | `entity`, `spawnReason`                                            |
+| `entity_damage`           | A living entity takes damage                                     | `entity`, `damageType`, `amount`, `attackerUuid`                   |
+| `entity_death`            | A living entity dies                                             | `entity`, `damageType`, `deathMessage`, `attackerUuid`             |
+| `entity_attack`           | A player attacks an entity                                       | `player`, `playerUuid`, `target`                                   |
+| `inventory_change`        | A slot of a player's inventory changes                           | `player`, `playerUuid`, `slot`, `oldItem`, `newItem`               |
+| `item_pickup`             | A player picks up an item                                        | `player`, `playerUuid`, `item`, `itemEntityUuid`                   |
+| `item_drop`               | A player drops or throws an item, also on death                  | `player`, `playerUuid`, `item`, `itemEntityUuid`, `death`          |
+| `item_craft`              | A player takes a crafted item                                    | `player`, `playerUuid`, `result`, `recipeId`, `count`              |
+| `item_smelt`              | A player takes an item out of a furnace                          | `player`, `playerUuid`, `result`, `count`                          |
+| `trade`                   | A player trades with a villager or another merchant              | `player`, `playerUuid`, `merchantUuid`, `costA`, `costB`, `result` |
+| `server_started`          | The server has started                                           | none                                                               |
+| `server_stopping`         | The server is stopping                                           | none                                                               |
 
 ## Configuration
 
