@@ -11,7 +11,8 @@ val EDIT_PLAYER =
             "Changes an online player: game_mode, food (level 0-20 and saturation), experience " +
                 "(levels and points within the level) and operator status. saved_merge_nbt and " +
                 "saved_set_slot edit the saved data of an offline player, which applies at their " +
-                "next login. get_player reads saved data.",
+                "next login. get_player reads saved data. grant_advancement and " +
+                "revoke_advancement grant or revoke an advancement, or one of its criteria.",
         input =
             input {
                 required("player", PLAYER)
@@ -25,6 +26,13 @@ val EDIT_PLAYER =
                 optional("points", integerSchema(min = 0))
                 optional("operator", booleanSchema("Required for operator."))
                 optional("snbt", stringSchema("SNBT to merge. Required for saved_merge_nbt."))
+                optional(
+                    "advancement",
+                    stringSchema(
+                        "e.g. \"minecraft:story/mine_diamond\". For the advancement actions.",
+                    ),
+                )
+                optional("criterion", stringSchema("One criterion. Leave it out for all of them."))
                 optional("slot", SLOT.described("Required for saved_set_slot."))
                 optional(
                     "item",
@@ -63,6 +71,26 @@ val EDIT_PLAYER =
                         val operator = input.boolean("operator")
                         server.changeOperator(input.string("player"), operator)
                         done(if (operator) "Player is now operator" else "Operator removed")
+                    },
+                "grant_advancement" to
+                    writeAction { server, input ->
+                        val granted =
+                            server.grantAdvancement(
+                                input.string("player"),
+                                input.string("advancement"),
+                                input.stringOrNull("criterion"),
+                            )
+                        done("Granted $granted criteria")
+                    },
+                "revoke_advancement" to
+                    writeAction { server, input ->
+                        val revoked =
+                            server.revokeAdvancement(
+                                input.string("player"),
+                                input.string("advancement"),
+                                input.stringOrNull("criterion"),
+                            )
+                        done("Revoked $revoked criteria")
                     },
                 "saved_merge_nbt" to
                     destructiveAction { server, input ->
