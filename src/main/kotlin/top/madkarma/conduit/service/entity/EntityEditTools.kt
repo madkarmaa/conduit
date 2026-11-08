@@ -17,8 +17,8 @@ val EDIT_ENTITY =
                 "remove_effect change status effects. set_attribute sets an attribute base " +
                 "value such as \"minecraft:max_health\". calm ends the anger of a neutral mob " +
                 "such as a wolf or a bee. owner tames an animal such as a wolf, a cat or a horse " +
-                "for a player, who must be online for horses and their kin. sit makes a tamed " +
-                "wolf, cat or parrot sit or stand up.",
+                "for a player, who may be offline. sit makes a tamed wolf, cat or parrot sit or " +
+                "stand up.",
         input =
             input {
                 optional("uuid", UUID.described("Required for every action but spawn."))
