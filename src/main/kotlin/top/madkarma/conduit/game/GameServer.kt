@@ -75,6 +75,11 @@ fun MinecraftServer.player(ref: String): ServerPlayer {
     return byUuid ?: playerList.getPlayerByName(ref) ?: notFound("Player not online: $ref")
 }
 
+/** The entity in any dimension, or null when it is not loaded. */
+fun MinecraftServer.findEntity(id: UUID): Entity? = allLevels.firstNotNullOfOrNull {
+    it.getEntity(id)
+}
+
 fun MinecraftServer.entity(uuid: String): Entity {
     val id =
         runCatching { UUID.fromString(uuid) }.getOrNull() ?: invalidInput("Invalid UUID: $uuid")

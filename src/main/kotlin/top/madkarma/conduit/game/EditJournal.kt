@@ -76,6 +76,7 @@ object EditJournal {
     fun undo(server: MinecraftServer, ids: List<Int>, caller: String): List<EditGroup> {
         val chosen = choose(ids, caller)
         checkNoNewerOverlap(chosen)
+        chosen.forEach { group -> group.changes.forEach { it.checkUndo(server) } }
 
         for (group in chosen.sortedByDescending { it.id }) {
             group.snapshots.forEach { it.restore(server) }
@@ -122,7 +123,8 @@ object EditJournal {
                     ?: continue
 
             failedPrecondition(
-                "Edit #${newer.id} (${newer.action}) changed the same blocks after #${group.id}. " +
+                "Edit #${newer.id} (${newer.action}) changed the same blocks, entities or players " +
+                    "after #${group.id}. " +
                     "Undo it first, or both together.",
             )
         }

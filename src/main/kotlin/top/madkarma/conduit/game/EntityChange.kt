@@ -20,17 +20,17 @@ import net.minecraft.world.level.storage.TagValueOutput
 class EntityChange
 private constructor(
     val dimension: ResourceKey<Level>,
-    private val uuid: UUID,
+    override val subject: UUID,
     private val removedData: CompoundTag?,
 ) : UndoableChange {
     override fun undo(server: MinecraftServer) {
         if (removedData == null) {
-            server.allLevels.firstNotNullOfOrNull { it.getEntity(uuid) }?.discard()
+            server.findEntity(subject)?.discard()
             return
         }
 
         val level = server.getLevel(dimension) ?: return
-        if (level.getEntity(uuid) != null) return
+        if (level.getEntity(subject) != null) return
 
         val input =
             TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), removedData)

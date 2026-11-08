@@ -17,26 +17,24 @@ import top.madkarma.conduit.game.UndoableChange
 class PlayerItems
 private constructor(
     private val server: MinecraftServer,
-    val id: UUID,
+    override val subject: UUID,
     private val inventory: List<ItemStack>,
     private val enderChest: List<ItemStack>,
 ) : UndoableChange {
     override fun changed(): Boolean {
-        val now = of(server, id)
+        val now = of(server, subject)
         return !sameItems(inventory, now.inventory) || !sameItems(enderChest, now.enderChest)
     }
 
-    override fun overlaps(other: UndoableChange): Boolean = other is PlayerItems && other.id == id
-
     override fun undo(server: MinecraftServer) {
-        val player = server.playerList.getPlayer(id)
+        val player = server.playerList.getPlayer(subject)
         if (player != null) {
             fill(player.inventory, inventory)
             fill(player.enderChestInventory, enderChest)
             return
         }
 
-        server.restoreSavedItems(id, inventory, enderChest)
+        server.restoreSavedItems(subject, inventory, enderChest)
     }
 
     companion object {

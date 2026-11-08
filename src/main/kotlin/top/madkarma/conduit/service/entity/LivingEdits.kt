@@ -23,7 +23,7 @@ internal fun MinecraftServer.living(uuid: String): LivingEntity =
     entity(uuid) as? LivingEntity ?: failedPrecondition("Entity $uuid is not a living entity")
 
 internal fun MinecraftServer.changeHealth(uuid: String, health: Float) {
-    living(uuid).health = health
+    editedLiving(uuid).health = health
 }
 
 /** Hurts the entity like an attack. The attacker is an optional entity UUID. */
@@ -33,7 +33,7 @@ internal fun MinecraftServer.damage(
     damageType: String?,
     attacker: String?,
 ) {
-    val entity = entity(uuid)
+    val entity = editedEntity(uuid)
     val typeId = damageType.orEmpty().ifBlank { "minecraft:generic" }
     val type =
         registryAccess()
@@ -65,12 +65,12 @@ internal fun MinecraftServer.addEffect(uuid: String, effect: EffectInfo) {
             effect.showIcon,
         )
 
-    living(uuid).addEffect(instance)
+    editedLiving(uuid).addEffect(instance)
 }
 
 /** A null effect clears all effects. */
 internal fun MinecraftServer.removeEffect(uuid: String, effect: String?) {
-    val entity = living(uuid)
+    val entity = editedLiving(uuid)
 
     if (effect.isNullOrBlank()) {
         entity.removeAllEffects()
@@ -104,7 +104,7 @@ internal fun MinecraftServer.changeAttributeBase(uuid: String, attribute: String
         }
 
     val instance =
-        living(uuid).getAttribute(holder)
+        editedLiving(uuid).getAttribute(holder)
             ?: failedPrecondition("Entity has no attribute $attribute")
 
     instance.baseValue = base

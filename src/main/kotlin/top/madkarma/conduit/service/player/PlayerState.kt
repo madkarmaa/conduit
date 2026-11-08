@@ -57,28 +57,32 @@ internal fun MinecraftServer.describePlayer(player: ServerPlayer): PlayerInfo {
     )
 }
 
+/** Looks up an online player that an action is about to change, and saves them for undo. */
+private fun MinecraftServer.editedPlayer(ref: String): ServerPlayer =
+    player(ref).also { player -> EditJournal.before { PlayerSnapshot.of(player) } }
+
 /** Game mode is survival, creative, adventure or spectator. */
 internal fun MinecraftServer.changeGameMode(ref: String, gameMode: String) {
     val mode =
         GameType.byName(gameMode.lowercase(), null) ?: invalidInput("Unknown game mode: $gameMode")
-    player(ref).setGameMode(mode)
+    editedPlayer(ref).setGameMode(mode)
 }
 
 internal fun MinecraftServer.changeFood(ref: String, foodLevel: Int?, saturation: Float?) {
-    val food = player(ref).foodData
+    val food = editedPlayer(ref).foodData
     foodLevel?.let { food.foodLevel = it }
     saturation?.let { food.setSaturation(it) }
 }
 
 /** Points are the experience within the current level. */
 internal fun MinecraftServer.changeExperience(ref: String, levels: Int?, points: Int?) {
-    val player = player(ref)
+    val player = editedPlayer(ref)
     levels?.let { player.setExperienceLevels(it) }
     points?.let { player.setExperiencePoints(it) }
 }
 
 internal fun MinecraftServer.changeOperator(ref: String, operator: Boolean) {
-    val id = player(ref).nameAndId()
+    val id = editedPlayer(ref).nameAndId()
     if (operator) playerList.op(id) else playerList.deop(id)
 }
 

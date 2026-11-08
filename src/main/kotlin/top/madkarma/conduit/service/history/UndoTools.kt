@@ -5,8 +5,12 @@ import kotlinx.serialization.Serializable
 import top.madkarma.conduit.game.EditGroup
 import top.madkarma.conduit.game.EditJournal
 import top.madkarma.conduit.game.EntityChange
+import top.madkarma.conduit.game.EntitySnapshot
+import top.madkarma.conduit.game.UndoableChange
 import top.madkarma.conduit.mcp.*
+import top.madkarma.conduit.service.player.AdvancementChange
 import top.madkarma.conduit.service.player.PlayerItems
+import top.madkarma.conduit.service.player.PlayerSnapshot
 
 @Serializable
 data class EditSummary(
@@ -18,7 +22,7 @@ data class EditSummary(
     val time: String,
     val blocks: Long,
     val entities: Int,
-    /** Players whose inventory or ender chest the edit changed. */
+    /** Players the edit changed. */
     val players: Int,
     val dimensions: List<String>,
 )
@@ -29,15 +33,16 @@ val UNDO =
         title = "Undo edits",
         description =
             "The server records the block changes of edit_blocks, edit_world explode, " +
-                "structures place and copy, and inventory on containers, the entities that " +
-                "edit_entity spawns and removes, and the player items that inventory and the " +
-                "saved actions of edit_player change, one edit per call. list shows the recent " +
-                "edits, newest first. undo restores the blocks and block entities of the given " +
-                "edits, or of your newest one, removes the entities they spawned, brings back " +
-                "the ones they removed, and puts back players' inventories and ender chests, " +
-                "online or offline. It does not bring back dropped items or other changes to " +
-                "entities and players, and it cannot undo run_command, fire spread, falling " +
-                "blocks or anything before a server restart.",
+                "structures place and copy, and inventory on containers, and every change that " +
+                "edit_entity, move_entity, inventory and edit_player make to entities and " +
+                "players, one edit per call. list shows the recent edits, newest first. undo " +
+                "puts the blocks, block entities, entities and players of the given edits, or " +
+                "of your newest one, back as they were: it removes spawned entities, brings back " +
+                "removed or dead ones, and restores entity data, riding, position, dimension, " +
+                "player items, game mode, food, experience, health, effects, attributes, " +
+                "operator status and advancement criteria, for offline players too. Undo also " +
+                "overwrites what happened to them since. It cannot undo run_command, dropped " +
+                "items, fire spread, falling blocks or anything before a server restart.",
         seesOtherPlayers = true,
         input =
             input {
@@ -79,16 +84,23 @@ private fun summarize(group: EditGroup) =
         action = group.action,
         time = group.time.truncatedTo(ChronoUnit.SECONDS).toString(),
         blocks = group.blocks,
-        entities = group.changes.count { it is EntityChange },
-        players = group.changes.count { it is PlayerItems },
+        entities = subjects(group) { it is EntityChange || it is EntitySnapshot },
+        players =
+            subjects(group) {
+                it is PlayerItems || it is PlayerSnapshot || it is AdvancementChange
+            },
         dimensions =
             (group.snapshots.map { it.dimension } +
-                    group.changes.filterIsInstance<EntityChange>().map { it.dimension })
+                    group.changes.filterIsInstance<EntityChange>().map { it.dimension } +
+                    group.changes.filterIsInstance<EntitySnapshot>().map { it.dimension })
                 .map { it.identifier().toString() }
                 .distinct(),
     )
 
+private fun subjects(group: EditGroup, kind: (UndoableChange) -> Boolean): Int =
+    group.changes.filter(kind).mapNotNull { it.subject }.distinct().size
+
 private fun describe(edit: EditSummary): String =
     "#${edit.id} ${edit.action} by ${edit.caller} at ${edit.time}: ${edit.blocks} blocks, " +
-        "${edit.entities} entities and ${edit.players} players' items" +
+        "${edit.entities} entities and ${edit.players} players" +
         edit.dimensions.joinToString(", ").let { if (it.isEmpty()) "" else " in $it" }

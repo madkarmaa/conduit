@@ -9,6 +9,7 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.SlotRanges
 import net.minecraft.world.item.ItemStack
 import top.madkarma.conduit.game.*
+import top.madkarma.conduit.service.entity.editedEntity
 
 private const val MOB_INVENTORY = "mob.inventory."
 
@@ -119,7 +120,6 @@ internal fun MinecraftServer.giveEntityItem(uuid: String, item: ItemInfo): Int {
 // Undo puts the entity's items back.
 private fun MinecraftServer.slotsBeforeEdit(uuid: String): List<NamedSlot> {
     val slots = slotsOf(uuid)
-    val entity = entity(uuid)
-    EditJournal.before { EntityItems(entity.uuid, slots.map { it.name to it.access.get().copy() }) }
+    editedEntity(uuid)
     return slots
 }

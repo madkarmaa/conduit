@@ -50,6 +50,7 @@ internal fun MinecraftServer.grantAdvancement(ref: String, id: String, criterion
         criterion?.let { listOf(checkedCriterion(advancement, it)) }
             ?: player.advancements.getOrStartProgress(advancement).remainingCriteria.toList()
 
+    EditJournal.before { AdvancementChange.before(player, advancement, criteria, granting = true) }
     return criteria.count { player.advancements.award(advancement, it) }
 }
 
@@ -61,6 +62,7 @@ internal fun MinecraftServer.revokeAdvancement(ref: String, id: String, criterio
         criterion?.let { listOf(checkedCriterion(advancement, it)) }
             ?: player.advancements.getOrStartProgress(advancement).completedCriteria.toList()
 
+    EditJournal.before { AdvancementChange.before(player, advancement, criteria, granting = false) }
     return criteria.count { player.advancements.revoke(advancement, it) }
 }
 

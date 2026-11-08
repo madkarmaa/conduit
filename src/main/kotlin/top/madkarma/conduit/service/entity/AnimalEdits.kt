@@ -11,7 +11,6 @@ import net.minecraft.world.entity.animal.equine.AbstractHorse
 import net.minecraft.world.entity.animal.feline.Cat
 import net.minecraft.world.entity.animal.parrot.Parrot
 import net.minecraft.world.entity.animal.wolf.Wolf
-import top.madkarma.conduit.game.entity
 import top.madkarma.conduit.game.failedPrecondition
 import top.madkarma.conduit.mixin.AbstractHorseAccessor
 import top.madkarma.conduit.service.player.lastKnownName
@@ -19,7 +18,7 @@ import top.madkarma.conduit.service.player.resolvePlayerId
 
 /** Ends the anger of a neutral mob, such as a wolf, a bee or a piglin. */
 internal fun MinecraftServer.calm(uuid: String) {
-    val entity = entity(uuid)
+    val entity = editedEntity(uuid)
     val mob = entity as? NeutralMob ?: failedPrecondition("A ${entity.typeId()} is never angry")
     mob.stopBeingAngry()
 }
@@ -29,7 +28,7 @@ internal fun MinecraftServer.calm(uuid: String) {
  * Returns the owner's name.
  */
 internal fun MinecraftServer.changeOwner(uuid: String, player: String): String {
-    val animal = entity(uuid)
+    val animal = editedEntity(uuid)
     if (animal !is TamableAnimal && animal !is AbstractHorse) {
         failedPrecondition("A ${animal.typeId()} cannot be tamed")
     }
@@ -51,7 +50,7 @@ internal fun MinecraftServer.changeOwner(uuid: String, player: String): String {
 
 /** Only wolves, cats and parrots sit, and only once they are tamed. */
 internal fun MinecraftServer.changeSitting(uuid: String, sitting: Boolean) {
-    val entity = entity(uuid)
+    val entity = editedEntity(uuid)
     val animal =
         entity.takeIf { it is Wolf || it is Cat || it is Parrot } as? TamableAnimal
             ?: failedPrecondition("A ${entity.typeId()} cannot sit. Wolves, cats and parrots can.")

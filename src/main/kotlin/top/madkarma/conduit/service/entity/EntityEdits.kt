@@ -32,7 +32,7 @@ internal fun MinecraftServer.teleportEntity(
     position: Vector3,
     rotation: Rotation?,
 ): EntityInfo {
-    val entity = entity(uuid)
+    val entity = editedEntity(uuid)
     val level = if (dimension.isNullOrBlank()) entity.level() as ServerLevel else level(dimension)
     val yaw = rotation?.yaw ?: entity.yRot
     val pitch = rotation?.pitch ?: entity.xRot
@@ -51,7 +51,7 @@ internal fun MinecraftServer.teleportEntity(
 
 /** Sets the velocity in blocks per tick, or adds to the current velocity. */
 internal fun MinecraftServer.changeVelocity(uuid: String, velocity: Vector3, add: Boolean) {
-    val entity = entity(uuid)
+    val entity = editedEntity(uuid)
     val change = velocity.toMc()
 
     entity.deltaMovement = if (add) entity.deltaMovement.add(change) else change
@@ -59,7 +59,7 @@ internal fun MinecraftServer.changeVelocity(uuid: String, velocity: Vector3, add
 }
 
 internal fun MinecraftServer.changeRotation(uuid: String, rotation: Rotation) {
-    rotate(entity(uuid), rotation.yaw, rotation.pitch)
+    rotate(editedEntity(uuid), rotation.yaw, rotation.pitch)
 }
 
 internal fun rotate(entity: Entity, yaw: Float, pitch: Float) {
@@ -92,7 +92,7 @@ internal fun MinecraftServer.entityNbt(uuid: String): String = saveEntity(entity
  * such as a broken villager trade, so such a merge puts the old data back and fails instead.
  */
 internal fun MinecraftServer.mergeEntityNbt(uuid: String, snbt: String) {
-    val entity = entity(uuid)
+    val entity = editedEntity(uuid)
     if (entity is ServerPlayer) failedPrecondition("Player data is read-only here")
 
     val original = saveEntity(entity)
@@ -109,25 +109,25 @@ internal fun MinecraftServer.mergeEntityNbt(uuid: String, snbt: String) {
 
 /** A null name clears the custom name. */
 internal fun MinecraftServer.changeCustomName(uuid: String, name: String?, visible: Boolean) {
-    val entity = entity(uuid)
+    val entity = editedEntity(uuid)
 
     entity.customName = name?.let { textComponent(it, registryAccess()) }
     entity.isCustomNameVisible = visible
 }
 
 internal fun MinecraftServer.changeTags(uuid: String, add: List<String>, remove: List<String>) {
-    val entity = entity(uuid)
+    val entity = editedEntity(uuid)
 
     remove.forEach { entity.removeTag(it) }
     add.forEach { entity.addTag(it) }
 }
 
 internal fun MinecraftServer.mount(passenger: String, vehicle: String) {
-    if (!entity(passenger).startRiding(entity(vehicle), true, true)) {
+    if (!editedEntity(passenger).startRiding(entity(vehicle), true, true)) {
         failedPrecondition("Entity cannot ride $vehicle")
     }
 }
 
 internal fun MinecraftServer.dismount(uuid: String) {
-    entity(uuid).stopRiding()
+    editedEntity(uuid).stopRiding()
 }
