@@ -1,9 +1,9 @@
-# Conduit agent
+<div align="center">
+    <img src="../docs/conduit.gif" alt="Conduit" />
+    <h1>Conduit Agent</h1>
+</div>
 
-The agent image runs the AI agents of the [Conduit](../README.md) mod. Two containers run next to
-the Minecraft server: `conduit-full` answers the requests in full mode, and `conduit-chat` those in
-chat mode. The image is `ghcr.io/madkarmaa/conduit-agent`, and each release of the mod publishes it
-with the release's version and as `latest`.
+The agent image that runs the AI agents of the [Conduit](../README.md) mod.
 
 Each container holds a runner that takes requests from the mod over HTTP. It answers them with
 Claude Code, Codex or OpenCode, through the
@@ -46,9 +46,6 @@ By default, every run uses the API key that the mod sends with it, `agents.<mode
 | Codex       | An OpenAI API key from the [OpenAI Platform](https://platform.openai.com/)    |
 | OpenCode    | A key of the provider that the model names, such as DeepSeek for `deepseek/…` |
 
-The CLI then runs with a home folder of its own that holds no logins, so it cannot fall back to a
-subscription that the container is logged in to.
-
 ### Subscription logins
 
 > [!CAUTION]
@@ -84,7 +81,7 @@ server. Pick the setup that matches the server.
 ### Minecraft in Docker Compose
 
 If the server runs in Docker Compose, such as with
-[itzg/minecraft-server](https://github.com/itzg/docker-minecraft-server), start the agents in the
+[`itzg/minecraft-server`](https://github.com/itzg/docker-minecraft-server), start the agents in the
 same project as the server, so they share its network.
 
 ```sh
