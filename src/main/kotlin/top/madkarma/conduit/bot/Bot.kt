@@ -67,7 +67,7 @@ object Bot {
     fun showStatus(server: MinecraftServer) {
         for (line in lines.values) {
             val running = line.running()
-            running?.let { status(server, it.asker.uuid, "Thinking…") }
+            running?.let { status(server, it.asker.uuid, it.activity ?: "Thinking…") }
 
             line.waiting().forEachIndexed { index, request ->
                 val ahead = index + if (running != null) 1 else 0

@@ -18,6 +18,11 @@ class BotRequest(
     val trigger: TriggerRun? = null,
 ) {
     var job: Job? = null
+
+    /**
+     * What the running request does right now, such as "Using edit_blocks…", for the action bar.
+     */
+    @Volatile var activity: String? = null
 }
 
 /**

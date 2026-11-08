@@ -32,22 +32,26 @@ class ToolSession(val policy: ToolPolicy, tools: List<ToolDefinition>) {
         if (calls.isNotEmpty()) policy.approvals?.approve(calls)
     }
 
-    suspend fun call(name: String, arguments: JsonObject): CallToolResult =
-        try {
+    suspend fun call(name: String, arguments: JsonObject): CallToolResult {
+        policy.recorder?.started(name)
+
+        return try {
             val prepared = prepare(name, arguments)
             if (!prepared.tool.definition.approvesItself) approve(listOf(prepared.called()))
 
             log(prepared, arguments)
             val reply = policy.redact(run(prepared))
-            policy.recorder?.record(name, arguments, failed = false, reply.text)
+            val called = prepared.called()
+            policy.recorder?.finished(RecordedCall(name, called, arguments, false, reply.text))
             toolResult(reply)
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
             val failure = describeFailure(exception, name)
-            policy.recorder?.record(name, arguments, failed = true, failure)
+            policy.recorder?.finished(RecordedCall(name, null, arguments, true, failure))
             errorResult(failure)
         }
+    }
 
     private suspend fun run(call: PreparedCall): Reply =
         when (val action = call.action) {

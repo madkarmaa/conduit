@@ -46,7 +46,16 @@ class ToolCallTest {
     fun `call tells the recorder what each call returned`() {
         val tool = testTool(actions = mapOf("set" to Access.WRITE))
         val recorded = mutableListOf<String>()
-        val recorder = CallRecorder { name, _, failed, text -> recorded += "$name $failed $text" }
+        val recorder =
+            object : CallRecorder {
+                override fun started(tool: String) {
+                    recorded += "started $tool"
+                }
+
+                override fun finished(call: RecordedCall) {
+                    recorded += "${call.tool} ${call.failed} ${call.text}"
+                }
+            }
         val session = ToolSession(ToolPolicy("full", recorder = recorder), listOf(tool))
 
         runBlocking {
@@ -55,7 +64,12 @@ class ToolCallTest {
         }
 
         assertEquals(
-            listOf("${tool.name} false set", "nope true Invalid input: Unknown tool nope"),
+            listOf(
+                "started ${tool.name}",
+                "${tool.name} false set",
+                "started nope",
+                "nope true Invalid input: Unknown tool nope",
+            ),
             recorded,
         )
     }

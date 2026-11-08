@@ -28,9 +28,24 @@ fun interface ApprovalGate {
     suspend fun approve(calls: List<CalledAction>)
 }
 
-/** Hears every call made with a policy, with the text it returned or why it failed. */
-fun interface CallRecorder {
-    fun record(tool: String, arguments: JsonObject, failed: Boolean, text: String)
+/**
+ * One finished call, with the arguments as the agent sent them and the text it returned or why it
+ * failed. The action is null when the call failed before it found one.
+ */
+class RecordedCall(
+    val tool: String,
+    val action: CalledAction?,
+    val arguments: JsonObject,
+    val failed: Boolean,
+    val text: String,
+)
+
+/** Hears every call made with a policy. */
+interface CallRecorder {
+    /** Called before the call checks its approvals and runs. */
+    fun started(tool: String) {}
+
+    fun finished(call: RecordedCall)
 }
 
 /** What one token may do with the tools. */

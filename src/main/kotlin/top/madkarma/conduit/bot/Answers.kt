@@ -53,8 +53,10 @@ object Answers {
         val agent = config.agent(request.mode)
         val runner = RunnerClient(agent.runner)
         val deadline = Deadline(config.requests.timeoutSeconds)
-        val approvals = Approvals.gate(request.asker, config.approvals, deadline)
-        val policy = config.toolPolicy(request.mode, request.asker, approvals, trace)
+        val progress = RequestProgress(request, trace)
+        val approvals =
+            progress.showingApprovals(Approvals.gate(request.asker, config.approvals, deadline))
+        val policy = config.toolPolicy(request.mode, request.asker, approvals, progress)
         val token = AccessTokens.issue(policy)
 
         try {

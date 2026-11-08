@@ -7,11 +7,10 @@ import java.nio.file.StandardOpenOption.APPEND
 import java.nio.file.StandardOpenOption.CREATE
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import kotlinx.serialization.json.JsonObject
 import net.fabricmc.loader.api.FabricLoader
 import top.madkarma.conduit.LOGGER
 import top.madkarma.conduit.config.ConduitConfig
-import top.madkarma.conduit.mcp.CallRecorder
+import top.madkarma.conduit.mcp.RecordedCall
 
 private const val SHOWN_LENGTH = 2000
 private val DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
@@ -53,7 +52,7 @@ object Telemetry {
  * The lines of one request. They go to the file together when the request ends, so the requests of
  * the two modes never mix.
  */
-class RequestTrace(request: BotRequest) : CallRecorder {
+class RequestTrace(request: BotRequest) {
     private val startedAt = System.currentTimeMillis()
     private val lines =
         mutableListOf(
@@ -63,9 +62,10 @@ class RequestTrace(request: BotRequest) : CallRecorder {
         )
 
     @Synchronized
-    override fun record(tool: String, arguments: JsonObject, failed: Boolean, text: String) {
-        lines += "${LocalDateTime.now().format(TIME)} $tool ${shorten(arguments.toString())}"
-        lines += "  ${if (failed) "failed" else "ok"}: ${shorten(text)}"
+    fun record(call: RecordedCall) {
+        lines +=
+            "${LocalDateTime.now().format(TIME)} ${call.tool} ${shorten(call.arguments.toString())}"
+        lines += "  ${if (call.failed) "failed" else "ok"}: ${shorten(call.text)}"
     }
 
     @Synchronized
