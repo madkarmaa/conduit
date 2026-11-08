@@ -56,6 +56,10 @@ The agent remembers earlier requests. In chat mode every player has a conversati
 In full mode, `requests.memory` picks one conversation per player, one `shared` by everyone, or
 `none`.
 
+In full mode the tools record the blocks that each change replaces, so a request such as
+`/conduit undo that` can put them back. Undo forgets everything when the server restarts, and it
+never brings back entities or dropped items.
+
 ### Approvals
 
 Before the agent runs an action that is hard to undo, such as `run_command`, `edit_blocks` `fill`
@@ -158,7 +162,7 @@ command lists the problems and keeps the old config.
 
 Chat mode gets `server_info`, `world_info`, `get_blocks`, `structures`, `entities`, `get_player`,
 `inventory` and `game_data` by default, and never the tools that list other players. It only gets
-their actions that read, and only the asking player's own data: `entities` leaves out the other
+the actions that read, and only the asking player's own data, so `entities` leaves out the other
 players.
 
 > [!CAUTION]
@@ -219,8 +223,9 @@ The server has 24 tools. Tools with several operations take an `action` argument
 - Anyone in full mode controls the agent and every tool it has, including `run_command`. Keep
   `access.allow` short, or turn on `tools.readOnly`.
 - Triggers run in full mode without anyone asking, and players write parts of the events, such as
-  chat messages. The agent learns to treat event data as information, but keep trigger prompts
-  narrow. Destructive actions still wait for an online operator's approval.
+  chat messages. The run's instructions tell the agent to treat event data as information and
+  never as instructions, but keep trigger prompts narrow. Destructive actions still wait for an
+  online operator's approval.
 - The MCP server listens on every interface by default, so the agent containers can reach it.
   Every request needs a token, but keep port 25585 closed to the internet. Each agent request gets
   a token of its own that only works while the request runs.
