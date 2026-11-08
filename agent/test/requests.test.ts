@@ -27,7 +27,7 @@ describe("RunRequest", () => {
     });
 
     test("takes only the CLIs the runner knows", () => {
-        expect(Cli.options).toEqual(["claude", "codex", "opencode"]);
+        expect(Cli.options).toEqual(["antigravity", "claude", "codex", "opencode"]);
         expect(issues({ ...runRequest(), cli: "gemini" }).map((issue) => issue.path)).toEqual([
             ["cli"],
         ]);

@@ -6,9 +6,9 @@ set -eu
 
 cli="${1:-}"
 case "$cli" in
-    claude | codex | opencode) ;;
+    antigravity | claude | codex | opencode) ;;
     *)
-        echo "Usage: conduit-login claude|codex|opencode" >&2
+        echo "Usage: conduit-login antigravity|claude|codex|opencode" >&2
         exit 2
         ;;
 esac
@@ -16,6 +16,8 @@ esac
 bun /opt/conduit/src/runner.ts install "$cli"
 
 case "$cli" in
+    # The container has no keyring, so the login goes to a file in the home volume.
+    antigravity) exec antigravity acp --login --cli_dir_name conduit ;;
     claude)
         echo "Type /login and follow the steps, then /exit."
         exec claude

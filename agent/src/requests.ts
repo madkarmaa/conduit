@@ -1,7 +1,7 @@
 // What the mod sends to start a run.
 import { z } from "zod";
 
-export const Cli = z.enum(["claude", "codex", "opencode"]);
+export const Cli = z.enum(["antigravity", "claude", "codex", "opencode"]);
 export type Cli = z.infer<typeof Cli>;
 
 export const RunRequest = z

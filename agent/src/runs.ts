@@ -1,6 +1,7 @@
 // Runs the agent for one request in its conversation's folder, through the SDK of its CLI.
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { runAntigravity } from "./drivers/antigravity.ts";
 import { runClaude } from "./drivers/claude.ts";
 import { runCodex } from "./drivers/codex.ts";
 import type { DriverAnswer, DriverRun } from "./drivers/driver.ts";
@@ -18,6 +19,7 @@ const SESSION_FILE = ".conduit-session.json";
 const ERROR_LIMIT = 4000;
 
 const DRIVERS: Record<Cli, (run: DriverRun) => Promise<DriverAnswer>> = {
+    antigravity: runAntigravity,
     claude: runClaude,
     codex: runCodex,
     opencode: runOpenCode,

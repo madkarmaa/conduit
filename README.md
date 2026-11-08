@@ -11,8 +11,8 @@ world and their own player.
 Conduit is a server-side Fabric mod. Players do not need it to join. The agents run in two Docker
 containers next to the server, one for each mode, as [`agent/README.md`](./agent/README.md)
 describes. Each uses the agent you pick:
-[Claude Code](https://www.anthropic.com/claude-code), [Codex](https://github.com/openai/codex) or
-[OpenCode](https://opencode.ai). The mod also serves its tools over
+[Antigravity CLI](https://antigravity.google), [Claude Code](https://www.anthropic.com/claude-code),
+[Codex](https://github.com/openai/codex) or [OpenCode](https://opencode.ai). The mod also serves its tools over
 [MCP](https://modelcontextprotocol.io), so other MCP hosts can control the game too.
 
 ## Requirements
@@ -175,7 +175,7 @@ command lists the problems and keeps the old config.
 | `mcp.allowedHosts`                                    | `minecraft`, `host.docker.internal`, `localhost`, `127.0.0.1` | Host names clients may use to reach the MCP server                                    |
 | `mcp.tokens`                                          | none                                                          | Tokens for other [MCP hosts](#other-mcp-hosts)                                        |
 | `agents.<mode>.enabled`                               | `true`                                                        | Turns the mode on. Chat mode stays on for the players `/conduit access` allowed       |
-| `agents.<mode>.cli`                                   | required                                                      | `claude`, `codex` or `opencode`                                                       |
+| `agents.<mode>.cli`                                   | required                                                      | `antigravity`, `claude`, `codex` or `opencode`                                        |
 | `agents.<mode>.model`                                 | required                                                      | The model, as the CLI names it                                                        |
 | `agents.<mode>.effort`                                | required                                                      | The reasoning effort, as the CLI names it                                             |
 | `agents.<mode>.options`                               | none                                                          | Extra options for the CLI's SDK, which Conduit's own options override                 |
@@ -201,18 +201,22 @@ command lists the problems and keeps the old config.
 | `triggers`                                            | none                                                          | Runs that game events or a timer start, as [triggers](#triggers) describes            |
 | `telemetry`                                           | `false`                                                       | Writes each request, the agent's tool calls and its answer to the telemetry file      |
 
+For Antigravity CLI, `model` is a model such as `gemini-3.1-pro` and `effort` a thinking level that
+the model offers, such as `low` or `high`.
+
 Chat mode gets `server_info`, `world_info`, `get_blocks`, `structures`, `entities`, `get_player`,
 `inventory` and `game_data` by default, and never the tools that list other players. It only gets
 the actions that read, and only the asking player's own data, so `entities` leaves out the other
 players.
 
 > [!CAUTION]
-> `dangerouslyUseSubscriptionCredentials` makes the agent use the Claude, ChatGPT or OpenCode
-> subscription that its container is logged in to, for every player who asks the bot. This is
+> `dangerouslyUseSubscriptionCredentials` makes the agent use the Claude, ChatGPT, Google or
+> OpenCode account that its container is logged in to, for every player who asks the bot. This is
 > against the terms of service of [Anthropic](https://www.anthropic.com/legal/consumer-terms),
 > [OpenAI](https://openai.com/policies/terms-of-use/) and
 > [OpenCode](https://opencode.ai/legal/terms-of-service). Anthropic also
-> [limits how subscription logins may be used](https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use).
+> [limits how subscription logins may be used](https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use),
+> and [Google's terms for Antigravity](https://antigravity.google/terms) apply to its Google login.
 > The provider can ban the account. Use API keys instead.
 
 ## Other MCP hosts

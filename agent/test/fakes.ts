@@ -54,6 +54,7 @@ function drive(run: DriverRun): Promise<DriverAnswer> {
     return fakes.driver(run);
 }
 
+mock.module("../src/drivers/antigravity.ts", () => ({ runAntigravity: drive }));
 mock.module("../src/drivers/claude.ts", () => ({ runClaude: drive }));
 mock.module("../src/drivers/codex.ts", () => ({ runCodex: drive }));
 mock.module("../src/drivers/opencode.ts", () => ({ runOpenCode: drive }));

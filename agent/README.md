@@ -6,7 +6,8 @@
 The agent image that runs the AI agents of the [Conduit](../README.md) mod.
 
 Each container holds a runner that takes requests from the mod over HTTP. It answers them with
-Claude Code, Codex or OpenCode, through the
+Antigravity CLI, Claude Code, Codex or OpenCode, through the
+[Agent Client Protocol SDK](https://agentclientprotocol.com), the
 [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/overview), the
 [Codex SDK](https://github.com/openai/codex/tree/main/sdk/typescript) or the
 [OpenCode client](https://opencode.ai/docs/sdk). The runner installs the CLI into the container's
@@ -36,21 +37,23 @@ requests with "try again in a few minutes".
 
 By default, every run uses the API key that the mod sends with it, `agents.<mode>.apiKey`:
 
-| CLI         | API key                                                                       |
-| ----------- | ----------------------------------------------------------------------------- |
-| Claude Code | An Anthropic API key from the [Claude Console](https://platform.claude.com/)  |
-| Codex       | An OpenAI API key from the [OpenAI Platform](https://platform.openai.com/)    |
-| OpenCode    | A key of the provider that the model names, such as DeepSeek for `deepseek/…` |
+| CLI             | API key                                                                       |
+| --------------- | ----------------------------------------------------------------------------- |
+| Antigravity CLI | A Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)  |
+| Claude Code     | An Anthropic API key from the [Claude Console](https://platform.claude.com/)  |
+| Codex           | An OpenAI API key from the [OpenAI Platform](https://platform.openai.com/)    |
+| OpenCode        | A key of the provider that the model names, such as DeepSeek for `deepseek/…` |
 
 ### Subscription logins
 
 > [!CAUTION]
-> `dangerouslyUseSubscriptionCredentials` makes the agent use the Claude, ChatGPT or OpenCode
-> subscription that its container is logged in to, for every player who asks the bot. This is
+> `dangerouslyUseSubscriptionCredentials` makes the agent use the Claude, ChatGPT, Google or
+> OpenCode account that its container is logged in to, for every player who asks the bot. This is
 > against the terms of service of [Anthropic](https://www.anthropic.com/legal/consumer-terms),
 > [OpenAI](https://openai.com/policies/terms-of-use/) and
 > [OpenCode](https://opencode.ai/legal/terms-of-service). Anthropic also
-> [limits how subscription logins may be used](https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use).
+> [limits how subscription logins may be used](https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use),
+> and [Google's terms for Antigravity](https://antigravity.google/terms) apply to its Google login.
 > The provider can ban the account. Use API keys instead.
 
 To use a subscription anyway, set `agents.<mode>.dangerouslyUseSubscriptionCredentials` to `true`
@@ -58,13 +61,15 @@ in the mod's config, and log the container in to its CLI once. The login stays i
 volume when Compose recreates the container.
 
 ```sh
+docker compose -f conduit-agents.yaml exec -it conduit-full conduit-login antigravity
 docker compose -f conduit-agents.yaml exec -it conduit-full conduit-login claude
 docker compose -f conduit-agents.yaml exec -it conduit-full conduit-login codex
 docker compose -f conduit-agents.yaml exec -it conduit-chat conduit-login opencode
 ```
 
-`conduit-login` installs the CLI first. Claude Code starts its interactive login, where `/login`
-signs in. Codex uses a device code, and OpenCode asks which account or provider to connect.
+`conduit-login` installs the CLI first. Antigravity CLI shows a link to sign in to Google with and
+asks for the code it shows. Claude Code starts its interactive login, where `/login` signs in. Codex
+uses a device code, and OpenCode asks which account or provider to connect.
 
 The agent's conversations belong to the login store they started in. Turning the flag on or off,
 or switching the CLI, starts new conversations.

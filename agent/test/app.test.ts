@@ -152,7 +152,7 @@ describe("request bodies", () => {
         expect(response.status).toBe(400);
         expect(await response.json()).toEqual({
             error:
-                'cli: Invalid option: expected one of "claude"|"codex"|"opencode"; ' +
+                'cli: Invalid option: expected one of "antigravity"|"claude"|"codex"|"opencode"; ' +
                 "mcp.token: Invalid input: expected string, received undefined",
         });
     });

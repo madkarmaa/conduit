@@ -23,7 +23,7 @@ class AgentChecksTest {
 
         val expected =
             listOf(
-                "agents.full.cli must be claude, codex or opencode. For another CLI, please open an issue.",
+                "agents.full.cli must be antigravity, claude, codex or opencode. For another CLI, please open an issue.",
                 "agents.full.model must be set to the model, as the CLI names it",
                 "agents.full.effort must be set to the reasoning effort, as the CLI names it",
                 "agents.full.runner.url must be an http or https URL with a host name without underscores",
@@ -51,7 +51,7 @@ class AgentChecksTest {
 
         val expected =
             listOf(
-                "agents.chat.cli must be set to claude, codex or opencode",
+                "agents.chat.cli must be set to antigravity, claude, codex or opencode",
                 "agents.chat.model must be set to the model, as the CLI names it",
                 "agents.chat.effort must be set to the reasoning effort, as the CLI names it",
             )

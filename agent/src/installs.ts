@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
+import { installAntigravity, updateAntigravity } from "./antigravity-release.ts";
 import { log } from "./log.ts";
 import { Cli } from "./requests.ts";
 
@@ -18,7 +19,10 @@ const UPDATE_RETRY_MS = 60 * 1000;
 
 const execute = promisify(execFile);
 
-export const PACKAGES: Record<Cli, string> = {
+// Antigravity CLI is no npm package, so antigravity-release.ts installs it.
+type NpmCli = Exclude<Cli, "antigravity">;
+
+export const PACKAGES: Record<NpmCli, string> = {
     claude: "@anthropic-ai/claude-code",
     codex: "@openai/codex",
     opencode: "@opencode/cli",
@@ -52,8 +56,9 @@ export async function ensureInstalled(cli: Cli): Promise<void> {
         return;
     }
 
-    log(`Installing ${PACKAGES[cli]}`);
-    await bunInstall(PACKAGES[cli]);
+    log(`Installing ${cli}`);
+    if (cli === "antigravity") await installAntigravity(cliPath(cli));
+    else await bunInstall(PACKAGES[cli]);
     versions[cli] = await versionOf(cli);
     log(`Installed ${cli} ${versions[cli]}`);
 }
@@ -84,10 +89,8 @@ export async function versionOf(cli: Cli): Promise<string> {
 async function updateInstalled(): Promise<void> {
     for (const cli of installedClis()) {
         try {
-            // Reinstalling the same version would download it again, and the CLI is missing meanwhile.
-            const latest = await latestVersion(cli);
-            if (latest !== (await installedVersion(cli)))
-                await bunInstall(`${PACKAGES[cli]}@${latest}`);
+            if (cli === "antigravity") await updateAntigravity(cliPath(cli), await versionOf(cli));
+            else await updatePackage(cli);
 
             versions[cli] = await versionOf(cli);
             log(`${cli} is at ${versions[cli]}`);
@@ -95,6 +98,12 @@ async function updateInstalled(): Promise<void> {
             log(`Could not update ${cli}: ${(error as Error).message}`);
         }
     }
+}
+
+// Reinstalling the same version would download it again, and the CLI is missing meanwhile.
+async function updatePackage(cli: NpmCli): Promise<void> {
+    const latest = await latestVersion(cli);
+    if (latest !== (await installedVersion(cli))) await bunInstall(`${PACKAGES[cli]}@${latest}`);
 }
 
 // Some CLIs set up their native binary in a postinstall script, which Bun only runs for trusted
@@ -105,12 +114,12 @@ async function bunInstall(spec: string): Promise<void> {
 }
 
 // The version Bun installed, from the package's own manifest.
-async function installedVersion(cli: Cli): Promise<string> {
+async function installedVersion(cli: NpmCli): Promise<string> {
     const manifest = join(GLOBAL_PACKAGES, PACKAGES[cli], "package.json");
     return JSON.parse(await readFile(manifest, "utf8")).version;
 }
 
-async function latestVersion(cli: Cli): Promise<string> {
+async function latestVersion(cli: NpmCli): Promise<string> {
     const { stdout } = await execute("bun", ["info", PACKAGES[cli], "version"]);
     return stdout.trim();
 }
