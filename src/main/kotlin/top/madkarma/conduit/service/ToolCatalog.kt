@@ -4,6 +4,7 @@ import top.madkarma.conduit.mcp.BATCH
 import top.madkarma.conduit.mcp.ToolDefinition
 import top.madkarma.conduit.service.entity.*
 import top.madkarma.conduit.service.events.EVENTS
+import top.madkarma.conduit.service.events.TRIGGERS
 import top.madkarma.conduit.service.history.UNDO
 import top.madkarma.conduit.service.inventory.INVENTORY
 import top.madkarma.conduit.service.player.*
@@ -42,5 +43,6 @@ val ALL_TOOLS: List<ToolDefinition> =
         SCOREBOARD,
         GAME_DATA,
         EVENTS,
+        TRIGGERS,
         BATCH,
     )

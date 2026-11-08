@@ -57,6 +57,13 @@ class ToolCatalogTest {
     }
 
     @Test
+    fun `every action that needs approval is one of the tool's actions`() {
+        for (tool in ALL_TOOLS) {
+            assertTrue(tool.actions.keys.containsAll(tool.needApproval), tool.name)
+        }
+    }
+
+    @Test
     fun `the default config fits the catalog`() {
         val toolActions = ALL_TOOLS.associate { it.name to it.actions.keys }
 

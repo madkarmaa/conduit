@@ -47,6 +47,16 @@ class ToolSessionTest {
         assertEquals("edit", called.tool)
         assertEquals("set", called.action)
         assertEquals(Access.WRITE, called.access)
+        assertEquals(false, called.needsApproval)
+    }
+
+    @Test
+    fun `a call to an action the tool marks needs approval`() {
+        val tool = testTool(actions = mapOf("add" to Access.WRITE), needApproval = setOf("add"))
+        val prepared =
+            ToolSession(ToolPolicy("full"), listOf(tool)).prepare("test_tool", parseJson("{}"))
+
+        assertEquals(true, prepared.called().needsApproval)
     }
 
     @Test

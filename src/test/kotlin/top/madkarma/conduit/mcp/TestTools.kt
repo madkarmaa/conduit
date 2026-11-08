@@ -7,6 +7,7 @@ fun testTool(
     defaultAction: String? = null,
     seesOtherPlayers: Boolean = false,
     input: InputSchema = input { optional("player", PLAYER) },
+    needApproval: Set<String> = emptySet(),
 ): ToolDefinition =
     ToolDefinition(
         name = name,
@@ -17,6 +18,7 @@ fun testTool(
             actions.mapValues { (action, access) -> AsyncAction(access) { _, _ -> Reply(action) } },
         defaultAction = defaultAction,
         seesOtherPlayers = seesOtherPlayers,
+        needApproval = needApproval,
     )
 
 /** A tool without arguments, whose one action has the tool's name. */

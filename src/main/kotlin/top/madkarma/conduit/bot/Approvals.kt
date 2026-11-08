@@ -78,8 +78,8 @@ object Approvals {
             entry == call.tool || entry == "${call.tool}.${call.action}"
         }
 
-        return (call.access == Access.DESTRUCTIVE || config.add.any(matches)) &&
-            config.remove.none(matches)
+        val needed = call.access == Access.DESTRUCTIVE || call.needsApproval
+        return (needed || config.add.any(matches)) && config.remove.none(matches)
     }
 
     // Returns whether the player approved the rest of the request too.

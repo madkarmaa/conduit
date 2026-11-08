@@ -49,4 +49,6 @@ class ToolDefinition(
     val seesOtherPlayers: Boolean = false,
     /** Asks for approvals itself, for the calls it makes, instead of for its own action. */
     val approvesItself: Boolean = false,
+    /** Actions that need approval although they are not destructive. */
+    val needApproval: Set<String> = emptySet(),
 )

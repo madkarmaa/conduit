@@ -21,6 +21,8 @@ class CalledAction(
     val action: String,
     val access: Access,
     val arguments: JsonObject,
+    /** The tool marks the action as one that needs approval even when it is not destructive. */
+    val needsApproval: Boolean = false,
 )
 
 /** Decides whether calls may run, and throws a ConduitError that names the reason when not. */

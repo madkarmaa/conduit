@@ -126,6 +126,9 @@ An event trigger starts no run within `cooldownSeconds` of its last one, and no 
 runs in line. Each trigger keeps a conversation of its own. Its runs show up as `trigger <name>`,
 and the online operators decide its approvals.
 
+In full mode, the agent can also set up triggers with the `triggers` tool, such as for "greet every
+player who joins". It saves them in the config file, and adding or removing one needs approval.
+
 These are the event types and the fields of their JSON. `player` and `playerUuid` name the player
 the event is about, and `entity` holds an entity's UUID, type, name, position, health and the like.
 
@@ -243,7 +246,7 @@ claude mcp add --transport http conduit http://localhost:25585/mcp \
 
 The host name in the URL must be in `mcp.allowedHosts`.
 
-The server has 24 tools. Tools with several operations take an `action` argument.
+The server has 25 tools. Tools with several operations take an `action` argument.
 
 | Area       | Read                                       | Write                                              |
 | ---------- | ------------------------------------------ | -------------------------------------------------- |
@@ -254,7 +257,7 @@ The server has 24 tools. Tools with several operations take an `action` argument
 | Players    | `list_players`, `get_player`, `inventory`  | `edit_player`, `moderation`, `inventory`, `notify` |
 | Scoreboard | `scoreboard`                               | `scoreboard`                                       |
 | Game data  | `game_data`                                |                                                    |
-| Other      | `events`                                   | `batch`                                            |
+| Other      | `events`, `triggers`                       | `triggers`, `batch`                                |
 
 ## Security
 

@@ -81,7 +81,14 @@ class PreparedCall(
     val action: Action,
     val input: ToolInput,
 ) {
-    fun called() = CalledAction(tool.name, actionName, action.access, input.arguments)
+    fun called() =
+        CalledAction(
+            tool.name,
+            actionName,
+            action.access,
+            input.arguments,
+            needsApproval = actionName in tool.definition.needApproval,
+        )
 
     /**
      * Runs a game action on the server thread. Undo can revert the blocks that actions which write
