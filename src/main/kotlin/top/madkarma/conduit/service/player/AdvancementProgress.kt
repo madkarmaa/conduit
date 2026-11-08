@@ -29,6 +29,7 @@ internal fun MinecraftServer.advancementsOf(
     val player = player(ref)
 
     return advancements.allAdvancements
+        .asSequence()
         .filter { it.value().display().isPresent && !it.id().path.startsWith("recipes/") }
         .map { statusOf(player, it) }
         .filter {
@@ -37,6 +38,7 @@ internal fun MinecraftServer.advancementsOf(
         }
         .filter { status == "all" || it.done == (status == "done") }
         .sortedBy { it.id }
+        .toList()
 }
 
 /** Grants one criterion, or every criterion left. Returns how many it granted. */

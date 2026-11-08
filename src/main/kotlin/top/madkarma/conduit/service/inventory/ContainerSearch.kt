@@ -71,8 +71,9 @@ private fun MinecraftServer.itemFilter(input: String): (ItemStack) -> Boolean {
         return { stack -> stack.`is` { it.`is`(tag) } }
     }
 
-    val item = BuiltInRegistries.ITEM.getOptional(parseId(input)).getOrNull()
-    if (item == null) notFound("Unknown item: $input")
+    val item =
+        BuiltInRegistries.ITEM.getOptional(parseId(input)).getOrNull()
+            ?: notFound("Unknown item: $input")
     return { it.item == item }
 }
 

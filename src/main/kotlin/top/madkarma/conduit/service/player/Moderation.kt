@@ -65,7 +65,7 @@ internal fun MinecraftServer.removeFromWhitelist(ref: String) {
 }
 
 internal fun MinecraftServer.changeWhitelistEnabled(enabled: Boolean) {
-    setUsingWhitelist(enabled)
+    isUsingWhitelist = enabled
     kickUnlistedPlayers()
 }
 
