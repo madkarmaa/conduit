@@ -37,7 +37,7 @@ class ToolSession(val policy: ToolPolicy, tools: List<ToolDefinition>) {
             val prepared = prepare(name, arguments)
             if (!prepared.tool.definition.approvesItself) approve(listOf(prepared.called()))
 
-            log(prepared)
+            log(prepared, arguments)
             val reply = policy.redact(run(prepared))
             policy.recorder?.record(name, arguments, failed = false, reply.text)
             toolResult(reply)
@@ -55,10 +55,11 @@ class ToolSession(val policy: ToolPolicy, tools: List<ToolDefinition>) {
             is AsyncAction -> action.run(call.input, this)
         }
 
-    private fun log(call: PreparedCall) {
+    // Logs the arguments as the agent sent them, without the defaults that validation adds.
+    private fun log(call: PreparedCall, sent: JsonObject) {
         if (call.action.access == Access.READ) return
 
-        val arguments = call.input.arguments.toString()
+        val arguments = sent.toString()
         val shown =
             if (arguments.length > LOGGED_ARGUMENTS_LENGTH)
                 arguments.take(LOGGED_ARGUMENTS_LENGTH) + "…"
