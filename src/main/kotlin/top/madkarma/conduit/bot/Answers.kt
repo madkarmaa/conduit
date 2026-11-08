@@ -41,7 +41,7 @@ object Answers {
             return
         }
 
-        say(reply)
+        say(reply, request)
     }
 
     // Returns the text to post, which is the answer or what went wrong.
@@ -154,9 +154,12 @@ object Answers {
             else -> result.output.trim().ifEmpty { "Done." }
         }
 
-    private suspend fun say(text: String) {
+    // An answer to a player names them, like their request named the bot. Other posts do not.
+    private suspend fun say(text: String, answering: BotRequest? = null) {
         val maxLength = Conduit.config?.replies?.maxLength ?: Int.MAX_VALUE
-        val message = botMessage(formattedText(toChatText(text, maxLength)))
+        val content = formattedText(toChatText(text, maxLength))
+        val asker = answering?.asker?.takeIf { answering.trigger == null }
+        val message = if (asker != null) answerMessage(asker, content) else botMessage(content)
         runCatching { GameServer.run { it.playerList.broadcastSystemMessage(message, false) } }
     }
 }
