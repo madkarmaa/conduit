@@ -11,11 +11,15 @@ val NOTIFY =
         description =
             "message sends a chat or action bar message to a player, or to everyone when no " +
                 "player is given. title shows a title and subtitle to a player. sound plays a " +
-                "sound to a player.",
+                "sound to a player. bossbar creates or changes the boss bar with an id, named " +
+                "by message, and remove_bossbar removes it.",
         input =
             input {
                 optional("player", PLAYER.described("Required for title and sound."))
-                optional("message", TEXT.described("Message, or the title for title."))
+                optional(
+                    "message",
+                    TEXT.described("Message, the title for title, or the boss bar's name."),
+                )
                 optional("subtitle", TEXT)
                 optional(
                     "action_bar",
@@ -28,6 +32,7 @@ val NOTIFY =
                 optional("position", VEC3.described("Sound position. Defaults to the player."))
                 optional("volume", numberSchema(min = 0.0, default = 1.0))
                 optional("pitch", numberSchema(min = 0.5, max = 2.0, default = 1.0))
+                bossBarFields()
             },
         actions =
             mapOf(
@@ -64,5 +69,43 @@ val NOTIFY =
                         )
                         done("Sound played")
                     },
+                "bossbar" to
+                    writeAction { server, input ->
+                        val created = server.updateBossBar(bossBarChange(input))
+                        done(if (created) "Boss bar created" else "Boss bar updated")
+                    },
+                "remove_bossbar" to
+                    writeAction { server, input ->
+                        server.removeBossBar(input.string("bar"))
+                        done("Boss bar removed")
+                    },
             ),
+    )
+
+private fun InputBuilder.bossBarFields() {
+    optional("bar", stringSchema("Boss bar id, e.g. \"conduit:race\". For the boss bar actions."))
+    optional(
+        "color",
+        enumSchema(listOf("pink", "blue", "red", "green", "yellow", "purple", "white")),
+    )
+    optional(
+        "style",
+        enumSchema(listOf("progress", "notched_6", "notched_10", "notched_12", "notched_20")),
+    )
+    optional("value", integerSchema("Boss bar progress, out of max.", min = 0))
+    optional("max", integerSchema(min = 1))
+    optional("visible", booleanSchema())
+    optional("players", arraySchema(PLAYER, "Who sees the boss bar. Replaces the earlier ones."))
+}
+
+private fun bossBarChange(input: ToolInput) =
+    BossBarChange(
+        id = input.string("bar"),
+        name = input.stringOrNull("message"),
+        color = input.stringOrNull("color"),
+        style = input.stringOrNull("style"),
+        value = input.intOrNull("value"),
+        max = input.intOrNull("max"),
+        visible = input.booleanOrNull("visible"),
+        players = if (input.has("players")) input.strings("players") else null,
     )

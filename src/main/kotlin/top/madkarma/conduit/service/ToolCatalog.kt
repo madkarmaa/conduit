@@ -7,6 +7,7 @@ import top.madkarma.conduit.service.events.EVENTS
 import top.madkarma.conduit.service.history.UNDO
 import top.madkarma.conduit.service.player.*
 import top.madkarma.conduit.service.registry.GAME_DATA
+import top.madkarma.conduit.service.scoreboard.SCOREBOARD
 import top.madkarma.conduit.service.server.DATAPACKS
 import top.madkarma.conduit.service.server.RUN_COMMAND
 import top.madkarma.conduit.service.server.SERVER_ADMIN
@@ -37,6 +38,7 @@ val ALL_TOOLS: List<ToolDefinition> =
         MODERATION,
         INVENTORY,
         NOTIFY,
+        SCOREBOARD,
         GAME_DATA,
         EVENTS,
         BATCH,
