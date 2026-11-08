@@ -243,6 +243,12 @@ Building needs JDK 25 and [Bun](https://bun.sh) on the `PATH`.
 The build writes the mod jar to `build/libs/conduit-<mod version>+<minecraft version>.jar`.
 [`agent/README.md`](./agent/README.md#building) covers the agent image.
 
+The build also runs the unit tests, which need no Minecraft server. To run only the tests:
+
+```sh
+./gradlew test
+```
+
 ## Test environment
 
 [`compose.yaml`](./compose.yaml) runs a Fabric server with the mod from `build/libs` and a vanilla

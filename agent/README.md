@@ -135,3 +135,12 @@ docker build -t conduit-agent agent/
 ```
 
 Set `CONDUIT_AGENT_IMAGE=conduit-agent` for the compose file to use the local image.
+
+The runner's tests need [Bun](https://bun.sh). They put fakes in place of the CLIs, so they start
+no CLI and need no API keys or logins. `bun run check` checks the types.
+
+```sh
+cd agent
+bun install
+bun test
+```
