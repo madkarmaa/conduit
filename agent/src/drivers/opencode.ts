@@ -3,9 +3,8 @@
 import { OpenCode, type OpenCodeClient, type V2Event as Event } from "@opencode/client";
 import type { RunRequest } from "../requests.ts";
 import type { DriverAnswer, DriverRun } from "./driver.ts";
+import { AGENT, serverConfig } from "./opencode-config.ts";
 import { startServer } from "./opencode-server.ts";
-
-const AGENT = "conduit";
 
 export async function runOpenCode(run: DriverRun): Promise<DriverAnswer> {
     const env = { ...run.env, OPENCODE_CONFIG_CONTENT: JSON.stringify(serverConfig(run.request)) };
@@ -20,31 +19,6 @@ export async function runOpenCode(run: DriverRun): Promise<DriverAnswer> {
     } finally {
         server.stop();
     }
-}
-
-function serverConfig(request: RunRequest) {
-    const { model, instructions, web, mcp, apiKey, options, timeoutSeconds } = request;
-    const providerId = model.split("/")[0] ?? "";
-    const webPermissions = web ? { webfetch: "allow", websearch: "allow" } : {};
-
-    return {
-        ...options,
-        mcp: {
-            conduit: {
-                type: "remote",
-                url: mcp.url,
-                headers: { Authorization: `Bearer ${mcp.token}` },
-                oauth: false,
-                // A tool call can wait for an approval, so it may take as long as the whole run.
-                timeout: { execution: timeoutSeconds * 1000 },
-            },
-        },
-        permission: { "*": "deny", "conduit_*": "allow", ...webPermissions },
-        // Without a chosen provider, web search asks which one to use, which a run cannot answer.
-        websearch: web ? { provider: "random" } : false,
-        agent: { [AGENT]: { prompt: instructions } },
-        ...(apiKey ? { provider: { [providerId]: { options: { apiKey } } } } : {}),
-    };
 }
 
 async function prompt(client: OpenCodeClient, { request, folder, sessionId, abort }: DriverRun) {
