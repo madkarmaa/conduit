@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="docs/conduit.gif" alt="Conduit" />
+    <img src="./docs/conduit.gif" alt="Conduit" />
     <h1>Conduit</h1>
 </div>
 
@@ -42,15 +42,11 @@ describes. Each uses the agent you pick:
 
 ## Using the bot
 
-`/conduit <request>` asks the bot, such as `/conduit build a small oak cabin next to me`. The bot
-posts the question and the answer in the public chat, like a player talking. While a request waits
-or runs, the asker's action bar shows how many requests are ahead, and then what the agent does,
-such as "Thinking…", "Using edit_blocks…" or "Waiting for approval…". When the agent fails, such
-as when its provider's usage limit is reached, the bot posts the error in red.
+`/conduit <request>` asks the bot, such as `/conduit build a small oak cabin next to me`.
 
 Operators get **full mode**, where the agent can change the game. Everyone else gets **chat
 mode**, where the agent can only read the world and the asking player's own data, such as their
-inventory, position and statistics, but never another player's data or an IP address. Each mode has
+inventory, position and statistics, but never another player's sensitive data. Each mode has
 a line of its own, so full mode never waits behind chat mode. The bot answers one request at a time
 per mode, and each player can have one request in line. `/conduit cancel` takes it back.
 
@@ -63,12 +59,6 @@ Operators change who gets a mode with `/conduit access`, which saves the change 
   the players that `/conduit access allow <player> chat` let in.
 
 The agent remembers earlier requests. Every player has a conversation of their own in each mode.
-
-In full mode the tools record the blocks that each change replaces, with the items of containers
-such as chests, the entities the agent spawns or removes, and the inventories and ender chests of
-the players it gives items to or takes them from, online or offline. A request such as
-`/conduit undo that` can put them back. Undo forgets everything when the server restarts, and it
-never brings back dropped items or undoes other changes to entities and players.
 
 ### Approvals
 
