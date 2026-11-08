@@ -91,6 +91,24 @@ internal suspend fun changeDatapackEnabled(id: String, enabled: Boolean): Datapa
     return GameServer.run { it.listDatapacks() }
 }
 
+/** Reloads the server's data like /reload, and enables a datapack first when it is off. */
+internal suspend fun reloadWithDatapack(id: String): DatapackList {
+    if (!reloadsInProgress.compareAndSet(0, 1)) {
+        aborted("A datapack reload is already in progress")
+    }
+
+    try {
+        val selection = GameServer.run {
+            it.selectionWith(id, enabled = true) ?: it.packRepository.selectedIds.toList()
+        }
+        reload(GameServer.require(), selection)
+    } finally {
+        reloadsInProgress.decrementAndGet()
+    }
+
+    return GameServer.run { it.listDatapacks() }
+}
+
 // Called off the server thread on purpose, because on the server thread reloadResources blocks
 // the tick until the reload is done. Every step of the reload still runs on the server thread or
 // the worker pool.
