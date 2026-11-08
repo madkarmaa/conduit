@@ -40,7 +40,17 @@ internal fun MinecraftServer.addToContainer(
 ): Int {
     var left = 0
     editContainer(dimension, pos) { container ->
-        left = HopperBlockEntity.addItem(null, container, item.toMc(registryAccess()), null).count
+        val stack = item.toMc(registryAccess())
+        // The hopper logic puts a whole stack into an empty slot, so containers that hold one
+        // item per slot, such as a campfire or a jukebox, get the items one by one.
+        if (container.maxStackSize > 1) {
+            left = HopperBlockEntity.addItem(null, container, stack, null).count
+        } else {
+            repeat(stack.count) {
+                left +=
+                    HopperBlockEntity.addItem(null, container, stack.copyWithCount(1), null).count
+            }
+        }
     }
     return left
 }
@@ -60,13 +70,17 @@ private fun MinecraftServer.editContainer(
     container.setChanged()
 }
 
-/** The container at a position. A double chest is one container of both halves. */
+/**
+ * The container at a position. A double chest is one container of both halves, and lecterns and
+ * campfires count as containers too.
+ */
 private fun ServerLevel.containerAt(pos: BlockPos): Container {
     val state = getBlockState(pos)
     val block = state.block
+    val blockEntity = getBlockEntity(pos)
     val container =
         if (block is ChestBlock) ChestBlock.getContainer(block, state, this, pos, true)
-        else getBlockEntity(pos) as? Container
+        else blockEntity as? Container ?: itemHolder(this, blockEntity)
 
     return container ?: notFound("No container at ${pos.x} ${pos.y} ${pos.z}")
 }

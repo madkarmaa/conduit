@@ -14,7 +14,9 @@ val INVENTORY =
         title = "Inventory",
         description =
             "Works on an online player's inventory, with pos on a container such as a chest, " +
-                "or with uuid on an entity's items. A double chest counts as one container. " +
+                "or with uuid on an entity's items. A double chest counts as one container, " +
+                "and a lectern's book and a campfire's food count as containers of one item " +
+                "per slot. " +
                 "Entities name their slots like the /item command, such as \"container.3\", " +
                 "\"armor.head\", \"weapon.mainhand\", \"horse.saddle\", \"mob.inventory.0\" " +
                 "or an item frame's \"contents\", and read lists the slots that hold items. give " +

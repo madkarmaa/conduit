@@ -6,6 +6,7 @@
         "AbstractContainerMenuMixin",
         "AbstractHorseAccessor",
         "BlockItemMixin",
+        "CampfireBlockEntityAccessor",
         "CommandsMixin",
         "FurnaceResultSlotMixin",
         "ItemEntityMixin",
