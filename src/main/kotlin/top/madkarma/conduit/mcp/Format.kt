@@ -13,8 +13,14 @@ import kotlinx.serialization.json.encodeToJsonElement
 import top.madkarma.conduit.game.GAME_JSON
 import top.madkarma.conduit.game.Vector3
 
-/** What a tool returns: text for the model, and the same data as JSON when there is any. */
-class Reply(val text: String, val data: JsonObject? = null)
+/**
+ * What a tool returns: text for the model, the same data as JSON when there is any, and an image
+ * for models that read images.
+ */
+class Reply(val text: String, val data: JsonObject? = null, val image: Pixels? = null)
+
+/** An image as ARGB pixels, row by row. The result encodes it, off the server thread. */
+class Pixels(val width: Int, val height: Int, val argb: IntArray)
 
 /** Shows a value as compact JSON, which keeps the model's context small. */
 inline fun <reified T> json(value: T): Reply {
@@ -26,7 +32,7 @@ fun done(text: String): Reply = Reply(text)
 
 /** Says when undo cannot revert an edit, because it changed more blocks than undo keeps. */
 fun Reply.noteUndo(undoable: Boolean): Reply =
-    if (undoable) this else Reply("$text\nThis change is too large to undo.", data)
+    if (undoable) this else Reply("$text\nThis change is too large to undo.", data, image)
 
 fun lines(header: String, rows: List<String>, data: JsonObject): Reply =
     Reply((listOf(header) + rows).joinToString("\n"), data)

@@ -20,15 +20,20 @@ val GET_BLOCKS =
                 "container lists the items of the chest, barrel, furnace or other container at " +
                 "pos; a double chest counts as one container. " +
                 "region reads a cuboid, corners inclusive: detail summary counts each block " +
-                "state, and draw prints every y layer as a character grid, up to " +
-                "$MAX_DRAWN_VOLUME blocks.",
+                "state, draw prints every y layer as a character grid, up to " +
+                "$MAX_DRAWN_VOLUME blocks, and image returns a top view as a PNG, the highest " +
+                "block of each column between the two y values in its map color, up to 256 by " +
+                "256 columns. An image one block tall shows that layer.",
         input =
             input {
                 optional("dimension", DIMENSION)
                 optional("pos", BLOCK_POS.described("Required for block and container."))
                 optional("from", BLOCK_POS.described("Region corner. Required for region."))
                 optional("to", BLOCK_POS.described("Opposite region corner. Required for region."))
-                optional("detail", enumSchema(listOf("summary", "draw"), default = "summary"))
+                optional(
+                    "detail",
+                    enumSchema(listOf("summary", "draw", "image"), default = "summary"),
+                )
                 optional(
                     "loaded_only",
                     booleanSchema(
@@ -64,6 +69,11 @@ private fun MinecraftServer.regionReply(input: ToolInput): Reply {
     val from = input.decode<BlockCoordinates>("from")
     val to = input.decode<BlockCoordinates>("to")
     val drawing = input.string("detail") == "draw"
+    if (input.string("detail") == "image") {
+        val image =
+            drawRegionImage(input.stringOrNull("dimension"), from, to, input.boolean("loaded_only"))
+        return imageReply(image, from, to)
+    }
 
     if (drawing && volume(from, to) > MAX_DRAWN_VOLUME) {
         invalidInput("draw supports up to $MAX_DRAWN_VOLUME blocks")
@@ -78,4 +88,12 @@ private fun MinecraftServer.regionReply(input: ToolInput): Reply {
 private fun volume(from: BlockCoordinates, to: BlockCoordinates): Long {
     fun side(first: Int, second: Int) = abs(first.toLong() - second) + 1
     return side(from.x, to.x) * side(from.y, to.y) * side(from.z, to.z)
+}
+
+private fun imageReply(image: RegionImage, from: BlockCoordinates, to: BlockCoordinates): Reply {
+    val legend = image.legend.map { (id, color) -> "$id #%06X".format(color and 0xFFFFFF) }
+    val header =
+        "Top view from ${from.x} ${from.z} to ${to.x} ${to.z}, ${image.scale} pixels per block, " +
+            "north up. Most common surface blocks:"
+    return Reply((listOf(header) + legend).joinToString("\n"), image = image.pixels)
 }

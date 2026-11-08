@@ -68,7 +68,7 @@ class ToolPolicy(
 
         val data = reply.data?.let { withoutPrivateKeys(it) as JsonObject }
         val leaks = "\"$PRIVATE_KEY\"" in reply.text
-        return Reply(if (leaks && data != null) data.toString() else reply.text, data)
+        return Reply(if (leaks && data != null) data.toString() else reply.text, data, reply.image)
     }
 }
 
