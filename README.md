@@ -206,6 +206,14 @@ Chat mode gets `server_info`, `world_info`, `get_blocks`, `structures`, `entitie
 the actions that read, and only the asking player's own data, so `entities` leaves out the other
 players.
 
+> [!TIP]
+> Telemetry is off by default. With `telemetry` on, or after `/conduit telemetry enable`, the mod
+> appends every request to `logs/conduit-telemetry.txt` in the server folder: who asked, the
+> request, each tool call with its arguments and result, and the answer. It shows why a request
+> failed. Sharing the file in an issue also helps me improve Conduit's tools, by showing how models
+> use them. The mod sends it nowhere. It holds player names and what they asked, and
+> `/conduit telemetry clear` empties it.
+
 > [!CAUTION]
 > `dangerouslyUseSubscriptionCredentials` makes the agent use the Claude, ChatGPT, Google or
 > OpenCode account that its container is logged in to, for every player who asks the bot. This is
