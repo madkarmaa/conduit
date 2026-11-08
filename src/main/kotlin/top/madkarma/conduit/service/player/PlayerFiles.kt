@@ -37,6 +37,7 @@ internal fun MinecraftServer.resolvePlayerId(ref: String): UUID {
         ?.let {
             return it
         }
+
     playerList.getPlayerByName(ref)?.let {
         return it.uuid
     }

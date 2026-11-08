@@ -47,6 +47,7 @@ fun MinecraftServer.modeFor(player: ServerPlayer, config: ConduitConfig): Mode? 
             it.equals(player.gameProfile.name, ignoreCase = true) ||
                 it.equals(player.stringUUID, ignoreCase = true)
         }
+
     val operator = config.access.operators && playerList.isOp(player.nameAndId())
 
     if ((listed || operator) && config.agents.full.enabled) return Mode.FULL

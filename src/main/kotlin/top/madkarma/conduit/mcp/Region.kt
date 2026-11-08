@@ -34,10 +34,12 @@ fun summarizeRegion(region: BlockRegion): Reply {
 /** Prints every y layer as a grid of characters, with rows along z and columns along x. */
 fun drawRegion(region: BlockRegion): Reply {
     val size = region.size
+
     val symbols =
         region.palette.mapIndexed { index, state ->
             if (baseId(state.serialized) in AIR) '.' else SYMBOLS.getOrElse(index) { '?' }
         }
+
     val legend =
         region.palette.mapIndexed { index, state -> "${symbols[index]} ${state.serialized}" }
 

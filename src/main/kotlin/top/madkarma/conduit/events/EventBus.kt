@@ -49,6 +49,7 @@ class GameEvent(
     /** Whether the event is about one of these players or entities, by name or UUID. */
     fun involves(players: List<String>): Boolean {
         val entity = payload["entity"] as? JsonObject
+
         val candidates =
             listOf(
                     payload["player"],

@@ -61,6 +61,7 @@ class ToolSession(val policy: ToolPolicy, tools: List<ToolDefinition>) {
             if (arguments.length > LOGGED_ARGUMENTS_LENGTH)
                 arguments.take(LOGGED_ARGUMENTS_LENGTH) + "…"
             else arguments
+
         LOGGER.info("{} runs {}.{} {}", policy.name, call.tool.name, call.actionName, shown)
     }
 }

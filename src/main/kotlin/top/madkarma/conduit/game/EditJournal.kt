@@ -27,6 +27,7 @@ object EditJournal {
 
         val recorder = Recorder(limit)
         current.set(recorder)
+
         try {
             val result = edit()
             return Recorded(result, !recorder.tooLarge)
@@ -59,6 +60,7 @@ object EditJournal {
             group.snapshots.forEach { it.restore(server) }
             groups.remove(group)
         }
+
         return chosen
     }
 
@@ -94,6 +96,7 @@ object EditJournal {
             val newer =
                 groups.firstOrNull { it.id > group.id && it !in chosen && it.overlaps(group) }
                     ?: continue
+
             failedPrecondition(
                 "Edit #${newer.id} (${newer.action}) changed the same blocks after #${group.id}. " +
                     "Undo it first, or both together.",

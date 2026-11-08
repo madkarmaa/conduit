@@ -67,8 +67,10 @@ object Triggers {
         val name = run.config.name
         val now = System.currentTimeMillis()
         val last = lastStarts[name]
+
         if (last != null && run.event != null && now - last < run.config.cooldownSeconds * 1000L)
             return
+
         if (Bot.line(Mode.FULL).has { it.trigger?.config?.name == name }) return
 
         lastStarts[name] = now

@@ -87,6 +87,7 @@ class RunnerClient(private val runner: RunnerConfig) {
         val publisher =
             body?.let { HttpRequest.BodyPublishers.ofString(it) }
                 ?: HttpRequest.BodyPublishers.noBody()
+
         val request =
             HttpRequest.newBuilder(URI(runner.url.trimEnd('/') + path))
                 .timeout(timeout)

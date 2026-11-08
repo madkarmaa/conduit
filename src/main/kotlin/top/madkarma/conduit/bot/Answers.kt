@@ -39,6 +39,7 @@ object Answers {
             LOGGER.info("{} answered: {}", request.asker.name, reply)
             return
         }
+
         say(reply)
     }
 
@@ -55,6 +56,7 @@ object Answers {
                 request.trigger?.let {
                     Conversations.ofTrigger(it.config.name, config.requests.memory)
                 } ?: Conversations.of(request.mode, config.requests.memory, request.asker)
+
             val run =
                 RunRequest(
                     cli = agent.cli,
@@ -115,6 +117,7 @@ object Answers {
         deadline: Deadline,
     ): Outcome = coroutineScope {
         val pastDeadline = AtomicBoolean(false)
+
         val watchdog = launch {
             deadline.awaitExpiry()
             pastDeadline.set(true)
@@ -133,11 +136,14 @@ object Answers {
         return when {
             outcome.pastDeadline || result.timedOut ->
                 "I ran out of time after ${config.requests.timeoutSeconds} seconds."
+
             result.cancelled -> "The request was cancelled."
+
             result.exitCode != 0 -> {
                 LOGGER.warn("The agent exited with code {}: {}", result.exitCode, result.stderrTail)
                 "Something went wrong. The server log has the details."
             }
+
             else -> result.output.trim().ifEmpty { "Done." }
         }
     }

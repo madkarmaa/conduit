@@ -30,15 +30,18 @@ export function isBusy(): boolean {
 
 export function createApp(secret: string): Hono {
     const app = new Hono();
+
     const limit = bodyLimit({
         maxSize: BODY_LIMIT,
         onError: (c) => c.json({ error: "The body is too large" }, 413),
     });
+
     const validRun = zValidator("json", RunRequest, (result, c) => {
         if (!result.success) return c.json({ error: describe(result.error) }, 400);
     });
 
     app.use(bearerAuth({ token: secret }));
+
     app.get("/health", (c) => c.json(health()));
     app.post("/cancel", async (c) => c.json({ cancelled: await cancelRun() }));
     app.post("/run", limit, validRun, (c) => startRun(c, c.req.valid("json")));
@@ -49,6 +52,7 @@ export function createApp(secret: string): Hono {
         log(`Request failed: ${error.stack ?? error}`);
         return c.json({ error: "The runner failed" }, 500);
     });
+
     return app;
 }
 

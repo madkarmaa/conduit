@@ -99,6 +99,7 @@ object McpHost {
     private suspend fun serve(call: RoutingCall) {
         val token = call.request.header(HttpHeaders.Authorization)?.removePrefix("Bearer ")?.trim()
         val policy = token?.let { AccessTokens.policyFor(it) }
+
         if (policy == null) {
             call.response.header(HttpHeaders.WWWAuthenticate, "Bearer")
             call.respondText(
@@ -136,6 +137,7 @@ object McpHost {
                 session.call(tool.name, request.arguments ?: JsonObject(emptyMap()))
             }
         }
+
         return server
     }
 
@@ -158,8 +160,10 @@ object McpHost {
     // feature registries log under names of their own, outside its package.
     private fun quietSdkLogs() {
         System.setProperty("kotlin-logging.logStartupMessage", "false")
+
         val registries =
             listOf("Tool", "Prompt", "Resource", "ResourceTemplate").map { "FeatureRegistry[$it]" }
+
         val names = listOf("io.modelcontextprotocol", "io.ktor") + registries
         Configurator.setLevel(names.associateWith { Level.WARN })
     }

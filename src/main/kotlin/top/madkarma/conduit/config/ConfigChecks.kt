@@ -30,6 +30,7 @@ fun ConduitConfig.problems(tools: Map<String, Set<String>>): List<String> {
         unknownTools("tools.chat", this.tools.chat.allow.orEmpty() + this.tools.chat.deny, tools)
     problems += unknownTools("approvals", approvals.add + approvals.remove, tools)
     problems += triggerProblems()
+
     return problems
 }
 
@@ -45,6 +46,7 @@ fun ConduitConfig.uses(path: String): Boolean {
     // A subscription login stands in for the API key.
     if (path == "$agentPath.apiKey")
         return agent.enabled && !agent.dangerouslyUseSubscriptionCredentials
+
     return agent.enabled
 }
 
@@ -54,8 +56,10 @@ private fun ConduitConfig.tokenProblems(toolNames: Set<String>): List<String> {
 
     tokens.forEachIndexed { index, token ->
         val path = "mcp.tokens[$index]"
+
         if (token.name.isBlank()) problems += "$path.name must not be empty"
         if (token.token.isBlank()) problems += "$path.token must not be empty"
+
         problems +=
             (token.allow + token.deny)
                 .filter { it !in toolNames }
@@ -64,6 +68,7 @@ private fun ConduitConfig.tokenProblems(toolNames: Set<String>): List<String> {
 
     if (tokens.distinctBy { it.name }.size != tokens.size) problems += "mcp.tokens names repeat"
     if (tokens.distinctBy { it.token }.size != tokens.size) problems += "mcp.tokens values repeat"
+
     return problems
 }
 

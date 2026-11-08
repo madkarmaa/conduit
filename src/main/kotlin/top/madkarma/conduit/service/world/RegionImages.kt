@@ -40,6 +40,7 @@ internal fun MinecraftServer.drawRegionImage(
     val max = BlockPos(max(from.x, to.x), min(max(from.y, to.y), level.maxY), max(from.z, to.z))
     val width = max.x - min.x + 1
     val depth = max.z - min.z + 1
+
     if (width > MAX_COLUMNS || depth > MAX_COLUMNS) {
         invalidInput("image draws up to $MAX_COLUMNS by $MAX_COLUMNS columns")
     }
@@ -90,6 +91,7 @@ private fun topBlock(
         if (!level.getBlockState(pos).isAir) return pos.immutable()
         pos.move(0, -1, 0)
     }
+
     return null
 }
 

@@ -91,6 +91,7 @@ async function lastAnswer(events: AsyncIterator<Event>, sessionId: string): Prom
 
     for (let next = await events.next(); !next.done; next = await events.next()) {
         const event = next.value;
+
         if (!("data" in event) || !event.data || !("sessionID" in event.data)) continue;
         if (event.data.sessionID !== sessionId) continue;
 
@@ -99,8 +100,11 @@ async function lastAnswer(events: AsyncIterator<Event>, sessionId: string): Prom
             messageId = event.data.assistantMessageID;
             parts.push(event.data.text);
         }
+
         if (event.type === "session.execution.succeeded") return parts.join("\n");
+
         if (event.type === "session.execution.failed") throw new Error(event.data.error.message);
+
         if (event.type === "session.execution.interrupted") {
             throw new Error(`OpenCode stopped the run: ${event.data.reason}`);
         }

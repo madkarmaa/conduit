@@ -16,6 +16,7 @@ export async function startServer(
     signal: AbortSignal,
 ): Promise<OpenCodeServer> {
     const password = randomBytes(24).toString("base64url");
+
     const server = spawn(executable, ["serve", "--hostname=127.0.0.1", "--port=0"], {
         cwd: folder,
         env: { ...env, OPENCODE_PASSWORD: password },
@@ -38,8 +39,10 @@ export async function startServer(
 function serverUrl(server: ChildProcess, signal: AbortSignal): Promise<string> {
     return new Promise((resolve, reject) => {
         let stderr = "";
+
         const fail = (reason: string) =>
             reject(new Error(`${reason}\n${stderr}`.trim().slice(-STDERR_LIMIT)));
+
         const timer = setTimeout(() => fail("OpenCode did not start in time"), STARTUP_TIMEOUT_MS);
 
         server.stdout?.setEncoding("utf8").on("data", (chunk: string) => {
@@ -48,9 +51,11 @@ function serverUrl(server: ChildProcess, signal: AbortSignal): Promise<string> {
             clearTimeout(timer);
             resolve(url);
         });
+
         server.stderr?.setEncoding("utf8").on("data", (chunk: string) => {
             stderr = (stderr + chunk).slice(-STDERR_LIMIT);
         });
+
         server.on("error", (error) => fail(error.message));
         server.on("exit", (code) => fail(`OpenCode exited with code ${code}`));
         signal.addEventListener("abort", () => fail("Cancelled"), { once: true });

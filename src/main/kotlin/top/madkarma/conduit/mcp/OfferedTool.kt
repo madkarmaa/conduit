@@ -69,6 +69,7 @@ class OfferedTool(val definition: ToolDefinition, val actions: Map<String, Actio
         val properties = linkedMapOf("action" to action) + base.properties
         val required =
             if (defaultAction == null) listOf("action") + base.required else base.required
+
         return InputSchema(properties, required).toJson()
     }
 }
@@ -94,6 +95,7 @@ class PreparedCall(
             EditJournal.record(input.policy.name, "${tool.name}.$actionName") {
                 gameAction.run(server, input)
             }
+
         return recorded.result.noteUndo(recorded.undoable)
     }
 }

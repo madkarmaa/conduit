@@ -78,7 +78,6 @@ object CraftedItems {
     @JvmStatic
     fun onSmelted(player: Player, result: ItemStack, count: Int) {
         if (player !is ServerPlayer || !EventBus.wants()) return
-
         add(Take(EventType.ITEM_SMELT, player, result.copyWithCount(count), null))
     }
 

@@ -63,6 +63,7 @@ private suspend fun runBatch(input: ToolInput, session: ToolSession): Reply {
         (input.arguments.getValue("calls") as JsonArray).mapIndexed { index, call ->
             prepare(index, call.jsonObject, session)
         }
+
     session.approve(calls.map { it.called() })
 
     val stopOnError = input.boolean("stop_on_error")
@@ -74,6 +75,7 @@ private suspend fun runBatch(input: ToolInput, session: ToolSession): Reply {
         val separator = if (outcome.status == "ok") ":" else " ${outcome.status}:"
         "$index ${outcome.label}$separator ${outcome.text}".trimEnd()
     }
+
     val results = outcomes.mapIndexed { index, outcome ->
         dataOf(
             "index" to JsonPrimitive(index),
@@ -100,6 +102,7 @@ private fun prepare(index: Int, call: JsonObject, session: ToolSession): Prepare
     if (prepared.action !is GameAction) {
         invalidInput("calls[$index]: $tool.${prepared.actionName} cannot run in a batch")
     }
+
     return prepared
 }
 

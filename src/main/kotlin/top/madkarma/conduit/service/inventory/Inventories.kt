@@ -28,9 +28,7 @@ internal fun MinecraftServer.enderChestOf(ref: String): InventoryContents =
 /** A null item empties the slot. */
 internal fun MinecraftServer.changeInventorySlot(ref: String, slot: Int, item: ItemInfo?) {
     val inventory = player(ref).inventory
-
     if (slot !in 0 until inventory.containerSize) invalidInput("Slot $slot is out of range")
-
     inventory.setItem(slot, item?.toMc(registryAccess()) ?: ItemStack.EMPTY)
 }
 

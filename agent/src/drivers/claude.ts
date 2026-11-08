@@ -13,6 +13,7 @@ const STDERR_LIMIT = 4000;
 export async function runClaude(run: DriverRun): Promise<DriverAnswer> {
     let result: SDKResultMessage | undefined;
     let stderr = "";
+
     const options: Options = {
         ...claudeOptions(run),
         stderr: (data) => (stderr = (stderr + data).slice(-STDERR_LIMIT)),
@@ -28,9 +29,12 @@ export async function runClaude(run: DriverRun): Promise<DriverAnswer> {
     }
 
     if (!result) throw new Error(`Claude Code ended without an answer\n${stderr}`.trim());
+
     if (result.subtype !== "success")
         throw new Error(`${result.subtype}: ${result.errors.join("; ")}`);
+
     if (result.is_error) throw new Error(result.result);
+
     return { output: result.result, sessionId: result.session_id };
 }
 

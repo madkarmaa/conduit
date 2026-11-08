@@ -68,6 +68,7 @@ object Approvals {
         val matches = { entry: String ->
             entry == call.tool || entry == "${call.tool}.${call.action}"
         }
+
         return (call.access == Access.DESTRUCTIVE || config.add.any(matches)) &&
             config.remove.none(matches)
     }
@@ -76,17 +77,20 @@ object Approvals {
         val nonce = HexFormat.of().formatHex(ByteArray(16).also(random::nextBytes))
         val actions = calls.joinToString(", ") { "${it.tool}.${it.action}" }
         val waiting = Pending(asker.uuid, CompletableDeferred())
+
         pending[nonce] = waiting
 
         try {
             GameServer.run { server ->
                 server.tellAudience(asker, prompt(nonce, asker, actions, calls))
             }
+
             val decision = withTimeoutOrNull(timeoutSeconds.seconds) { waiting.decision.await() }
             announce(asker, actions, decision?.let { it.player to it.approved })
 
             if (decision == null)
                 throw ConduitError.NotApproved("Nobody approved this in $timeoutSeconds seconds.")
+
             if (!decision.approved)
                 throw ConduitError.NotApproved("${decision.player} denied this.")
         } finally {

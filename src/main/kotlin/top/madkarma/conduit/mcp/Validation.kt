@@ -66,7 +66,6 @@ private fun withNestedDefaults(schema: JsonObject, value: JsonElement): JsonElem
     return when (value) {
         is JsonObject -> withDefaults(schema, value)
         is JsonArray if items != null -> JsonArray(value.map { withNestedDefaults(items, it) })
-
         else -> value
     }
 }

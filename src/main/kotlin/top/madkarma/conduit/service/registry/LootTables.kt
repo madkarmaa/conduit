@@ -20,6 +20,5 @@ internal fun MinecraftServer.readLootTable(id: String): String {
 
     val context = registries.createSerializationContext(JsonOps.INSTANCE)
     val encoded = LootTable.DIRECT_CODEC.encodeStart(context, holder.value()).getOrThrow()
-
     return encoded.toString()
 }

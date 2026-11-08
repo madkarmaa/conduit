@@ -35,9 +35,11 @@ class BlockSnapshot(val dimension: ResourceKey<Level>) {
 
         positions.add(packed)
         states.add(level.getBlockState(pos))
+
         level.getBlockEntity(pos)?.let {
             blockEntities.put(positions.size - 1, it.saveWithoutMetadata(level.registryAccess()))
         }
+
         return true
     }
 
@@ -63,6 +65,7 @@ class BlockSnapshot(val dimension: ResourceKey<Level>) {
 
         val (smaller, larger) = if (size <= other.size) this to other else other to this
         val lookup = LongOpenHashSet(smaller.positions)
+
         return (0 until larger.size).any { lookup.contains(larger.positions.getLong(it)) }
     }
 

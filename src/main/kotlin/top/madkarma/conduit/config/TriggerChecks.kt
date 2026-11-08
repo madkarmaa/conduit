@@ -26,5 +26,6 @@ fun ConduitConfig.triggerProblems(): List<String> {
     if (triggers.any { it.enabled } && !agents.full.enabled) {
         problems += "triggers run in full mode, so agents.full must be enabled"
     }
+
     return problems
 }

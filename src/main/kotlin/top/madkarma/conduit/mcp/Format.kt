@@ -62,6 +62,7 @@ private fun compactPrimitive(value: JsonPrimitive): JsonPrimitive? {
 
     val number = value.doubleOrNull ?: return value
     val whole = number == floor(number) && abs(number) < 1e15
+
     return if (whole && !value.content.all { it.isDigit() || it == '-' })
         JsonPrimitive(number.toLong())
     else value

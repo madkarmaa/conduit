@@ -90,9 +90,11 @@ internal fun MinecraftServer.fillRegion(
 internal fun MinecraftServer.blockFilter(input: String): (BlockState) -> Boolean {
     if (input.startsWith("#")) {
         val tag = TagKey.create(Registries.BLOCK, parseId(input.removePrefix("#")))
+
         if (registryAccess().lookupOrThrow(Registries.BLOCK).get(tag).isEmpty) {
             notFound("Unknown block tag: $input")
         }
+
         return { it.`is`(tag) }
     }
 

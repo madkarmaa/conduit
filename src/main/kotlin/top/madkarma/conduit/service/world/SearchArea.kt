@@ -30,6 +30,7 @@ internal fun searchArea(input: ToolInput): BlockArea {
     if (!input.has("from") || !input.has("to")) {
         invalidInput("Give from and to, or center and radius")
     }
+
     val from = input.decode<BlockCoordinates>("from")
     val to = input.decode<BlockCoordinates>("to")
     val middle = BlockPos((from.x + to.x) / 2, (from.y + to.y) / 2, (from.z + to.z) / 2)

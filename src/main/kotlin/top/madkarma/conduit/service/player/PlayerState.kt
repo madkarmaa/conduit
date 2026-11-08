@@ -61,13 +61,11 @@ internal fun MinecraftServer.describePlayer(player: ServerPlayer): PlayerInfo {
 internal fun MinecraftServer.changeGameMode(ref: String, gameMode: String) {
     val mode =
         GameType.byName(gameMode.lowercase(), null) ?: invalidInput("Unknown game mode: $gameMode")
-
     player(ref).setGameMode(mode)
 }
 
 internal fun MinecraftServer.changeFood(ref: String, foodLevel: Int?, saturation: Float?) {
     val food = player(ref).foodData
-
     foodLevel?.let { food.foodLevel = it }
     saturation?.let { food.setSaturation(it) }
 }
@@ -75,7 +73,6 @@ internal fun MinecraftServer.changeFood(ref: String, foodLevel: Int?, saturation
 /** Points are the experience within the current level. */
 internal fun MinecraftServer.changeExperience(ref: String, levels: Int?, points: Int?) {
     val player = player(ref)
-
     levels?.let { player.setExperienceLevels(it) }
     points?.let { player.setExperiencePoints(it) }
 }

@@ -22,6 +22,7 @@ object Subcommands {
             val rows =
                 Mode.entries.map { describeMode(it, config) } +
                     listOfNotNull(describeTriggers(config))
+
             source.server.execute { rows.forEach { source.sendSystemMessage(botMessage(it)) } }
         }
     }
@@ -67,16 +68,21 @@ object Subcommands {
     private fun forgetTarget(source: CommandSourceStack, target: String?): String {
         when (target) {
             "shared" -> Conversations.forgetShared()
+
             "all" -> Conversations.forgetAll()
+
             null -> {
                 val player =
                     source.player
                         ?: throw ConduitError.InvalidInput("Name a player, shared or all.")
+
                 Conversations.forgetPlayer(player.uuid)
                 return "you"
             }
+
             else -> Conversations.forgetPlayer(source.server.resolvePlayerId(target))
         }
+
         return if (target == "all") "everyone" else target
     }
 }

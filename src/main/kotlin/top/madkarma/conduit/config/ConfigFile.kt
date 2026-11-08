@@ -38,12 +38,14 @@ object ConfigFile {
 
         // A disabled agent needs no secret, so its variables may stay unset.
         val unset = missing.filter { config.uses(it.path) }.map { it.name }.toSortedSet()
+
         val variables =
             listOfNotNull(
                 unset
                     .takeIf { it.isNotEmpty() }
                     ?.let { "Set the variables ${it.joinToString(", ")}" },
             )
+
         val problems = variables + config.problems(tools)
         if (problems.isNotEmpty()) throw InvalidConfig(problems)
 

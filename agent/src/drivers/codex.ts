@@ -22,6 +22,7 @@ const DISABLED_FEATURES = [
 
 export async function runCodex(run: DriverRun): Promise<DriverAnswer> {
     const { request, folder, sessionId, abort } = run;
+
     const codex = new Codex(codexOptions(run));
     const threadOptions: ThreadOptions = {
         model: request.model,

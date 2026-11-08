@@ -51,13 +51,16 @@ object Conduit : ModInitializer {
     override fun onInitialize() {
         GameEvents.register()
         trackDatapackReloads()
+
         config = readConfig()
         config?.let(Triggers::apply)
+
         EditJournal.maxBlocks = { gameConfig.maxUndoBlocks }
 
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             ConduitCommand.register(dispatcher)
         }
+
         ServerTickEvents.END_SERVER_TICK.register { server ->
             if (server.tickCount % STATUS_INTERVAL_TICKS == 0) Bot.showStatus(server)
             Triggers.onTick(server)
