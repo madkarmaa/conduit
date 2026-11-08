@@ -12,7 +12,7 @@ val EDIT_PLAYER =
             "Changes an online player: game_mode, food (level 0-20 and saturation), experience " +
                 "(levels and points within the level) and operator status. saved_merge_nbt and " +
                 "saved_set_slot edit the saved data of an offline player, which applies at their " +
-                "next login. get_player reads saved data. grant_advancement and " +
+                "next login. saved_set_slot with ender_chest sets a slot of the ender chest, 0-26. get_player reads saved data. grant_advancement and " +
                 "revoke_advancement grant or revoke an advancement, or one of its criteria.",
         input =
             input {
@@ -35,6 +35,7 @@ val EDIT_PLAYER =
                 )
                 optional("criterion", stringSchema("One criterion. Leave it out for all of them."))
                 optional("slot", SLOT.described("Required for saved_set_slot."))
+                optional("ender_chest", booleanSchema("For saved_set_slot.", default = false))
                 optional(
                     "item",
                     ITEM.described("For saved_set_slot. Leave it out to empty the slot."),
@@ -104,6 +105,7 @@ val EDIT_PLAYER =
                             input.string("player"),
                             input.int("slot"),
                             input.decodeOrNull<ItemInfo>("item"),
+                            input.boolean("ender_chest"),
                         )
                         done("Slot ${input.int("slot")} set")
                     },

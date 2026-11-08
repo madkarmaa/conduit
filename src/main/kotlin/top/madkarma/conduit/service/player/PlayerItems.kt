@@ -4,14 +4,11 @@ import java.util.UUID
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.ProblemReporter
 import net.minecraft.world.Container
-import net.minecraft.world.ItemStackWithSlot
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.inventory.PlayerEnderChestContainer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.storage.TagValueInput
-import net.minecraft.world.level.storage.TagValueOutput
 import top.madkarma.conduit.game.UndoableChange
-import top.madkarma.conduit.game.invalidInput
 
 /**
  * A player's inventory and ender chest before a recorded call changed them. Undo puts the items
@@ -61,11 +58,12 @@ private constructor(
                     server.registryAccess(),
                     server.readPlayerData(id),
                 )
-            val enderChest =
-                PlayerEnderChestContainer().apply {
-                    fromSlots(input.listOrEmpty("EnderItems", ItemStackWithSlot.CODEC))
-                }
-            return PlayerItems(server, id, copies(readInventory(input)), copies(enderChest))
+            return PlayerItems(
+                server,
+                id,
+                copies(readInventory(input)),
+                copies(readEnderChest(input)),
+            )
         }
     }
 }
@@ -94,14 +92,8 @@ private fun MinecraftServer.restoreSavedItems(
     fill(items, inventory)
     writeInventory(data, items, registries)
 
-    val problems = ProblemReporter.Collector()
-    val output = TagValueOutput.createWithContext(problems, registries)
     val chest = PlayerEnderChestContainer()
     fill(chest, enderChest)
-    chest.storeAsSlots(output.list("EnderItems", ItemStackWithSlot.CODEC))
-    if (!problems.isEmpty) invalidInput("Ender chest cannot be saved: ${problems.report}")
-
-    data.remove("EnderItems")
-    data.merge(output.buildResult())
+    writeEnderChest(data, chest, registries)
     writePlayerData(id, data)
 }

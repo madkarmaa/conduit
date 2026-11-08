@@ -29,6 +29,7 @@ import top.madkarma.conduit.service.inventory.contents
 // This reads saved player data with the same keys and codecs the game loads players with.
 
 internal val INVENTORY_SLOTS = Inventory.INVENTORY_SIZE + Inventory.EQUIPMENT_SLOT_MAPPING.size
+internal const val ENDER_CHEST_SLOTS = 27
 
 @Serializable
 data class OfflinePlayerInfo(
@@ -71,10 +72,7 @@ internal fun MinecraftServer.describePlayerData(
     val effects =
         input.read("active_effects", MobEffectInstance.CODEC.listOf()).getOrNull().orEmpty()
 
-    val enderChest =
-        PlayerEnderChestContainer().apply {
-            fromSlots(input.listOrEmpty("EnderItems", ItemStackWithSlot.CODEC))
-        }
+    val enderChest = readEnderChest(input)
 
     return OfflinePlayerInfo(
         uuid = id.toString(),
@@ -109,6 +107,25 @@ internal fun MinecraftServer.problemsIn(id: UUID, data: CompoundTag): String? {
     describePlayerData(id, data, problems)
 
     return if (problems.isEmpty) null else problems.report
+}
+
+internal fun readEnderChest(input: ValueInput): PlayerEnderChestContainer =
+    PlayerEnderChestContainer().apply {
+        fromSlots(input.listOrEmpty("EnderItems", ItemStackWithSlot.CODEC))
+    }
+
+internal fun writeEnderChest(
+    data: CompoundTag,
+    container: PlayerEnderChestContainer,
+    registries: HolderLookup.Provider,
+) {
+    val problems = ProblemReporter.Collector()
+    val output = TagValueOutput.createWithContext(problems, registries)
+    container.storeAsSlots(output.list("EnderItems", ItemStackWithSlot.CODEC))
+    if (!problems.isEmpty) invalidInput("Item cannot be saved: ${problems.report}")
+
+    data.remove("EnderItems")
+    data.merge(output.buildResult())
 }
 
 /** Slot numbers follow the online inventory, with the main items first and then the equipment. */

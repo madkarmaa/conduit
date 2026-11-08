@@ -6,6 +6,8 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.util.Prediction
 import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.ItemStack
 import top.madkarma.conduit.game.*
 import top.madkarma.conduit.service.player.PlayerItems
@@ -28,18 +30,25 @@ internal fun MinecraftServer.enderChestOf(ref: String): InventoryContents =
     contents(player(ref).enderChestInventory, 0)
 
 /** A null item empties the slot. */
-internal fun MinecraftServer.changeInventorySlot(ref: String, slot: Int, item: ItemInfo?) {
-    val inventory = player(ref).itemsBeforeEdit().inventory
-    if (slot !in 0 until inventory.containerSize) invalidInput("Slot $slot is out of range")
-    inventory.setItem(slot, item?.toMc(registryAccess()) ?: ItemStack.EMPTY)
+internal fun MinecraftServer.changeInventorySlot(
+    ref: String,
+    slot: Int,
+    item: ItemInfo?,
+    enderChest: Boolean,
+) {
+    val container = player(ref).itemsBeforeEdit(enderChest)
+    if (slot !in 0 until container.containerSize) invalidInput("Slot $slot is out of range")
+    container.setItem(slot, item?.toMc(registryAccess()) ?: ItemStack.EMPTY)
 }
 
 /** Returns how many items did not fit and dropped at the player's feet. */
-internal fun MinecraftServer.giveItem(ref: String, item: ItemInfo): Int {
-    val player = player(ref).itemsBeforeEdit()
-    val stack = item.toMc(registryAccess())
+internal fun MinecraftServer.giveItem(ref: String, item: ItemInfo, enderChest: Boolean): Int {
+    val player = player(ref)
+    val container = player.itemsBeforeEdit(enderChest)
+    var stack = item.toMc(registryAccess())
 
-    player.inventory.add(stack)
+    if (container is Inventory) container.add(stack)
+    else stack = (container as SimpleContainer).addItem(stack)
 
     val dropped = stack.count
     if (!stack.isEmpty) player.drop(stack, false, Prediction.SERVER_ONLY)
@@ -47,14 +56,14 @@ internal fun MinecraftServer.giveItem(ref: String, item: ItemInfo): Int {
     return dropped
 }
 
-internal fun MinecraftServer.clearInventory(ref: String) {
-    player(ref).itemsBeforeEdit().inventory.clearContent()
+internal fun MinecraftServer.clearInventory(ref: String, enderChest: Boolean) {
+    player(ref).itemsBeforeEdit(enderChest).clearContent()
 }
 
-// Undo puts the player's items back.
-private fun ServerPlayer.itemsBeforeEdit(): ServerPlayer {
+// Undo puts the player's items back. Returns the inventory or the ender chest.
+private fun ServerPlayer.itemsBeforeEdit(enderChest: Boolean): Container {
     EditJournal.before { PlayerItems.of(level().server, uuid) }
-    return this
+    return if (enderChest) enderChestInventory else inventory
 }
 
 internal fun MinecraftServer.selectHotbarSlot(ref: String, slot: Int) {

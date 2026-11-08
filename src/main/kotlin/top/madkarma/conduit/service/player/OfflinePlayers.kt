@@ -39,18 +39,31 @@ internal fun MinecraftServer.mergeOfflinePlayerNbt(ref: String, snbt: String) {
     editPlayerData(ref) { it.merge(patch) }
 }
 
-/** Uses the same slot numbers as the online inventory. A null item empties the slot. */
-internal fun MinecraftServer.changeOfflineInventorySlot(ref: String, slot: Int, item: ItemInfo?) {
-    if (slot !in 0 until INVENTORY_SLOTS) invalidInput("Slot $slot is out of range")
+/**
+ * Uses the same slot numbers as the online inventory, or the ender chest's 0-26. A null item
+ * empties the slot.
+ */
+internal fun MinecraftServer.changeOfflineInventorySlot(
+    ref: String,
+    slot: Int,
+    item: ItemInfo?,
+    enderChest: Boolean,
+) {
+    val size = if (enderChest) ENDER_CHEST_SLOTS else INVENTORY_SLOTS
+    if (slot !in 0 until size) invalidInput("Slot $slot is out of range")
 
     val registries = registryAccess()
     val stack = item?.toMc(registries) ?: ItemStack.EMPTY
 
     editPlayerData(ref) { data ->
         val input = TagValueInput.create(ProblemReporter.DISCARDING, registries, data)
-        val inventory = readInventory(input)
-        inventory.setItem(slot, stack)
-        writeInventory(data, inventory, registries)
+        if (enderChest) {
+            val chest = readEnderChest(input).also { it.setItem(slot, stack) }
+            writeEnderChest(data, chest, registries)
+        } else {
+            val inventory = readInventory(input).also { it.setItem(slot, stack) }
+            writeInventory(data, inventory, registries)
+        }
     }
 }
 

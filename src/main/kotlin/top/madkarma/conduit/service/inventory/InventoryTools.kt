@@ -14,8 +14,9 @@ val INVENTORY =
         title = "Inventory",
         description =
             "Works on an online player's inventory, or with pos on a container such as a chest. " +
-                "A double chest counts as one container. read lists the items, or the player's " +
-                "ender chest. set_slot puts an item in a slot or empties it. clear empties " +
+                "A double chest counts as one container. With ender_chest, the actions but " +
+                "select_slot work on the player's ender chest, slots 0-26, instead. read lists " +
+                "the items. set_slot puts an item in a slot or empties it. clear empties " +
                 "every slot. select_slot picks a player's held hotbar slot. give adds an item " +
                 "stack. Items that do not fit drop at a player's feet, or stay out of a " +
                 "container. Player slots 0-8 are the hotbar, 9-35 the main inventory, 36-39 " +
@@ -27,7 +28,7 @@ val INVENTORY =
                 optional("pos", BLOCK_POS.described("A container's position instead of a player."))
                 optional(
                     "ender_chest",
-                    booleanSchema("read lists the player's ender chest instead.", default = false),
+                    booleanSchema("Use the player's ender chest instead.", default = false),
                 )
                 optional(
                     "slot",
@@ -52,7 +53,11 @@ val INVENTORY =
                     destructiveAction { server, input ->
                         val pos = containerPos(input)
                         if (pos != null) server.clearContainer(input.stringOrNull("dimension"), pos)
-                        else server.clearInventory(input.string("player"))
+                        else
+                            server.clearInventory(
+                                input.string("player"),
+                                input.boolean("ender_chest"),
+                            )
                         done("Cleared")
                     },
                 "select_slot" to
@@ -68,6 +73,7 @@ val INVENTORY =
 private fun containerPos(input: ToolInput): BlockCoordinates? {
     val pos = input.decodeOrNull<BlockCoordinates>("pos") ?: return null
     if (input.has("player")) invalidInput("Give player or pos, not both")
+    if (input.boolean("ender_chest")) invalidInput("ender_chest needs a player, not pos")
     return pos
 }
 
@@ -99,7 +105,7 @@ private fun MinecraftServer.setSlot(input: ToolInput) {
     val pos = containerPos(input)
 
     if (pos != null) changeContainerSlot(input.stringOrNull("dimension"), pos, slot, item)
-    else changeInventorySlot(input.string("player"), slot, item)
+    else changeInventorySlot(input.string("player"), slot, item, input.boolean("ender_chest"))
 }
 
 private fun MinecraftServer.give(input: ToolInput): Reply {
@@ -112,7 +118,7 @@ private fun MinecraftServer.give(input: ToolInput): Reply {
         return done(if (left > 0) "$gave, $left did not fit" else gave)
     }
 
-    val dropped = giveItem(input.string("player"), item)
+    val dropped = giveItem(input.string("player"), item, input.boolean("ender_chest"))
     return done(if (dropped > 0) "$gave, $dropped dropped" else gave)
 }
 
