@@ -35,8 +35,6 @@ data class Located(
     val distance: Int,
 )
 
-class BlockArea(val from: BlockCoordinates, val to: BlockCoordinates, val center: BlockPos)
-
 /** Blocks in an area that match a block id, state or #tag, nearest to the area's center first. */
 internal fun MinecraftServer.findBlocks(
     dimension: String?,

@@ -6,8 +6,12 @@ import top.madkarma.conduit.game.BlockCoordinates
 import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.toMc
 import top.madkarma.conduit.mcp.*
+import top.madkarma.conduit.service.player.findItems
 
 private const val MAX_RADIUS = 48
+
+// Searching items only reads block entities, so it covers more ground than blocks.
+private const val MAX_ITEM_CHUNKS = 1024
 
 val FIND =
     ToolDefinition(
@@ -15,7 +19,9 @@ val FIND =
         title = "Find",
         description =
             "blocks finds the blocks matching a block id, state or #tag in a cuboid (from and " +
-                "to) or within radius of center, nearest to the center first. structure, biome " +
+                "to) or within radius of center, nearest to the center first. items finds the " +
+                "containers holding an item id or #tag the same way, counting the items inside " +
+                "shulker boxes and bundles. structure, biome " +
                 "and poi find the nearest structure, biome or point of interest (such as " +
                 "\"minecraft:home\" for beds) from center, like /locate. Each takes an id or a " +
                 "#tag. Points of interest are only known in chunks loaded since they were placed.",
@@ -26,6 +32,7 @@ val FIND =
                     "block",
                     stringSchema("Block id, state or #tag, e.g. \"#minecraft:logs\". For blocks."),
                 )
+                optional("item", stringSchema("Item id or #tag. For items."))
                 optional(
                     "structure",
                     stringSchema("e.g. \"minecraft:village_plains\" or \"#minecraft:village\"."),
@@ -43,14 +50,18 @@ val FIND =
                 )
                 optional(
                     "radius",
-                    integerSchema("For blocks, around center.", min = 0, max = MAX_RADIUS),
+                    integerSchema(
+                        "For blocks and items, around center.",
+                        min = 0,
+                        max = MAX_RADIUS,
+                    ),
                 )
-                optional("from", BLOCK_POS.described("Cuboid corner for blocks."))
-                optional("to", BLOCK_POS.described("Opposite cuboid corner for blocks."))
+                optional("from", BLOCK_POS.described("Cuboid corner for blocks and items."))
+                optional("to", BLOCK_POS.described("Opposite cuboid corner."))
                 optional(
                     "loaded_only",
                     booleanSchema(
-                        "blocks skips unloaded chunks instead of loading them.",
+                        "blocks and items skip unloaded chunks instead of loading them.",
                         default = false,
                     ),
                 )
@@ -59,6 +70,7 @@ val FIND =
         actions =
             mapOf(
                 "blocks" to readAction { server, input -> server.blocksReply(input) },
+                "items" to readAction { server, input -> server.itemsReply(input) },
                 "structure" to
                     readAction { server, input ->
                         located(
@@ -97,7 +109,7 @@ private fun MinecraftServer.blocksReply(input: ToolInput): Reply {
         findBlocks(
             input.stringOrNull("dimension"),
             input.string("block"),
-            area(input),
+            searchArea(input),
             input.boolean("loaded_only"),
             input.int("limit"),
         )
@@ -109,22 +121,27 @@ private fun MinecraftServer.blocksReply(input: ToolInput): Reply {
     )
 }
 
-// A cuboid searches around its middle, and a radius around its center.
-private fun area(input: ToolInput): BlockArea {
-    val radius = input.intOrNull("radius")
-    if (radius != null) {
-        val center = input.decode<BlockCoordinates>("center")
-        val from = BlockCoordinates(center.x - radius, center.y - radius, center.z - radius)
-        val to = BlockCoordinates(center.x + radius, center.y + radius, center.z + radius)
-        return BlockArea(from, to, center.toMc())
+private fun MinecraftServer.itemsReply(input: ToolInput): Reply {
+    val area = searchArea(input)
+    if (area.chunkCount > MAX_ITEM_CHUNKS) {
+        invalidInput("items searches up to $MAX_ITEM_CHUNKS chunks, not ${area.chunkCount}")
     }
 
-    if (!input.has("from") || !input.has("to"))
-        invalidInput("blocks needs from and to, or center and radius")
-    val from = input.decode<BlockCoordinates>("from")
-    val to = input.decode<BlockCoordinates>("to")
-    val middle = BlockPos((from.x + to.x) / 2, (from.y + to.y) / 2, (from.z + to.z) / 2)
-    return BlockArea(from, to, middle)
+    val search =
+        findItems(
+            input.stringOrNull("dimension"),
+            input.string("item"),
+            area.min,
+            area.max,
+            area.center,
+            input.boolean("loaded_only"),
+            input.int("limit"),
+        )
+    return lines(
+        "${search.total} matching items, nearest containers first:",
+        search.containers.map { "${it.pos.x} ${it.pos.y} ${it.pos.z} ${it.block}: ${it.count}" },
+        encodedObject(search),
+    )
 }
 
 private fun center(input: ToolInput): BlockPos = input.decode<BlockCoordinates>("center").toMc()

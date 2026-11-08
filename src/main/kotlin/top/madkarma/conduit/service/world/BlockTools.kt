@@ -5,6 +5,8 @@ import net.minecraft.server.MinecraftServer
 import top.madkarma.conduit.game.BlockCoordinates
 import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.mcp.*
+import top.madkarma.conduit.service.player.containerContents
+import top.madkarma.conduit.service.player.describeInventory
 
 // Drawn regions print one character per block, so they stay small enough to read.
 private const val MAX_DRAWN_VOLUME = 8192
@@ -15,13 +17,15 @@ val GET_BLOCKS =
         title = "Read blocks",
         description =
             "block reads the block state, biome and block entity SNBT (chest, sign, ...) at pos. " +
+                "container lists the items of the chest, barrel, furnace or other container at " +
+                "pos; a double chest counts as one container. " +
                 "region reads a cuboid, corners inclusive: detail summary counts each block " +
                 "state, and draw prints every y layer as a character grid, up to " +
                 "$MAX_DRAWN_VOLUME blocks.",
         input =
             input {
                 optional("dimension", DIMENSION)
-                optional("pos", BLOCK_POS.described("Required for block."))
+                optional("pos", BLOCK_POS.described("Required for block and container."))
                 optional("from", BLOCK_POS.described("Region corner. Required for region."))
                 optional("to", BLOCK_POS.described("Opposite region corner. Required for region."))
                 optional("detail", enumSchema(listOf("summary", "draw"), default = "summary"))
@@ -45,6 +49,14 @@ val GET_BLOCKS =
                         )
                     },
                 "region" to readAction { server, input -> server.regionReply(input) },
+                "container" to
+                    readAction { server, input ->
+                        val pos = input.decode<BlockCoordinates>("pos")
+                        describeInventory(
+                            "Non-empty slots of the container at ${pos.x} ${pos.y} ${pos.z}:",
+                            server.containerContents(input.stringOrNull("dimension"), pos),
+                        )
+                    },
             ),
     )
 

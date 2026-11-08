@@ -1,7 +1,9 @@
 package top.madkarma.conduit.service.player
 
 import net.minecraft.server.MinecraftServer
+import top.madkarma.conduit.game.BlockCoordinates
 import top.madkarma.conduit.game.ItemInfo
+import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.mcp.*
 
 internal val SLOT = integerSchema(min = 0, max = 40)
@@ -11,19 +13,26 @@ val INVENTORY =
         name = "inventory",
         title = "Inventory",
         description =
-            "read lists the items of an online player's inventory or ender chest. set_slot puts " +
-                "an item in a slot or empties it. clear empties the inventory. select_slot picks " +
-                "the held hotbar slot. give adds an item stack, and items that do not fit drop " +
-                "at the player's feet. Slots 0-8 are the hotbar, 9-35 the main inventory, 36-39 " +
-                "armor (feet, legs, chest, head) and 40 the offhand.",
+            "Works on an online player's inventory, or with pos on a container such as a chest; " +
+                "a double chest counts as one container. read lists the items, or the player's " +
+                "ender chest. set_slot puts an item in a slot or empties it. clear empties it. " +
+                "select_slot picks a player's held hotbar slot. give adds an item stack: items " +
+                "that do not fit drop at a player's feet, or stay out of a container. Player " +
+                "slots 0-8 are the hotbar, 9-35 the main inventory, 36-39 armor (feet, legs, " +
+                "chest, head) and 40 the offhand.",
         input =
             input {
-                required("player", PLAYER)
+                optional("player", PLAYER.described("Player name or UUID. Leave it out for pos."))
+                optional("dimension", DIMENSION)
+                optional("pos", BLOCK_POS.described("A container's position instead of a player."))
                 optional(
                     "ender_chest",
-                    booleanSchema("read lists the ender chest instead.", default = false),
+                    booleanSchema("read lists the player's ender chest instead.", default = false),
                 )
-                optional("slot", SLOT.described("Required for set_slot and select_slot."))
+                optional(
+                    "slot",
+                    integerSchema("Required for set_slot and select_slot.", min = 0, max = 53),
+                )
                 optional(
                     "item",
                     ITEM.described(
@@ -36,36 +45,42 @@ val INVENTORY =
                 "read" to readAction { server, input -> server.readInventory(input) },
                 "set_slot" to
                     writeAction { server, input ->
-                        server.changeInventorySlot(
-                            input.string("player"),
-                            input.int("slot"),
-                            input.decodeOrNull<ItemInfo>("item"),
-                        )
+                        server.setSlot(input)
                         done("Slot ${input.int("slot")} set")
                     },
                 "clear" to
                     destructiveAction { server, input ->
-                        server.clearInventory(input.string("player"))
-                        done("Inventory cleared")
+                        val pos = containerPos(input)
+                        if (pos != null) server.clearContainer(input.stringOrNull("dimension"), pos)
+                        else server.clearInventory(input.string("player"))
+                        done("Cleared")
                     },
                 "select_slot" to
                     writeAction { server, input ->
                         server.selectHotbarSlot(input.string("player"), input.int("slot"))
                         done("Selected hotbar slot ${input.int("slot")}")
                     },
-                "give" to
-                    writeAction { server, input ->
-                        val item = input.decode<ItemInfo>("item")
-                        val dropped = server.giveItem(input.string("player"), item)
-                        done(
-                            "Gave ${item.count} ${item.id}" +
-                                if (dropped > 0) ", $dropped dropped" else "",
-                        )
-                    },
+                "give" to writeAction { server, input -> server.give(input) },
             ),
     )
 
+// A call names either a player or a container's position.
+private fun containerPos(input: ToolInput): BlockCoordinates? {
+    val pos = input.decodeOrNull<BlockCoordinates>("pos") ?: return null
+    if (input.has("player")) invalidInput("Give player or pos, not both")
+    return pos
+}
+
 private fun MinecraftServer.readInventory(input: ToolInput): Reply {
+    val pos = containerPos(input)
+    if (pos != null) {
+        val contents = containerContents(input.stringOrNull("dimension"), pos)
+        return describeInventory(
+            "Non-empty slots of the container at ${pos.x} ${pos.y} ${pos.z}:",
+            contents,
+        )
+    }
+
     val player = input.string("player")
     if (input.boolean("ender_chest")) {
         return describeInventory("Non-empty ender chest slots:", enderChestOf(player))
@@ -76,6 +91,29 @@ private fun MinecraftServer.readInventory(input: ToolInput): Reply {
         "Selected hotbar slot ${inventory.selectedSlot}; non-empty slots:",
         inventory,
     )
+}
+
+private fun MinecraftServer.setSlot(input: ToolInput) {
+    val slot = input.int("slot")
+    val item = input.decodeOrNull<ItemInfo>("item")
+    val pos = containerPos(input)
+
+    if (pos != null) changeContainerSlot(input.stringOrNull("dimension"), pos, slot, item)
+    else changeInventorySlot(input.string("player"), slot, item)
+}
+
+private fun MinecraftServer.give(input: ToolInput): Reply {
+    val item = input.decode<ItemInfo>("item")
+    val pos = containerPos(input)
+    val gave = "Gave ${item.count} ${item.id}"
+
+    if (pos != null) {
+        val left = addToContainer(input.stringOrNull("dimension"), pos, item)
+        return done(if (left > 0) "$gave, $left did not fit" else gave)
+    }
+
+    val dropped = giveItem(input.string("player"), item)
+    return done(if (dropped > 0) "$gave, $dropped dropped" else gave)
 }
 
 internal fun describeInventory(header: String, inventory: InventoryContents): Reply =
