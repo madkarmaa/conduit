@@ -45,7 +45,8 @@ describes. Each uses the agent you pick:
 `/conduit <request>` asks the bot, such as `/conduit build a small oak cabin next to me`. The bot
 posts the question and the answer in the public chat, like a player talking. While a request waits
 or runs, the asker's action bar shows how many requests are ahead, and then what the agent does,
-such as "Thinking…", "Using edit_blocks…" or "Waiting for approval…".
+such as "Thinking…", "Using edit_blocks…" or "Waiting for approval…". When the agent fails, such
+as when its provider's usage limit is reached, the bot posts the error in red.
 
 Operators get **full mode**, where the agent can change the game. Everyone else gets **chat
 mode**, where the agent can only read the world and the asking player's own data, such as their

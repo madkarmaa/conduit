@@ -4,6 +4,8 @@ import java.io.IOException
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
 import top.madkarma.conduit.Conduit
 import top.madkarma.conduit.LOGGER
 import top.madkarma.conduit.config.ConduitConfig
@@ -27,26 +29,26 @@ object Answers {
             } catch (exception: CancellationException) {
                 trace?.finish("The request was cancelled.")
                 withContext(NonCancellable) {
-                    say("${request.asker.name}'s request was cancelled.")
+                    say(BotReply("${request.asker.name}'s request was cancelled."))
                 }
                 throw exception
             }
-        trace?.finish(reply)
+        trace?.finish(if (reply.isError) "Error: ${reply.text}" else reply.text)
 
         if (request.trigger?.config?.announce == false) {
-            LOGGER.info("{} answered: {}", request.asker.name, reply)
+            LOGGER.info("{} answered: {}", request.asker.name, reply.text)
             return
         }
 
         say(reply, request)
     }
 
-    // Returns the text to post, which is the answer or what went wrong.
+    // Returns what to post, which is the answer or what went wrong.
     private suspend fun runRequest(
         config: ConduitConfig,
         request: BotRequest,
         trace: RequestTrace?,
-    ): String {
+    ): BotReply {
         val agent = config.agent(request.mode)
         val runner = RunnerClient(agent.runner)
         val deadline = Deadline(config.requests.timeoutSeconds)
@@ -83,7 +85,7 @@ object Answers {
 
             val outcome = runner.runWithDeadline(run, deadline)
             if (outcome.timedOut)
-                return progress.ranOutOfTime(config.requests.timeoutSeconds, policy.name)
+                return BotReply(progress.ranOutOfTime(config.requests.timeoutSeconds, policy.name))
             return describe(outcome.result)
         } catch (exception: CancellationException) {
             withContext(NonCancellable) { runCatching { runner.cancel() } }
@@ -91,9 +93,10 @@ object Answers {
         } catch (exception: RunnerRefused) {
             LOGGER.warn("The {} runner refused the request: {}", request.mode.id, exception.message)
             // A busy or updating runner explains itself to the players.
-            return if (exception.status == 409 || exception.status == 503)
-                exception.message.orEmpty()
-            else "The agent is not set up right. The server log has the details."
+            val text =
+                if (exception.status == 409 || exception.status == 503) exception.message.orEmpty()
+                else "The agent is not set up right. The server log has the details."
+            return BotReply(text, isError = true)
         } catch (exception: IOException) {
             LOGGER.warn(
                 "Cannot reach the {} runner at {}: {}",
@@ -101,7 +104,7 @@ object Answers {
                 agent.runner.url,
                 exception.toString(),
             )
-            return "Conduit cannot reach its agent right now."
+            return BotReply("Conduit cannot reach its agent right now.", isError = true)
         } catch (exception: Exception) {
             LOGGER.error(
                 "The {} request of {} failed",
@@ -109,18 +112,24 @@ object Answers {
                 request.asker.name,
                 exception,
             )
-            return "Something went wrong. The server log has the details."
+            return BotReply("Something went wrong. The server log has the details.", isError = true)
         } finally {
             AccessTokens.revoke(token)
         }
     }
 
-    // An answer to a player names them, like their request named the bot. Other posts do not.
-    private suspend fun say(text: String, answering: BotRequest? = null) {
+    // An answer to a player names them, like their request named the bot. Errors and other posts
+    // do not, and errors show in red.
+    private suspend fun say(reply: BotReply, answering: BotRequest? = null) {
         val maxLength = Conduit.config?.replies?.maxLength ?: Int.MAX_VALUE
-        val content = formattedText(toChatText(text, maxLength))
-        val asker = answering?.asker?.takeIf { answering.trigger == null }
-        val message = if (asker != null) answerMessage(asker, content) else botMessage(content)
+        val text = toChatText(reply.text, maxLength)
+        val asker = answering?.asker?.takeIf { answering.trigger == null && !reply.isError }
+        val message =
+            when {
+                reply.isError -> botMessage(Component.literal(text).withStyle(ChatFormatting.RED))
+                asker != null -> answerMessage(asker, formattedText(text))
+                else -> botMessage(formattedText(text))
+            }
         runCatching { GameServer.run { it.playerList.broadcastSystemMessage(message, false) } }
     }
 }

@@ -28,15 +28,24 @@ internal suspend fun RunnerClient.runWithDeadline(run: RunRequest, deadline: Dea
         }
     }
 
-/** The text to post for a run that ended in time. */
-internal fun describe(result: RunResult): String =
+/** What the bot posts after a request: the answer, or an error that shows in red. */
+internal class BotReply(val text: String, val isError: Boolean = false)
+
+/** The reply to a run that ended in time. */
+internal fun describe(result: RunResult): BotReply =
     when {
-        result.cancelled -> "The request was cancelled."
+        result.cancelled -> BotReply("The request was cancelled.")
 
         result.exitCode != 0 -> {
             LOGGER.warn("The agent exited with code {}: {}", result.exitCode, result.stderrTail)
-            "Something went wrong. The server log has the details."
+            // The runner takes the API key and the MCP token out of the error.
+            val error =
+                result.stderrTail.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
+            BotReply(
+                error ?: "Something went wrong. The server log has the details.",
+                isError = true,
+            )
         }
 
-        else -> result.output.trim().ifEmpty { "Done." }
+        else -> BotReply(result.output.trim().ifEmpty { "Done." })
     }
