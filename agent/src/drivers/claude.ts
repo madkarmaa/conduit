@@ -39,7 +39,7 @@ export async function runClaude(run: DriverRun): Promise<DriverAnswer> {
 }
 
 function claudeOptions({ request, executable, folder, env, sessionId, abort }: DriverRun): Options {
-    const { model, effort, web, instructions, mcp, apiKey, options } = request;
+    const { model, effort, web, instructions, mcp, apiKey, options, timeoutSeconds } = request;
     const tools = web ? WEB_TOOLS : [];
 
     return {
@@ -49,6 +49,8 @@ function claudeOptions({ request, executable, folder, env, sessionId, abort }: D
         env: {
             ...env,
             CONDUIT_MCP_TOKEN: mcp.token,
+            // A tool call can wait for an approval, so it may take as long as the whole run.
+            MCP_TOOL_TIMEOUT: String(timeoutSeconds * 1000),
             ...(apiKey ? { ANTHROPIC_API_KEY: apiKey } : {}),
         },
         // Rendered fresh on every run, so changed instructions reach continued conversations.

@@ -42,7 +42,7 @@ export async function runCodex(run: DriverRun): Promise<DriverAnswer> {
 }
 
 function codexOptions({ request, executable, env }: DriverRun): CodexOptions {
-    const { instructions, mcp, apiKey, options } = request;
+    const { instructions, mcp, apiKey, options, timeoutSeconds } = request;
 
     return {
         codexPathOverride: executable,
@@ -53,7 +53,13 @@ function codexOptions({ request, executable, env }: DriverRun): CodexOptions {
             ...(options as CodexOptions["config"]),
             developer_instructions: instructions,
             mcp_servers: {
-                conduit: { url: mcp.url, bearer_token_env_var: "CONDUIT_MCP_TOKEN" },
+                conduit: {
+                    url: mcp.url,
+                    bearer_token_env_var: "CONDUIT_MCP_TOKEN",
+                    // Codex stops waiting for a tool after 60 s by default, which an approval can
+                    // take longer than.
+                    tool_timeout_sec: timeoutSeconds,
+                },
             },
             features: Object.fromEntries(DISABLED_FEATURES.map((feature) => [feature, false])),
         },

@@ -22,7 +22,8 @@ export async function runOpenCode(run: DriverRun): Promise<DriverAnswer> {
     }
 }
 
-function serverConfig({ model, instructions, web, mcp, apiKey, options }: RunRequest) {
+function serverConfig(request: RunRequest) {
+    const { model, instructions, web, mcp, apiKey, options, timeoutSeconds } = request;
     const providerId = model.split("/")[0] ?? "";
     const webPermissions = web ? { webfetch: "allow", websearch: "allow" } : {};
 
@@ -34,6 +35,8 @@ function serverConfig({ model, instructions, web, mcp, apiKey, options }: RunReq
                 url: mcp.url,
                 headers: { Authorization: `Bearer ${mcp.token}` },
                 oauth: false,
+                // A tool call can wait for an approval, so it may take as long as the whole run.
+                timeout: { execution: timeoutSeconds * 1000 },
             },
         },
         permission: { "*": "deny", "conduit_*": "allow", ...webPermissions },
