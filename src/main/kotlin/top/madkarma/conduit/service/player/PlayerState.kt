@@ -22,6 +22,8 @@ data class PlayerInfo(
     val ipAddress: String,
     val mainHand: ItemInfo,
     val offHand: ItemInfo,
+    /** What the player looks at. Only get_player info reads it. */
+    val lookingAt: LookTarget? = null,
 )
 
 @Serializable data class PlayerList(val players: List<PlayerInfo>)
@@ -29,7 +31,10 @@ data class PlayerInfo(
 internal fun MinecraftServer.listPlayers(): PlayerList =
     PlayerList(playerList.players.map { describePlayer(it) })
 
-internal fun MinecraftServer.describePlayer(ref: String): PlayerInfo = describePlayer(player(ref))
+internal fun MinecraftServer.describePlayer(ref: String): PlayerInfo {
+    val player = player(ref)
+    return describePlayer(player).copy(lookingAt = lookTarget(player))
+}
 
 internal fun MinecraftServer.describePlayer(player: ServerPlayer): PlayerInfo {
     val registries = registryAccess()

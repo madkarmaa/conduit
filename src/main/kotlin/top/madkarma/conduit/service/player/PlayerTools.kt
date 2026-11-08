@@ -41,7 +41,7 @@ val GET_PLAYER =
         name = "get_player",
         title = "Get player",
         description =
-            "info reads an online player. stats reads the statistics of any player, filtered " +
+            "info reads an online player, with the block or entity they look at. stats reads the statistics of any player, filtered " +
                 "by a substring. saved and saved_nbt read the saved data of any player, also " +
                 "offline ones. The inventory tool reads inventories.",
         input =
