@@ -16,8 +16,9 @@ val EDIT_ENTITY =
                 "the entity like an attack. nbt merges SNBT into its data. add_effect and " +
                 "remove_effect change status effects. set_attribute sets an attribute base " +
                 "value such as \"minecraft:max_health\". calm ends the anger of a neutral mob " +
-                "such as a wolf or a bee. owner tames an animal such as a wolf or a cat for a " +
-                "player. sit makes a tamed animal sit or stand up.",
+                "such as a wolf or a bee. owner tames an animal such as a wolf, a cat or a horse " +
+                "for a player, who must be online for horses and their kin. sit makes a tamed " +
+                "wolf, cat or parrot sit or stand up.",
         input =
             input {
                 optional("uuid", UUID.described("Required for every action but spawn."))
@@ -53,7 +54,7 @@ val EDIT_ENTITY =
                 optional("show_particles", booleanSchema(default = true))
                 optional("attribute", stringSchema("Required for set_attribute."))
                 optional("base", numberSchema("Required for set_attribute."))
-                optional("player", PLAYER.described("Required for owner. May be offline."))
+                optional("player", PLAYER.described("Required for owner."))
                 optional("sitting", booleanSchema("For sit. false stands up.", default = true))
             },
         actions =
