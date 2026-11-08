@@ -1,5 +1,5 @@
-# The two agent containers of Conduit. conduit-full answers operators in full mode, and
-# conduit-chat answers everyone else in chat mode. Start them once with `docker compose up -d`.
+# The two agent containers of Conduit. conduit-full answers the requests in full mode, and
+# conduit-chat those in chat mode. Start them once with `docker compose up -d`.
 # They restart on their own, and the mod never starts or stops them.
 #
 # Put the runner secrets in a .env file next to this file. The mod's config/conduit.json needs the
@@ -17,8 +17,8 @@
 #
 #   docker compose -f compose.yaml -f conduit-agents.yaml up -d
 #
-# Each container may use 1 CPU. conduit-full gets 1 GiB of memory and conduit-chat 1 GiB. Raise
-# the limits with the variables below if a CLI runs out of memory.
+# Each container may use 1 CPU and 1 GiB of memory. Raise the limits with the variables below if a
+# CLI runs out of memory.
 
 x-agent: &agent
     image: ${CONDUIT_AGENT_IMAGE:-ghcr.io/madkarmaa/conduit-agent:latest}

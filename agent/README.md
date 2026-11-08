@@ -1,9 +1,9 @@
 # Conduit agent
 
 The agent image runs the AI agents of the [Conduit](../README.md) mod. Two containers run next to
-the Minecraft server: `conduit-full` answers operators in full mode, and `conduit-chat` answers
-everyone else in chat mode. The image is `ghcr.io/madkarmaa/conduit-agent`, and each release of the
-mod publishes it with the release's version and as `latest`.
+the Minecraft server: `conduit-full` answers the requests in full mode, and `conduit-chat` those in
+chat mode. The image is `ghcr.io/madkarmaa/conduit-agent`, and each release of the mod publishes it
+with the release's version and as `latest`.
 
 Each container holds a runner that takes requests from the mod over HTTP. It answers them with
 Claude Code, Codex or OpenCode, through the

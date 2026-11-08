@@ -4,13 +4,13 @@
 </div>
 
 An AI bot for Minecraft servers. Players ask it with `/conduit <request>`, and an AI agent answers
-in the chat, using tools that read and change the game. Operators can let it build, fill, teleport,
-edit inventories and run commands, while everyone else can ask questions about the world and their
-own player.
+in the chat, using tools that read and change the game. Operators, and the players they allow, can
+have it build, fill, teleport, edit inventories and run commands. Everyone else can ask about the
+world and their own player.
 
 Conduit is a server-side Fabric mod. Players do not need it to join. The agents run in two Docker
-containers next to the server, one for operators and one for everyone else, as
-[`agent/README.md`](./agent/README.md) describes. Each uses the agent you pick:
+containers next to the server, one for each mode, as [`agent/README.md`](./agent/README.md)
+describes. Each uses the agent you pick:
 [Claude Code](https://www.anthropic.com/claude-code), [Codex](https://github.com/openai/codex) or
 [OpenCode](https://opencode.ai). The mod also serves its tools over
 [MCP](https://modelcontextprotocol.io), so other MCP hosts can control the game too.
@@ -49,7 +49,7 @@ or runs, the asker's action bar shows how many requests are ahead and then "Thin
 Operators get **full mode**, where the agent can change the game. Everyone else gets **chat
 mode**, where the agent can only read the world and the asking player's own data, such as their
 inventory, position and statistics, but never another player's data or an IP address. Each mode has
-a line of its own, so operators never wait behind chat mode. The bot answers one request at a time
+a line of its own, so full mode never waits behind chat mode. The bot answers one request at a time
 per mode, and each player can have one request in line. `/conduit cancel` takes it back.
 
 Operators change who gets a mode with `/conduit access`, which saves the change in the config:
@@ -132,7 +132,8 @@ and the online operators decide its approvals. The event types are the ones the 
 
 The mod reads `config/conduit.json` at startup and on `/conduit reload`. Fields the file leaves out
 keep their defaults. Any string can use `${NAME}` or `${NAME:-default}` to read an environment
-variable, and an empty variable counts as unset. The variables of a disabled agent may stay unset.
+variable, and an empty variable counts as unset. The variables of an agent that answers nobody may
+stay unset.
 
 When the config is invalid at startup, the mod logs the missing variables and invalid fields, and
 keeps the bot and the MCP server off until `/conduit reload` loads a valid config. On a reload, the
@@ -186,8 +187,8 @@ players.
 
 ## Other MCP hosts
 
-Claude Code, Cursor and other MCP hosts can use the tools too. The MCP server speaks streamable
-HTTP at `http://<server>:25585/mcp` and needs a token from `mcp.tokens`:
+Claude Code, Cursor and other MCP hosts can use the tools too. The MCP server uses the streamable
+HTTP transport at `http://<server>:25585/mcp` and needs a token from `mcp.tokens`:
 
 ```json
 {
