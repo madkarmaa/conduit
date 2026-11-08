@@ -48,12 +48,12 @@ class RequestProgress(private val request: BotRequest, private val trace: Reques
 
         val listed = "$ranOut Before that, I ran ${changes.joinToString(", ")}."
         if (!hasUndoableEdits(caller)) return listed
-        return "$listed Ask \"/conduit undo that\" to put back the blocks I changed and the " +
-            "entities I spawned or removed."
+        return "$listed Ask \"/conduit undo that\" to put back the blocks and containers I " +
+            "changed and the entities I spawned or removed. Player inventories stay as they are."
     }
 
-    // Undo only knows the edits its journal recorded: changed blocks, and spawned or removed
-    // entities.
+    // Undo only knows the edits its journal recorded: changed blocks with their containers, and
+    // spawned or removed entities.
     private suspend fun hasUndoableEdits(caller: String): Boolean =
         try {
             GameServer.run {

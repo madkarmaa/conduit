@@ -63,10 +63,11 @@ Operators change who gets a mode with `/conduit access`, which saves the change 
 
 The agent remembers earlier requests. Every player has a conversation of their own in each mode.
 
-In full mode the tools record the blocks that each change replaces, and the entities the agent
-spawns or removes, so a request such as `/conduit undo that` can put them back. Undo forgets
-everything when the server restarts, and it never brings back dropped items or undoes other changes
-to entities.
+In full mode the tools record the blocks that each change replaces, with the items of containers
+such as chests, and the entities the agent spawns or removes, so a request such as
+`/conduit undo that` can put them back. Undo forgets everything when the server restarts, and it
+never brings back dropped items, changes player inventories back, or undoes other changes to
+entities.
 
 ### Approvals
 
