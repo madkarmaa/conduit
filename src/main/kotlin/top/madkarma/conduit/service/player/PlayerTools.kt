@@ -66,7 +66,7 @@ val GET_PLAYER =
                 optional(
                     "filter",
                     stringSchema(
-                        "Substring for stats and advancements, e.g. \"mined\" or \"nether\".",
+                        "Substring for stats and advancements, such as \"mined\" or \"nether\".",
                         default = "",
                     ),
                 )

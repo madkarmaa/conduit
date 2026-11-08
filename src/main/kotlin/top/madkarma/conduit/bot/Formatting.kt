@@ -28,7 +28,7 @@ val CODE_LIST: String =
 /**
  * Turns text with § codes, such as "§cRed §lbold", into styled components. As in Java Edition, a
  * color code also ends the styles before it, and §r ends everything. Unknown codes stay in the
- * text, and this drops a § at the very end.
+ * text, and this drops a § at the end.
  */
 fun formattedText(text: String): MutableComponent {
     val result = Component.empty()

@@ -23,7 +23,7 @@ data class EntitySpawnEvent(
 
 /** Publishes ENTITY_SPAWN. */
 object EntityLifecycle {
-    // Called from the fresh entity mixin, only for entities that were actually added.
+    // Called from the fresh entity mixin, only for entities that the level added.
     @JvmStatic
     fun onEntitySpawned(entity: Entity) {
         if (!EventBus.wants()) return

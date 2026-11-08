@@ -23,7 +23,7 @@ val SCOREBOARD =
                 optional(
                     "criterion",
                     stringSchema(
-                        "For add_objective, e.g. \"dummy\" or \"deathCount\".",
+                        "Criterion for add_objective, such as \"dummy\" or \"deathCount\".",
                         default = "dummy",
                     ),
                 )

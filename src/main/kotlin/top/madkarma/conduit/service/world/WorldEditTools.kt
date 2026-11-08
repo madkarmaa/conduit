@@ -30,8 +30,8 @@ val EDIT_WORLD =
                 optional("z", integerSchema("Block z of the column. Required for force_chunk."))
                 optional("forced", booleanSchema("Required for force_chunk."))
                 borderFields()
-                optional("name", stringSchema("Rule name, e.g. \"advance_time\"."))
-                optional("value", stringSchema("New rule value, e.g. \"false\" or \"3\"."))
+                optional("name", stringSchema("Rule name, such as \"advance_time\"."))
+                optional("value", stringSchema("New rule value, such as \"false\" or \"3\"."))
                 explosionFields()
             },
         actions =

@@ -19,7 +19,10 @@ val ENTITIES =
             input {
                 optional("uuid", UUID.described("Required for info, nbt, effects and attributes."))
                 optional("dimension", stringSchema("For list. Empty means every dimension."))
-                optional("types", arraySchema(stringSchema(), "e.g. [\"minecraft:zombie\"]."))
+                optional(
+                    "types",
+                    arraySchema(stringSchema(), "Entity types, such as [\"minecraft:zombie\"]."),
+                )
                 optional("center", VEC3.described("Requires dimension and radius."))
                 optional("radius", numberSchema(min = 0.0))
                 optional(

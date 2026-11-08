@@ -25,7 +25,7 @@ val DATAPACKS =
                 optional(
                     "pack",
                     stringSchema(
-                        "Datapack id, e.g. \"file/my_pack\". Required for enable and disable.",
+                        "Datapack id, such as \"file/my_pack\". Required for enable and disable.",
                     ),
                 )
                 optional(
@@ -35,10 +35,10 @@ val DATAPACKS =
                         "Required for write, read and delete.",
                     ),
                 )
-                optional("id", stringSchema("File id, e.g. \"conduit:diamond_from_dirt\"."))
+                optional("id", stringSchema("File id, such as \"conduit:diamond_from_dirt\"."))
                 optional(
                     "registry",
-                    stringSchema("For tags, e.g. \"block\", \"item\" or \"function\"."),
+                    stringSchema("Registry for tags, such as \"block\", \"item\" or \"function\"."),
                 )
                 optional(
                     "content",

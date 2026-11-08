@@ -33,11 +33,11 @@ val BATCH =
                     "calls",
                     arraySchema(
                         objectSchema {
-                            required("tool", stringSchema("Tool name, e.g. \"edit_blocks\"."))
+                            required("tool", stringSchema("Tool name, such as \"edit_blocks\"."))
                             optional(
                                 "arguments",
                                 objectSchema(
-                                    "The tool's arguments, e.g. {\"action\": \"set\", \"changes\": [...]}.",
+                                    "The tool's arguments, such as {\"action\": \"set\", \"changes\": [...]}.",
                                 ) {},
                             )
                         },

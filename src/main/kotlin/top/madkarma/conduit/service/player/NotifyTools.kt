@@ -27,7 +27,7 @@ val NOTIFY =
                 )
                 optional(
                     "sound",
-                    stringSchema("Sound id, e.g. \"minecraft:entity.player.levelup\"."),
+                    stringSchema("Sound id, such as \"minecraft:entity.player.levelup\"."),
                 )
                 optional("position", VEC3.described("Sound position. Defaults to the player."))
                 optional("volume", numberSchema(min = 0.0, default = 1.0))
@@ -83,7 +83,10 @@ val NOTIFY =
     )
 
 private fun InputBuilder.bossBarFields() {
-    optional("bar", stringSchema("Boss bar id, e.g. \"conduit:race\". For the boss bar actions."))
+    optional(
+        "bar",
+        stringSchema("Boss bar id, such as \"conduit:race\". For the boss bar actions."),
+    )
     optional(
         "color",
         enumSchema(listOf("pink", "blue", "red", "green", "yellow", "purple", "white")),

@@ -29,25 +29,30 @@ val GAME_DATA =
                 )
                 optional(
                     "tag",
-                    stringSchema("For entries: only members of this tag, e.g. \"minecraft:logs\"."),
+                    stringSchema(
+                        "For entries: only members of this tag, such as \"minecraft:logs\".",
+                    ),
                 )
                 optional(
                     "id",
                     stringSchema(
-                        "Recipe or loot table id, e.g. \"minecraft:crafting_table\". Required " +
+                        "Recipe or loot table id, such as \"minecraft:crafting_table\". Required " +
                             "for recipe and loot_table.",
                     ),
                 )
                 optional(
                     "type",
                     stringSchema(
-                        "For recipes, e.g. \"minecraft:crafting_shaped\".",
+                        "Recipe type for recipes, such as \"minecraft:crafting_shaped\".",
                         default = "",
                     ),
                 )
                 optional(
                     "result_item",
-                    stringSchema("For recipes, e.g. \"minecraft:torch\".", default = ""),
+                    stringSchema(
+                        "Result item for recipes, such as \"minecraft:torch\".",
+                        default = "",
+                    ),
                 )
                 optional("offset", OFFSET)
                 optional("limit", LIMIT)

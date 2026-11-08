@@ -37,7 +37,7 @@ val EDIT_ENTITY =
                 optional(
                     "effect",
                     stringSchema(
-                        "Effect id, e.g. \"minecraft:speed\"; remove_effect without it clears all.",
+                        "Effect id, such as \"minecraft:speed\"; remove_effect without it clears all.",
                     ),
                 )
                 optional(
@@ -149,7 +149,10 @@ val EDIT_ENTITY =
     )
 
 private fun InputBuilder.spawnFields() {
-    optional("type", stringSchema("Entity type, e.g. \"minecraft:villager\". Required for spawn."))
+    optional(
+        "type",
+        stringSchema("Entity type, such as \"minecraft:villager\". Required for spawn."),
+    )
     optional("dimension", DIMENSION)
     optional("position", VEC3.described("Required for spawn."))
     optional("rotation", ROTATION)

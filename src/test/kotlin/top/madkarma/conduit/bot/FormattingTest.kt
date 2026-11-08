@@ -65,7 +65,7 @@ class FormattingTest {
     }
 
     @Test
-    fun `a section sign at the very end is dropped`() {
+    fun `a section sign at the end is dropped`() {
         assertEquals(listOf("end" to ""), segments("end§"))
     }
 

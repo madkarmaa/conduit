@@ -30,7 +30,7 @@ val EDIT_PLAYER =
                 optional(
                     "advancement",
                     stringSchema(
-                        "e.g. \"minecraft:story/mine_diamond\". For the advancement actions.",
+                        "Advancement id, such as \"minecraft:story/mine_diamond\". For the advancement actions.",
                     ),
                 )
                 optional("criterion", stringSchema("One criterion. Leave it out for all of them."))

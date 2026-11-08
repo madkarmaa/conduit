@@ -18,7 +18,7 @@ val STRUCTURES =
             input {
                 optional(
                     "id",
-                    stringSchema("Template id for save and place, e.g. \"builds:house\"."),
+                    stringSchema("Template id for save and place, such as \"builds:house\"."),
                 )
                 optional("filter", stringSchema("Substring of the id, for list.", default = ""))
                 optional("limit", LIMIT)
@@ -54,7 +54,7 @@ val STRUCTURES =
                 optional(
                     "ignore_block",
                     stringSchema(
-                        "For save: block left out, e.g. \"minecraft:structure_void\".",
+                        "For save: block left out, such as \"minecraft:structure_void\".",
                         default = "",
                     ),
                 )

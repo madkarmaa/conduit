@@ -30,17 +30,24 @@ val FIND =
                 optional("dimension", DIMENSION)
                 optional(
                     "block",
-                    stringSchema("Block id, state or #tag, e.g. \"#minecraft:logs\". For blocks."),
+                    stringSchema(
+                        "Block id, state or #tag, such as \"#minecraft:logs\". For blocks.",
+                    ),
                 )
                 optional("item", stringSchema("Item id or #tag. For items."))
                 optional(
                     "structure",
-                    stringSchema("e.g. \"minecraft:village_plains\" or \"#minecraft:village\"."),
+                    stringSchema("Structure id or #tag, such as \"#minecraft:village\"."),
                 )
-                optional("biome", stringSchema("e.g. \"minecraft:cherry_grove\"."))
+                optional(
+                    "biome",
+                    stringSchema("Biome id or #tag, such as \"minecraft:cherry_grove\"."),
+                )
                 optional(
                     "poi",
-                    stringSchema("e.g. \"minecraft:home\" or \"#minecraft:acquirable_job_site\"."),
+                    stringSchema(
+                        "Point of interest type or #tag, such as \"minecraft:home\" for beds.",
+                    ),
                 )
                 optional(
                     "center",

@@ -49,7 +49,7 @@ val RUN_COMMAND =
             input {
                 required(
                     "command",
-                    stringSchema("Command with or without the slash, e.g. \"time set day\"."),
+                    stringSchema("Command with or without the slash, such as \"time set day\"."),
                 )
                 optional("as", stringSchema("Player name or UUID, or entity UUID to run as."))
                 optional("dimension", stringSchema())
