@@ -52,9 +52,7 @@ own data, such as their inventory, position and statistics, but never another pl
 IP address. Each mode has a line of its own, so operators never wait behind chat mode. The bot
 answers one request at a time per mode, and each player can have one request in line.
 
-The agent remembers earlier requests. In chat mode every player has a conversation of their own.
-In full mode, `requests.memory` picks one conversation per player, one `shared` by everyone, or
-`none`.
+The agent remembers earlier requests. Every player has a conversation of their own in each mode.
 
 In full mode the tools record the blocks that each change replaces, so a request such as
 `/conduit undo that` can put them back. Undo forgets everything when the server restarts, and it
@@ -73,12 +71,12 @@ such as `edit_player`, or one of its actions, such as `edit_player.game_mode`.
 
 ### Operator commands
 
-| Command                                   | Description                                                   |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| `/conduit status`                         | Each mode's agent, its CLI version, its line and the triggers |
-| `/conduit cancel [full\|chat\|<player>]`  | Stops a mode's running request, or a player's request         |
-| `/conduit reload`                         | Reloads the config, and keeps the old one if the new is bad   |
-| `/conduit forget [<player>\|shared\|all]` | Starts fresh conversations, so the agent forgets earlier ones |
+| Command                                  | Description                                                   |
+| ---------------------------------------- | ------------------------------------------------------------- |
+| `/conduit status`                        | Each mode's agent, its CLI version, its line and the triggers |
+| `/conduit cancel [full\|chat\|<player>]` | Stops a mode's running request, or a player's request         |
+| `/conduit reload`                        | Reloads the config, and keeps the old one if the new is bad   |
+| `/conduit forget [<player>\|all]`        | Starts fresh conversations, so the agent forgets earlier ones |
 
 Without an argument, `cancel` and `forget` act on the operator's own request and conversations.
 
@@ -152,7 +150,6 @@ command lists the problems and keeps the old config.
 | `approvals.add`                                       | none                                                          | Tools or actions that also need approval                                              |
 | `approvals.remove`                                    | none                                                          | Tools or actions that never need approval                                             |
 | `requests.timeoutSeconds`                             | `300`                                                         | How long a request may run, not counting approvals                                    |
-| `requests.memory`                                     | `player`                                                      | Full mode conversations: `player`, `shared` or `none`                                 |
 | `requests.instructions`                               | none                                                          | Extra instructions for the agent, such as the server's rules                          |
 | `replies.maxLength`                                   | `1000`                                                        | Longest answer the bot posts                                                          |
 | `game.backupDirectory`                                | `backups`                                                     | Where backups go, relative to the server folder                                       |

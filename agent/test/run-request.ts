@@ -11,7 +11,6 @@ export function runRequest(changes: Partial<RunRequest> = {}): RunRequest {
         instructions: "Answer in a few words.",
         prompt: "Alex asks: hi",
         conversation: "player-1",
-        resume: false,
         mcp: { url: "http://minecraft:25585/mcp", token: "mcp-token-for-tests" },
         apiKey: "sk-key-for-tests",
         dangerouslyUseSubscriptionCredentials: false,

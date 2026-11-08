@@ -67,14 +67,11 @@ object Subcommands {
 
     private fun forgetTarget(source: CommandSourceStack, target: String?): String {
         when (target) {
-            "shared" -> Conversations.forgetShared()
-
             "all" -> Conversations.forgetAll()
 
             null -> {
                 val player =
-                    source.player
-                        ?: throw ConduitError.InvalidInput("Name a player, shared or all.")
+                    source.player ?: throw ConduitError.InvalidInput("Name a player or all.")
 
                 Conversations.forgetPlayer(player.uuid)
                 return "you"

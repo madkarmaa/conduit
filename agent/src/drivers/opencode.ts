@@ -60,7 +60,6 @@ async function prompt(client: OpenCodeClient, { request, folder, sessionId, abor
 
         await client.session.prompt({ sessionID: id, text: request.prompt });
         const output = await lastAnswer(events, id);
-        if (!request.resume) await client.session.remove({ sessionID: id }).catch(() => undefined);
         return { output, sessionId: id };
     } finally {
         listening.abort();

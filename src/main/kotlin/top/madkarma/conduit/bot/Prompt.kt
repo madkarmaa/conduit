@@ -1,11 +1,9 @@
 package top.madkarma.conduit.bot
 
 import top.madkarma.conduit.config.ConduitConfig
-import top.madkarma.conduit.config.Memory
 
 /** The system prompt of a request, which tells the agent where it is and how to answer. */
 fun ConduitConfig.buildInstructions(mode: Mode, asker: Asker, trigger: TriggerRun? = null): String {
-    val shared = requests.memory == Memory.SHARED && mode == Mode.FULL
     val limited =
         "${asker.name} has limited access. Your tools can read the world and the data of " +
             "${asker.name}, such as their inventory, health or food, so answer questions about " +
@@ -14,8 +12,6 @@ fun ConduitConfig.buildInstructions(mode: Mode, asker: Asker, trigger: TriggerRu
     return listOf(
             "You are an AI assistant inside a Minecraft server. Players talk to you through the",
             "in-game chat, and the conduit MCP server gives you tools that read and change the game.",
-            if (shared) "Several players share this conversation, so each request names its sender."
-            else "",
             if (mode == Mode.CHAT) limited else "",
             trigger?.let(::triggerInstructions).orEmpty(),
             "The bot posts your final answer in the chat, so keep it to a few short sentences and do",

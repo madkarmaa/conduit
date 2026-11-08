@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, rmSync } from "node:fs";
+import { rmSync } from "node:fs";
 import { join } from "node:path";
 import { fakes, home, resetFakes, until, untilAborted } from "./fakes.ts";
 import { runRequest } from "./run-request.ts";
@@ -70,16 +70,9 @@ describe("runs", () => {
 });
 
 describe("conversations", () => {
-    test("that are never continued leave no folder", async () => {
-        await runAgent(request);
-
-        expect(existsSync(join(conversations, "player-1"))).toBe(false);
-    });
-
     test("continue the CLI's session", async () => {
-        const resumed = runRequest({ resume: true });
-        await runAgent(resumed);
-        await runAgent(resumed);
+        await runAgent(request);
+        await runAgent(request);
 
         expect(fakes.runs.map((run) => run.sessionId)).toEqual([undefined, "session-1"]);
     });
@@ -87,9 +80,9 @@ describe("conversations", () => {
     // Each run saves its own session, so every run differs from the one before in one way.
     test("start anew with another login store or CLI", async () => {
         const subscription = { apiKey: "", dangerouslyUseSubscriptionCredentials: true };
-        await runAgent(runRequest({ resume: true }));
-        await runAgent(runRequest({ resume: true, ...subscription }));
-        await runAgent(runRequest({ resume: true, ...subscription, cli: "codex" }));
+        await runAgent(request);
+        await runAgent(runRequest(subscription));
+        await runAgent(runRequest({ ...subscription, cli: "codex" }));
 
         expect(fakes.runs.map((run) => run.sessionId)).toEqual([undefined, undefined, undefined]);
     });

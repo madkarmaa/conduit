@@ -1,6 +1,5 @@
 package top.madkarma.conduit.config
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
@@ -124,18 +123,9 @@ data class ApprovalsConfig(
 @Serializable
 data class RequestsConfig(
     val timeoutSeconds: Int = 300,
-    val memory: Memory = Memory.PLAYER,
     /** Added to the agent's instructions, such as the server's rules. */
     val instructions: String = "",
 )
-
-/** Which earlier requests full mode remembers. Chat mode always remembers the player's own. */
-@Serializable
-enum class Memory {
-    @SerialName("player") PLAYER,
-    @SerialName("shared") SHARED,
-    @SerialName("none") NONE,
-}
 
 @Serializable data class RepliesConfig(val maxLength: Int = 1000)
 

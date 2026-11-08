@@ -1,5 +1,5 @@
 // Runs the agent for one request in its conversation's folder, through the SDK of its CLI.
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { runClaude } from "./drivers/claude.ts";
 import { runCodex } from "./drivers/codex.ts";
@@ -44,9 +44,7 @@ export async function runAgent(request: RunRequest): Promise<RunResult> {
     const home = credentials === "subscription" ? HOME : API_KEY_HOME;
     await mkdir(folder, { recursive: true });
     await mkdir(home, { recursive: true });
-    const sessionId = request.resume
-        ? await savedSession(folder, request.cli, credentials)
-        : undefined;
+    const sessionId = await savedSession(folder, request.cli, credentials);
 
     const run = { abort: new AbortController(), cancelled: false, timedOut: false };
     current = run;
@@ -69,7 +67,7 @@ export async function runAgent(request: RunRequest): Promise<RunResult> {
             abort: run.abort,
         });
 
-        if (request.resume && answer.sessionId) {
+        if (answer.sessionId) {
             await saveSession(folder, { cli: request.cli, credentials, id: answer.sessionId });
         }
 
@@ -93,8 +91,6 @@ export async function runAgent(request: RunRequest): Promise<RunResult> {
     } finally {
         clearTimeout(timer);
         current = undefined;
-        // A conversation that is never continued needs no folder.
-        if (!request.resume) await rm(folder, { recursive: true, force: true });
     }
 }
 

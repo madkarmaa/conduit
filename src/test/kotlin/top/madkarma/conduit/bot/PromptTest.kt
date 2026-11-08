@@ -6,7 +6,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import top.madkarma.conduit.config.ConduitConfig
-import top.madkarma.conduit.config.Memory
 import top.madkarma.conduit.config.RequestsConfig
 import top.madkarma.conduit.config.TriggerConfig
 import top.madkarma.conduit.events.EventType
@@ -25,16 +24,6 @@ class PromptTest {
 
         assertTrue("Alex has limited access." in config.buildInstructions(Mode.CHAT, alex))
         assertFalse("limited access" in config.buildInstructions(Mode.FULL, alex))
-    }
-
-    @Test
-    fun `only a shared full mode conversation names its senders`() {
-        val shared = ConduitConfig(requests = RequestsConfig(memory = Memory.SHARED))
-        val sentence = "Several players share this conversation"
-
-        assertTrue(sentence in shared.buildInstructions(Mode.FULL, alex))
-        assertFalse(sentence in shared.buildInstructions(Mode.CHAT, alex))
-        assertFalse(sentence in ConduitConfig().buildInstructions(Mode.FULL, alex))
     }
 
     @Test

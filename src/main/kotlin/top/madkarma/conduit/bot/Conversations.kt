@@ -1,22 +1,18 @@
 package top.madkarma.conduit.bot
 
 import java.nio.file.Files
-import java.util.*
+import java.util.UUID
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import net.fabricmc.loader.api.FabricLoader
-import top.madkarma.conduit.config.Memory
 
 private val PATH = FabricLoader.getInstance().configDir.resolve("conduit-conversations.json")
 private val JSON = Json { ignoreUnknownKeys = true }
 
-/** Where a request runs in the agent's container, and whether it continues an earlier one. */
-class Conversation(val folder: String, val resumable: Boolean)
-
 /**
  * The agent CLIs keep a conversation per working directory, so each conversation gets its own
- * folder. Forgetting moves a conversation to a folder with a higher generation, which the CLIs have
- * never seen.
+ * folder. Each player has one conversation per mode, and each trigger one of its own. Forgetting
+ * moves a conversation to a folder with a higher generation, which the CLIs have never seen.
  */
 object Conversations {
     @Serializable
@@ -24,38 +20,20 @@ object Conversations {
 
     private var generations: Generations? = null
 
-    /** Chat mode never shares a conversation, with other players or with full mode. */
+    /** The folder of the asker's conversation in a mode. */
     @Synchronized
-    fun of(mode: Mode, memory: Memory, asker: Asker): Conversation {
-        if (mode == Mode.CHAT) return remembered(chatKey(asker.uuid))
+    fun of(mode: Mode, asker: Asker): String =
+        folder(if (mode == Mode.CHAT) chatKey(asker.uuid) else asker.uuid.toString())
 
-        return when (memory) {
-            Memory.PLAYER -> remembered(asker.uuid.toString())
-            Memory.SHARED -> remembered(SHARED_KEY)
-            Memory.NONE -> Conversation("once-${UUID.randomUUID()}", resumable = false)
-        }
-    }
+    @Synchronized fun ofTrigger(name: String): String = folder("trigger-$name")
 
-    /** Each trigger has a conversation of its own, unless full mode remembers nothing. */
-    @Synchronized
-    fun ofTrigger(name: String, memory: Memory): Conversation {
-        if (memory == Memory.NONE)
-            return Conversation("once-${UUID.randomUUID()}", resumable = false)
-        return remembered("trigger-$name")
-    }
-
-    private fun remembered(key: String): Conversation {
+    private fun folder(key: String): String {
         val stored = load()
-        return Conversation(
-            "$key-${stored.base + stored.keys.getOrDefault(key, 0)}",
-            resumable = true,
-        )
+        return "$key-${stored.base + stored.keys.getOrDefault(key, 0)}"
     }
 
     /** Starts fresh conversations for a player, in both modes. */
     fun forgetPlayer(uuid: UUID) = forget(listOf(uuid.toString(), chatKey(uuid)))
-
-    fun forgetShared() = forget(listOf(SHARED_KEY))
 
     @Synchronized
     fun forgetAll() {
@@ -86,6 +64,4 @@ object Conversations {
     }
 
     private fun chatKey(uuid: UUID) = "chat-$uuid"
-
-    private const val SHARED_KEY = "shared"
 }

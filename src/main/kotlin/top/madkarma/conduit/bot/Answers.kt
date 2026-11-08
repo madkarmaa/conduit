@@ -51,9 +51,8 @@ object Answers {
 
         try {
             val conversation =
-                request.trigger?.let {
-                    Conversations.ofTrigger(it.config.name, config.requests.memory)
-                } ?: Conversations.of(request.mode, config.requests.memory, request.asker)
+                request.trigger?.let { Conversations.ofTrigger(it.config.name) }
+                    ?: Conversations.of(request.mode, request.asker)
 
             val run =
                 RunRequest(
@@ -67,8 +66,7 @@ object Answers {
                     prompt =
                         request.trigger?.let(::triggerPrompt)
                             ?: requestPrompt(request.asker, request.text),
-                    conversation = conversation.folder,
-                    resume = conversation.resumable,
+                    conversation = conversation,
                     mcp = McpAccess(agent.mcpUrl, token),
                     apiKey = agent.apiKey,
                     dangerouslyUseSubscriptionCredentials =

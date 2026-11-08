@@ -37,7 +37,6 @@ class RunRequest(
     /** The conversation's folder in the container. */
     val conversation: String,
     /** Continues the conversation if it has started, and keeps its folder. */
-    val resume: Boolean,
     val mcp: McpAccess,
     /** Empty when the CLI uses its subscription login instead. */
     val apiKey: String,

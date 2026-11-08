@@ -28,7 +28,7 @@ object ConduitCommand {
                 .then(subcommand("status", null) { source, _ -> Subcommands.status(source) })
                 .then(subcommand("reload", null) { source, _ -> Subcommands.reload(source) })
                 .then(subcommand("cancel", suggest("full", "chat"), Subcommands::cancel))
-                .then(subcommand("forget", suggest("shared", "all"), Subcommands::forget))
+                .then(subcommand("forget", suggest("all"), Subcommands::forget))
                 .then(
                     Commands.argument("request", StringArgumentType.greedyString()).executes {
                         ask(it.source, StringArgumentType.getString(it, "request"))

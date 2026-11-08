@@ -71,7 +71,6 @@ function claudeOptions({ request, executable, folder, env, sessionId, abort }: D
         model,
         effort: effort as EffortLevel,
         resume: sessionId,
-        persistSession: request.resume,
         abortController: abort,
     };
 }
