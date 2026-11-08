@@ -51,6 +51,7 @@ Everyone else gets **chat mode**, where the agent can only read the world and th
 own data, such as their inventory, position and statistics, but never another player's data or an
 IP address. Each mode has a line of its own, so operators never wait behind chat mode. The bot
 answers one request at a time per mode, and each player can have one request in line.
+`/conduit cancel` takes it back.
 
 The agent remembers earlier requests. Every player has a conversation of their own in each mode.
 
@@ -69,20 +70,23 @@ happened, and the time spent waiting does not count against the request's timeou
 `approvals.add` and `approvals.remove` change which actions need approval. Each entry is a tool,
 such as `edit_player`, or one of its actions, such as `edit_player.game_mode`.
 
-### Operator commands
+### Commands
 
-| Command                                  | Description                                                   |
-| ---------------------------------------- | ------------------------------------------------------------- |
-| `/conduit status`                        | Each mode's agent, its CLI version, its line and the triggers |
-| `/conduit cancel [full\|chat\|<player>]` | Stops a mode's running request, or a player's request         |
-| `/conduit reload`                        | Reloads the config, and keeps the old one if the new is bad   |
-| `/conduit forget [<player>\|all]`        | Starts fresh conversations, so the agent forgets earlier ones |
+Every player can take back their request with `/conduit cancel`. Operators also have these
+commands, which other players never see:
 
-Without an argument, `cancel` and `forget` act on the operator's own request and conversations.
+| Command                                | Description                                                   |
+| -------------------------------------- | ------------------------------------------------------------- |
+| `/conduit status`                      | Each mode's agent, its CLI version, its line and the triggers |
+| `/conduit cancel <full\|chat\|player>` | Stops a mode's running request, or a player's request         |
+| `/conduit reload`                      | Reloads the config, and keeps the old one if the new is bad   |
+| `/conduit forget [<player>\|all]`      | Starts fresh conversations, so the agent forgets earlier ones |
 
-An operator's request runs a command when it is one of these words alone, or `cancel` or `forget`
-followed by one more word. Longer requests that start with these words, such as
-`/conduit status of the farm`, go to the bot. Requests from other players always go to the bot.
+Without an argument, `forget` acts on the operator's own conversations.
+
+A request runs a command when it matches one exactly. Longer requests that start with a command's
+word, such as `/conduit status of the farm`, go to the bot, and so do other players' requests that
+start with an operator's command.
 
 ### Triggers
 

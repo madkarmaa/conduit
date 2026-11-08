@@ -81,6 +81,15 @@ object Bot {
         }
     }
 
+    /** Cancels a player's newest request. Returns whether they had one. */
+    fun cancelNewest(uuid: UUID): Boolean {
+        val newest =
+            lines.values.firstNotNullOfOrNull { line -> line.newest { it.asker.uuid == uuid } }
+                ?: return false
+
+        return cancel { it === newest }
+    }
+
     /** Cancels every request, such as when the server stops. */
     fun stopAll() {
         cancel { true }

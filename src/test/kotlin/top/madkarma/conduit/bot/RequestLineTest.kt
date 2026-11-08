@@ -99,6 +99,19 @@ class RequestLineTest {
     }
 
     @Test
+    fun `the newest request is the last waiting one, or else the running one`() {
+        line.add(request(alex, "first"))
+        nextStarted()
+        line.add(request(alex, "second"))
+        line.add(request(steve, "third"))
+
+        assertEquals("second", line.newest { it.asker == alex }?.text)
+        line.cancel { it.text == "second" }
+        assertEquals("first", line.newest { it.asker == alex }?.text)
+        assertEquals(null, line.newest { it.asker.name == "Herobrine" })
+    }
+
+    @Test
     fun `keeps answering after an answer fails`() {
         line.add(request(alex, "broken"))
         line.add(request(steve, "second"))

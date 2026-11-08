@@ -53,6 +53,11 @@ class RequestLine(
 
     @Synchronized fun running(): BotRequest? = running
 
+    /** The newest request that matches, which is the last waiting one or else the running one. */
+    @Synchronized
+    fun newest(predicate: (BotRequest) -> Boolean): BotRequest? =
+        waiting.lastOrNull(predicate) ?: running?.takeIf(predicate)
+
     @Synchronized fun waiting(): List<BotRequest> = waiting.toList()
 
     /**

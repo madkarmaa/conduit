@@ -6,7 +6,7 @@ import top.madkarma.conduit.Conduit
 import top.madkarma.conduit.game.ConduitError
 import top.madkarma.conduit.service.player.resolvePlayerId
 
-/** The operators' subcommands of /conduit. They run on the server thread. */
+/** The subcommands of /conduit. They run on the server thread. */
 object Subcommands {
     /** Shows each mode's agent, its runner and its line. Never shows secrets. */
     fun status(source: CommandSourceStack) {
@@ -35,22 +35,33 @@ object Subcommands {
         problems.forEach { source.sendFailure(Component.literal("- $it")) }
     }
 
-    /** Cancels the asker's own request, the running one of a mode, or a player's request. */
+    /**
+     * Cancels the player's newest request. Operators may name a target instead: the running request
+     * of a mode, or a player's requests.
+     */
     fun cancel(source: CommandSourceStack, target: String?) {
-        val mode = Mode.entries.firstOrNull { it.id == target }
-        val ownId = source.player?.uuid
+        if (target == null) return cancelOwn(source)
 
+        val mode = Mode.entries.firstOrNull { it.id == target }
         val cancelled =
-            when {
-                mode != null -> Bot.cancel { it === Bot.line(mode).running() }
-                target != null -> Bot.cancel { it.asker.name.equals(target, ignoreCase = true) }
-                ownId != null -> Bot.cancel { it.asker.uuid == ownId }
-                else -> return source.sendFailure(Component.literal("Name full, chat or a player."))
-            }
+            if (mode != null) Bot.cancel { it === Bot.line(mode).running() }
+            else Bot.cancel { it.asker.name.equals(target, ignoreCase = true) }
 
         source.sendSystemMessage(
             botMessage(if (cancelled) "Cancelled." else "There was nothing to cancel."),
         )
+    }
+
+    private fun cancelOwn(source: CommandSourceStack) {
+        val player =
+            source.player
+                ?: return source.sendFailure(Component.literal("Name full, chat or a player."))
+
+        if (!Bot.cancelNewest(player.uuid)) {
+            return source.sendFailure(Component.literal("You have no more requests to cancel."))
+        }
+
+        source.sendSystemMessage(botMessage("Cancelled your latest request."))
     }
 
     /** Starts fresh conversations, so the agents no longer see earlier requests. */
