@@ -24,7 +24,7 @@
 
 - Report expected failures with the `ConduitError` kind that fits them, such as `InvalidInput`, `NotFound` or `FailedPrecondition`. Only unexpected exceptions may end up as internal errors.
 
-- Keep the MCP tools backwards compatible: their names, actions, arguments and output format. Mark every action as read, write or destructive, so approvals and MCP hosts can rely on the marks.
+- Mark every MCP action as read, write or destructive, so approvals and MCP hosts can rely on the marks.
 
 - Never log or show secrets: runner secrets, MCP tokens and CLI logins.
 
