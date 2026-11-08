@@ -20,7 +20,7 @@ internal fun MinecraftServer.tellAudience(asker: Asker, message: Component) {
         .forEach { it.sendSystemMessage(message) }
 }
 
-/** The approval prompt, with `[Approve]` and `[Deny]` buttons that carry the nonce. */
+/** The approval prompt, with `[Approve]`, `[Approve all]` and `[Deny]` buttons with the nonce. */
 internal fun prompt(
     nonce: String,
     asker: Asker,
@@ -38,6 +38,16 @@ internal fun prompt(
             .append("\n")
             .append(button("approve", nonce, "[Approve]", ChatFormatting.GREEN, "Run it"))
             .append(" ")
+            .append(
+                button(
+                    "approve_all",
+                    nonce,
+                    "[Approve all]",
+                    ChatFormatting.GOLD,
+                    "Run it and the rest of this request without asking again",
+                ),
+            )
+            .append(" ")
             .append(button("deny", nonce, "[Deny]", ChatFormatting.RED, "Do not run it"))
             .append(
                 Component.literal(" $timeoutSeconds s to answer").withStyle(ChatFormatting.GRAY),
@@ -45,19 +55,10 @@ internal fun prompt(
     )
 }
 
-/**
- * Tells the audience how the approval ended. The decision is who decided and whether they approved.
- */
-internal suspend fun announce(asker: Asker, actions: String, decision: Pair<String, Boolean>?) {
-    val outcome =
-        when {
-            decision == null -> "Nobody answered"
-            decision.second -> "${decision.first} approved"
-            else -> "${decision.first} denied"
-        }
-
-    LOGGER.info("{} for {} of {}", outcome, actions, asker.name)
-    val message = botMessage(Component.literal("$outcome $actions.").withStyle(ChatFormatting.GRAY))
+/** Tells the audience how the approval ended, such as "Alex approved run_command.run." */
+internal suspend fun announce(asker: Asker, outcome: String) {
+    LOGGER.info("{} This was the request of {}.", outcome, asker.name)
+    val message = botMessage(Component.literal(outcome).withStyle(ChatFormatting.GRAY))
     GameServer.run { it.tellAudience(asker, message) }
 }
 

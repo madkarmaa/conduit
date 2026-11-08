@@ -70,9 +70,11 @@ never brings back entities or dropped items.
 
 Before the agent runs an action that is hard to undo, such as `run_command`, `edit_blocks` `fill`
 or `moderation` `kick`, the asker and every online operator get the action with its arguments and
-an `[Approve]` and a `[Deny]` button. A click from the asker or an operator decides. When nobody
-answers within `approvals.timeoutSeconds`, the action does not run. Either way the agent learns what
-happened, and the time spent waiting does not count against the request's timeout.
+an `[Approve]`, an `[Approve all]` and a `[Deny]` button. A click from the asker or an operator
+decides, and `[Approve all]` also lets the rest of the request run without asking again. When
+nobody answers within `approvals.timeoutSeconds`, which the prompt shows, the action does not run.
+Either way the agent learns what happened, and the time spent waiting does not count against the
+request's timeout.
 
 `approvals.add` and `approvals.remove` change which actions need approval. Each entry is a tool,
 such as `edit_player`, or one of its actions, such as `edit_player.game_mode`.
