@@ -55,4 +55,18 @@ class RequestProgressTest {
 
         assertEquals(listOf("edit_blocks.set ×2", "move_entity.teleport"), progress.changes())
     }
+
+    @Test
+    fun `running out of time names the changes, and undo only for recorded edits`() {
+        assertEquals(
+            "I ran out of time after 900 seconds.",
+            runBlocking { progress.ranOutOfTime(900, "Alex in full mode") },
+        )
+
+        finish("move_entity", "teleport", Access.WRITE)
+        assertEquals(
+            "I ran out of time after 900 seconds. Before that, I ran move_entity.teleport.",
+            runBlocking { progress.ranOutOfTime(900, "Alex in full mode") },
+        )
+    }
 }

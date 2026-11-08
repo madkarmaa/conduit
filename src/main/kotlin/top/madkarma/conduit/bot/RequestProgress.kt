@@ -1,6 +1,10 @@
 package top.madkarma.conduit.bot
 
+import java.time.Instant
 import java.util.Collections
+import top.madkarma.conduit.game.ConduitError
+import top.madkarma.conduit.game.EditJournal
+import top.madkarma.conduit.game.GameServer
 import top.madkarma.conduit.mcp.Access
 import top.madkarma.conduit.mcp.ApprovalGate
 import top.madkarma.conduit.mcp.CallRecorder
@@ -12,6 +16,7 @@ import top.madkarma.conduit.mcp.RecordedCall
  */
 class RequestProgress(private val request: BotRequest, private val trace: RequestTrace?) :
     CallRecorder {
+    private val startedAt = Instant.now()
     private val changes = Collections.synchronizedList(mutableListOf<String>())
 
     override fun started(tool: String) {
@@ -31,6 +36,30 @@ class RequestProgress(private val request: BotRequest, private val trace: Reques
     fun changes(): List<String> =
         synchronized(changes) { changes.groupingBy { it }.eachCount() }
             .map { (action, count) -> if (count > 1) "$action ×$count" else action }
+
+    /**
+     * A run that ran out of time may have changed the game halfway, so the asker learns what, and
+     * whether undo can put it back. The caller is the name of the request's tool policy.
+     */
+    suspend fun ranOutOfTime(seconds: Int, caller: String): String {
+        val ranOut = "I ran out of time after $seconds seconds."
+        val changes = changes()
+        if (changes.isEmpty()) return ranOut
+
+        val listed = "$ranOut Before that, I ran ${changes.joinToString(", ")}."
+        if (!hasUndoableEdits(caller)) return listed
+        return "$listed Ask \"/conduit undo that\" to put back the blocks I changed."
+    }
+
+    // Undo only knows the edits its journal recorded, which are changed blocks.
+    private suspend fun hasUndoableEdits(caller: String): Boolean =
+        try {
+            GameServer.run {
+                EditJournal.groups().any { it.caller == caller && !it.time.isBefore(startedAt) }
+            }
+        } catch (_: ConduitError) {
+            false
+        }
 
     /** The gate, which shows that the request waits while an approval prompt is open. */
     fun showingApprovals(gate: ApprovalGate) = ApprovalGate { calls ->

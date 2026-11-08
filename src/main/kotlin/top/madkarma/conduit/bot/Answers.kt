@@ -84,7 +84,10 @@ object Answers {
                     timeoutSeconds = config.requests.timeoutSeconds * RUNNER_TIMEOUT_FACTOR,
                 )
 
-            return describe(runWithDeadline(runner, run, deadline), config, progress.changes())
+            val outcome = runWithDeadline(runner, run, deadline)
+            if (outcome.timedOut)
+                return progress.ranOutOfTime(config.requests.timeoutSeconds, policy.name)
+            return describe(outcome.result)
         } catch (exception: CancellationException) {
             withContext(NonCancellable) { runCatching { runner.cancel() } }
             throw exception
@@ -115,7 +118,9 @@ object Answers {
         }
     }
 
-    private class Outcome(val result: RunResult, val pastDeadline: Boolean)
+    private class Outcome(val result: RunResult, pastDeadline: Boolean) {
+        val timedOut = pastDeadline || result.timedOut
+    }
 
     private suspend fun runWithDeadline(
         runner: RunnerClient,
@@ -137,12 +142,8 @@ object Answers {
         }
     }
 
-    private fun describe(outcome: Outcome, config: ConduitConfig, changes: List<String>): String {
-        val result = outcome.result
-        return when {
-            outcome.pastDeadline || result.timedOut ->
-                ranOutOfTime(config.requests.timeoutSeconds, changes)
-
+    private fun describe(result: RunResult): String =
+        when {
             result.cancelled -> "The request was cancelled."
 
             result.exitCode != 0 -> {
@@ -152,16 +153,6 @@ object Answers {
 
             else -> result.output.trim().ifEmpty { "Done." }
         }
-    }
-
-    // A run that ran out of time may have changed the game halfway, so the asker learns what.
-    private fun ranOutOfTime(seconds: Int, changes: List<String>): String {
-        val ranOut = "I ran out of time after $seconds seconds."
-        if (changes.isEmpty()) return ranOut
-
-        return "$ranOut Before that, I ran ${changes.joinToString(", ")}. Ask " +
-            "\"/conduit undo that\" to put the changed blocks back."
-    }
 
     private suspend fun say(text: String) {
         val maxLength = Conduit.config?.replies?.maxLength ?: Int.MAX_VALUE
