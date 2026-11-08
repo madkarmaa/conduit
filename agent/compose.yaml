@@ -2,8 +2,9 @@
 # conduit-chat those in chat mode. Start them once with `docker compose up -d`.
 # They restart on their own, and the mod never starts or stops them.
 #
-# Put the runner secrets in a .env file next to this file, copied from .env.example. The mod's config/conduit.json needs the
-# same values in agents.full.runner.secret and agents.chat.runner.secret.
+# Copy .env.example to a .env file next to this file and put the runner secrets in it. The mod's
+# config/conduit.json needs the same values in agents.full.runner.secret and
+# agents.chat.runner.secret.
 #
 #   CONDUIT_FULL_SECRET=<at least 16 letters, digits or -._~+/ characters>
 #   CONDUIT_CHAT_SECRET=<another one>
