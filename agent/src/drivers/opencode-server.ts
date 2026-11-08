@@ -1,9 +1,9 @@
 // Starts `opencode serve` for one run and stops it afterwards.
 import { type ChildProcess, spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
+import { stopGroup } from "./process-group.ts";
 
 const STARTUP_TIMEOUT_MS = 30_000;
-const KILL_GRACE_MS = 5000;
 const STDERR_LIMIT = 4000;
 
 /** A running server, with the Basic credentials its client needs. */
@@ -60,20 +60,4 @@ function serverUrl(server: ChildProcess, signal: AbortSignal): Promise<string> {
         server.on("exit", (code) => fail(`OpenCode exited with code ${code}`));
         signal.addEventListener("abort", () => fail("Cancelled"), { once: true });
     });
-}
-
-function stopGroup(child: ChildProcess): void {
-    const groupId = child.pid;
-    if (groupId === undefined) return;
-
-    const signal = (name: NodeJS.Signals) => {
-        try {
-            process.kill(-groupId, name);
-        } catch {
-            // The group already ended.
-        }
-    };
-
-    signal("SIGTERM");
-    setTimeout(() => signal("SIGKILL"), KILL_GRACE_MS).unref();
 }
