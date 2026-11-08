@@ -8,7 +8,8 @@ import kotlin.test.assertEquals
 class EventDocsTest {
     @Test
     fun `the README lists every event type`() {
-        val readme = Files.readString(Path.of(System.getProperty("conduit.readme")))
+        // Gradle runs the tests in the build folder, next to the README.
+        val readme = Files.readString(Path.of("..", "README.md"))
         val documented =
             Regex("""^\| `([a-z_]+)` +\|""", RegexOption.MULTILINE)
                 .findAll(readme)

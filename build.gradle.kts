@@ -88,10 +88,8 @@ tasks.test {
     // The game's logging config writes a logs folder into the working directory.
     workingDir = layout.buildDirectory.get().asFile
 
-    // A test checks that the README documents every trigger event type.
-    val readme = layout.projectDirectory.file("README.md")
-    inputs.file(readme)
-    systemProperty("conduit.readme", readme.asFile.path)
+    // A test checks that the README lists every trigger event type, so it reads the README.
+    inputs.file("README.md")
 }
 
 tasks.withType<JavaCompile>().configureEach {
