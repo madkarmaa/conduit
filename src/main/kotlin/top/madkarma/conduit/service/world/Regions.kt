@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import top.madkarma.conduit.game.*
 
-private const val MAX_REGION_VOLUME = 1_000_000L
+internal const val MAX_REGION_VOLUME = 1_000_000L
 
 /** A cuboid region as a palette and indices into it, in x, then z, then y order. */
 @Serializable
