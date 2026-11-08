@@ -16,6 +16,8 @@ jobs:
     release:
         if: github.ref == 'refs/heads/main'
         runs-on: ubuntu-latest
+        outputs:
+            version: ${{ steps.version.outputs.version }}
         env:
             # The release commit only changes versions, so it skips the formatting hook.
             HUSKY: "0"
@@ -47,7 +49,61 @@ jobs:
             - name: Install dependencies
               run: bun install --frozen-lockfile
 
+            # Bun runs the agent's runner without checking its types, so a type error stops the
+            # release here.
+            - name: Check the agent runner's types
+              working-directory: agent
+              run: bun install --frozen-lockfile && bun run check
+
             - name: Release
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: bun run release
+
+            # semantic-release tags the release commit, so the tag on HEAD names a new release.
+            - name: Find the released version
+              id: version
+              run: |
+                  tag=$(git describe --tags --exact-match HEAD 2>/dev/null || true)
+                  echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
+    agent-image:
+        needs: release
+        if: needs.release.outputs.version != ''
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+        steps:
+            - name: Checkout the release
+              uses: actions/checkout@v7
+              with:
+                  ref: v${{ needs.release.outputs.version }}
+
+            # GHCR only takes lowercase names.
+            - name: Choose the image name
+              id: image
+              run: echo "name=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/conduit-agent" >> "$GITHUB_OUTPUT"
+
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v4
+
+            - name: Set up Buildx
+              uses: docker/setup-buildx-action@v4
+
+            - name: Log in to GHCR
+              uses: docker/login-action@v4
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Build and push
+              uses: docker/build-push-action@v7
+              with:
+                  context: agent
+                  platforms: linux/amd64,linux/arm64
+                  push: true
+                  tags: |
+                      ${{ steps.image.outputs.name }}:latest
+                      ${{ steps.image.outputs.name }}:${{ needs.release.outputs.version }}
