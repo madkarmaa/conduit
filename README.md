@@ -123,9 +123,10 @@ command lists the problems and keeps the old config.
 | `game.backupDirectory`                                | `backups`                                                     | Where backups go, relative to the server folder                                       |
 | `game.maxStructureVolume`                             | `8000000`                                                     | Largest structure the tools save or place, in blocks                                  |
 
-Chat mode gets `server_info`, `world_info`, `get_blocks`, `structures`, `get_player`, `inventory`
-and `game_data` by default, and never the tools that list other players or entities. It only gets
-their actions that read, and only the asking player's own data.
+Chat mode gets `server_info`, `world_info`, `get_blocks`, `structures`, `entities`, `get_player`,
+`inventory` and `game_data` by default, and never the tools that list other players. It only gets
+their actions that read, and only the asking player's own data: `entities` leaves out the other
+players.
 
 > [!CAUTION]
 > `dangerouslyUseSubscriptionCredentials` makes the agent use the Claude, ChatGPT or OpenCode

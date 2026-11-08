@@ -15,9 +15,10 @@ import top.madkarma.conduit.game.invalidInput
 
 /**
  * Arguments of a tool call that already passed validation, with defaults filled in. Fields only
- * some actions need are optional in the schema, so each action names its own with require.
+ * some actions need are optional in the schema, so each action names its own with require. The
+ * policy is the caller's, for actions whose answer depends on who asks.
  */
-class ToolInput(val arguments: JsonObject) {
+class ToolInput(val arguments: JsonObject, val policy: ToolPolicy) {
     fun has(name: String): Boolean = arguments[name] != null
 
     fun require(vararg names: String) {

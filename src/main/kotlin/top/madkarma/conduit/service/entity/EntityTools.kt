@@ -13,8 +13,8 @@ val ENTITIES =
             "list finds entities by type, area, tag or a vanilla selector, one line each with " +
                 "the uuid, type, name, dimension, position and health. info reads the full state " +
                 "of one entity, nbt its complete data as SNBT, effects its status effects, and " +
-                "attributes its attributes with base and current values.",
-        seesOtherPlayers = true,
+                "attributes its attributes with base and current values. Callers limited to " +
+                "one player's data see no other players.",
         input =
             input {
                 optional("uuid", UUID.described("Required for info, nbt, effects and attributes."))
@@ -43,14 +43,20 @@ val ENTITIES =
                 "list" to readAction { server, input -> server.listEntities(input) },
                 "info" to
                     readAction { server, input ->
-                        json(server.describeEntity(input.string("uuid")))
+                        json(server.describeEntity(server.visibleUuid(input)))
                     },
                 "nbt" to
-                    readAction { server, input -> done(server.entityNbt(input.string("uuid"))) },
+                    readAction { server, input ->
+                        done(server.entityNbt(server.visibleUuid(input)))
+                    },
                 "effects" to
-                    readAction { server, input -> json(server.effectsOf(input.string("uuid"))) },
+                    readAction { server, input ->
+                        json(server.effectsOf(server.visibleUuid(input)))
+                    },
                 "attributes" to
-                    readAction { server, input -> json(server.attributesOf(input.string("uuid"))) },
+                    readAction { server, input ->
+                        json(server.attributesOf(server.visibleUuid(input)))
+                    },
             ),
     )
 
@@ -65,6 +71,7 @@ private fun MinecraftServer.listEntities(input: ToolInput): Reply {
             selector = input.stringOrNull("selector"),
             tag = input.stringOrNull("tag"),
             limit = input.int("limit"),
+            onlyPlayer = input.policy.player?.uuid,
         )
     val entities = findEntities(query)
     return lines(
@@ -72,6 +79,12 @@ private fun MinecraftServer.listEntities(input: ToolInput): Reply {
         entities.map(::describeEntity),
         dataOf("entities" to encoded(entities)),
     )
+}
+
+private fun MinecraftServer.visibleUuid(input: ToolInput): String {
+    val uuid = input.string("uuid")
+    visibleEntity(uuid, input.policy.player?.uuid)
+    return uuid
 }
 
 /** One line with the entity's uuid, type, name, dimension, position and health. */

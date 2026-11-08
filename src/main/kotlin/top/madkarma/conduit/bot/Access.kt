@@ -28,6 +28,7 @@ private val DEFAULT_CHAT_TOOLS =
         "world_info",
         "get_blocks",
         "structures",
+        "entities",
         "get_player",
         "inventory",
         "game_data",

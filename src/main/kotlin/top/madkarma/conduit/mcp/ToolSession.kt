@@ -23,7 +23,7 @@ class ToolSession(val policy: ToolPolicy, tools: List<ToolDefinition>) {
     /** Checks a call against the schema and the policy. Throws a ConduitError on a problem. */
     fun prepare(name: String, arguments: JsonObject): PreparedCall {
         val tool = offered[name] ?: invalidInput("Unknown tool $name")
-        val input = ToolInput(validateArguments(tool.schema, arguments))
+        val input = ToolInput(validateArguments(tool.schema, arguments), policy)
         policy.checkPlayers(input.arguments)
 
         val (actionName, action) = tool.select(input)
