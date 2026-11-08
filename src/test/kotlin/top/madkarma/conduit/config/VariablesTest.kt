@@ -10,7 +10,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 import top.madkarma.conduit.parseJson
 
 class VariablesTest {
-    private val environment = mapOf("HOST" to "minecraft", "PORT" to "25585")
+    private val environment = mapOf("HOST" to "minecraft", "PORT" to "25585", "EMPTY" to "")
 
     private fun expanded(
         text: String,
@@ -28,6 +28,16 @@ class VariablesTest {
         assertEquals("fallback", expanded($$"${UNSET:-fallback}"))
         assertEquals("minecraft", expanded($$"${HOST:-fallback}"))
         assertEquals("", expanded($$"${UNSET:-}"))
+    }
+
+    @Test
+    fun `an empty variable counts as not set`() {
+        // Compose passes variables that the host leaves unset as empty strings.
+        assertEquals("fallback", expanded($$"${EMPTY:-fallback}"))
+
+        val missing = mutableListOf<MissingVariable>()
+        assertEquals("", expanded($$"${EMPTY}", missing))
+        assertEquals(listOf("EMPTY"), missing.map { it.name })
     }
 
     @Test

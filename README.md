@@ -121,7 +121,7 @@ and the online operators decide its approvals. The event types are the ones the 
 
 The mod reads `config/conduit.json` at startup and on `/conduit reload`. Fields the file leaves out
 keep their defaults. Any string can use `${NAME}` or `${NAME:-default}` to read an environment
-variable. The variables of a disabled agent may stay unset.
+variable, and an empty variable counts as unset. The variables of a disabled agent may stay unset.
 
 When the config is invalid at startup, the mod logs the missing variables and invalid fields, and
 keeps the bot and the MCP server off until `/conduit reload` loads a valid config. On a reload, the

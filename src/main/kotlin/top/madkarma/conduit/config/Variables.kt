@@ -12,8 +12,9 @@ private val REFERENCE = Regex("""\$\{(\w+)(?::-([^}]*))?}""")
 class MissingVariable(val name: String, val path: String)
 
 /**
- * Replaces the variable references in every string of a JSON value. A reference to a variable that
- * is not set and has no default becomes an empty string and goes into missing.
+ * Replaces the variable references in every string of a JSON value. Like in a shell, an empty
+ * variable counts as not set. A reference to a variable that is not set and has no default becomes
+ * an empty string and goes into missing.
  */
 fun expandVariables(
     value: JsonElement,
@@ -48,5 +49,5 @@ fun expandVariables(
 private fun expand(text: String, environment: Map<String, String>, onMissing: (String) -> Unit) =
     REFERENCE.replace(text) { match ->
         val name = match.groupValues[1]
-        environment[name] ?: match.groups[2]?.value ?: "".also { onMissing(name) }
+        environment[name]?.ifEmpty { null } ?: match.groups[2]?.value ?: "".also { onMissing(name) }
     }
