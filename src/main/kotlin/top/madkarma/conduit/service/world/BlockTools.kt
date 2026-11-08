@@ -23,13 +23,29 @@ val GET_BLOCKS =
                 "draw prints every y layer as a character grid of up to $MAX_DRAWN_VOLUME " +
                 "blocks, and image returns a PNG top view of up to 256 by 256 columns. The " +
                 "image shows the highest block of each column between the two y values in its " +
-                "map color, so a cuboid one block tall shows that layer.",
+                "map color, so a cuboid one block tall shows that layer. watch reads up to " +
+                "$MAX_WATCHED_BLOCKS positions after every game tick, for up to " +
+                "$MAX_WATCH_TICKS ticks, and lists each change, such as a redstone lamp that " +
+                "turns on, to check that a redstone build works.",
         input =
             input {
                 optional("dimension", DIMENSION)
                 optional("pos", BLOCK_POS.described("Required for block and container."))
                 optional("from", BLOCK_POS.described("Region corner. Required for region."))
                 optional("to", BLOCK_POS.described("Opposite region corner. Required for region."))
+                optional(
+                    "positions",
+                    arraySchema(
+                        BLOCK_POS,
+                        "Required for watch.",
+                        minItems = 1,
+                        maxItems = MAX_WATCHED_BLOCKS,
+                    ),
+                )
+                optional(
+                    "ticks",
+                    integerSchema("For watch.", min = 1, max = MAX_WATCH_TICKS, default = 40),
+                )
                 optional(
                     "detail",
                     enumSchema(listOf("summary", "draw", "image"), default = "summary"),
@@ -54,6 +70,14 @@ val GET_BLOCKS =
                         )
                     },
                 "region" to readAction { server, input -> server.regionReply(input) },
+                "watch" to
+                    AsyncAction(Access.READ) { input, _ ->
+                        watchBlocks(
+                            input.stringOrNull("dimension"),
+                            input.decode("positions"),
+                            input.int("ticks"),
+                        )
+                    },
                 "container" to
                     readAction { server, input ->
                         val pos = input.decode<BlockCoordinates>("pos")
