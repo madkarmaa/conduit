@@ -5,6 +5,7 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import top.madkarma.conduit.config.AgentConfig
 import top.madkarma.conduit.config.ConduitConfig
+import top.madkarma.conduit.config.ModeAccess
 import top.madkarma.conduit.mcp.ApprovalGate
 import top.madkarma.conduit.mcp.PlayerIdentity
 import top.madkarma.conduit.mcp.ToolPolicy
@@ -37,22 +38,25 @@ private val DEFAULT_CHAT_TOOLS =
 fun ConduitConfig.agent(mode: Mode): AgentConfig =
     if (mode == Mode.FULL) agents.full else agents.chat
 
+fun MinecraftServer.modeFor(player: ServerPlayer, config: ConduitConfig): Mode? =
+    config.modeFor(player.stringUUID, playerList.isOp(player.nameAndId()))
+
 /**
- * The listed players get full mode, and so do operators unless the config turns that off. Everyone
- * else gets chat mode if it is on, or no answer.
+ * Operators and allowed players get full mode while it is enabled. Everyone else gets chat mode
+ * while it is enabled, or only the allowed players while it is not. Denied players never get a
+ * mode, and a player without one gets no answer.
  */
-fun MinecraftServer.modeFor(player: ServerPlayer, config: ConduitConfig): Mode? {
-    val listed =
-        config.access.allow.any {
-            it.equals(player.gameProfile.name, ignoreCase = true) ||
-                it.equals(player.stringUUID, ignoreCase = true)
-        }
+fun ConduitConfig.modeFor(uuid: String, operator: Boolean): Mode? {
+    if (agents.full.enabled && access.full.lets(uuid, operator && access.operators)) {
+        return Mode.FULL
+    }
 
-    val operator = config.access.operators && playerList.isOp(player.nameAndId())
-
-    if ((listed || operator) && config.agents.full.enabled) return Mode.FULL
-    return if (config.agents.chat.enabled) Mode.CHAT else null
+    return Mode.CHAT.takeIf { access.chat.lets(uuid, agents.chat.enabled) }
 }
+
+private fun ModeAccess.lets(uuid: String, byDefault: Boolean): Boolean =
+    deny.none { it.uuid.equals(uuid, ignoreCase = true) } &&
+        (byDefault || allow.any { it.uuid.equals(uuid, ignoreCase = true) })
 
 /** What the agent of one request may do with the tools. */
 fun ConduitConfig.toolPolicy(mode: Mode, asker: Asker, approvals: ApprovalGate): ToolPolicy {

@@ -1,6 +1,7 @@
 package top.madkarma.conduit
 
 import kotlin.jvm.optionals.getOrNull
+import kotlinx.serialization.json.JsonObject
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
@@ -81,10 +82,20 @@ object Conduit : ModInitializer {
     /**
      * Reads the config file again. Returns its problems, and keeps the old config when it has any.
      */
-    fun reloadConfig(): List<String> {
+    fun reloadConfig(): List<String> = load { ConfigFile.read(toolActions()) }
+
+    /**
+     * Changes the config file and loads it. Returns the config's problems, and keeps the old file
+     * and config when it has any.
+     */
+    fun updateConfig(change: (JsonObject) -> JsonObject): List<String> = load {
+        ConfigFile.update(toolActions(), change)
+    }
+
+    private fun load(read: () -> ConduitConfig): List<String> {
         val updated =
             try {
-                ConfigFile.read(toolActions())
+                read()
             } catch (exception: InvalidConfig) {
                 return exception.problems
             }

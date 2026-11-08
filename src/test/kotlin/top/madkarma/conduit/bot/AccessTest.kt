@@ -7,8 +7,11 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import top.madkarma.conduit.config.AccessConfig
+import top.madkarma.conduit.config.AccessEntry
 import top.madkarma.conduit.config.ChatToolsConfig
 import top.madkarma.conduit.config.ConduitConfig
+import top.madkarma.conduit.config.ModeAccess
 import top.madkarma.conduit.config.ToolsConfig
 import top.madkarma.conduit.mcp.ApprovalGate
 
@@ -16,8 +19,67 @@ class AccessTest {
     private val alex = Asker("Alex", UUID(0, 1))
     private val gate = ApprovalGate {}
 
+    private val alexId = alex.uuid.toString()
+    private val steveId = UUID(0, 2).toString()
+    private val onlyAlex = listOf(AccessEntry("Alex", alexId))
+
     private fun chatPolicy(chat: ChatToolsConfig) =
         ConduitConfig(tools = ToolsConfig(chat = chat)).toolPolicy(Mode.CHAT, alex, gate)
+
+    private fun ConduitConfig.withAgents(full: Boolean = true, chat: Boolean = true) =
+        copy(
+            agents =
+                agents.copy(
+                    full = agents.full.copy(enabled = full),
+                    chat = agents.chat.copy(enabled = chat),
+                ),
+        )
+
+    @Test
+    fun `operators and allowed players get full mode`() {
+        val allowed = ConduitConfig(access = AccessConfig(full = ModeAccess(allow = onlyAlex)))
+
+        assertEquals(Mode.FULL, ConduitConfig().modeFor(alexId, operator = true))
+        assertEquals(Mode.CHAT, ConduitConfig().modeFor(alexId, operator = false))
+        assertEquals(Mode.FULL, allowed.modeFor(alexId, operator = false))
+        assertEquals(Mode.CHAT, allowed.modeFor(steveId, operator = false))
+    }
+
+    @Test
+    fun `a denied operator and operators the config leaves out get chat mode`() {
+        val denied = ConduitConfig(access = AccessConfig(full = ModeAccess(deny = onlyAlex)))
+        val noOperators = ConduitConfig(access = AccessConfig(operators = false))
+
+        assertEquals(Mode.CHAT, denied.modeFor(alexId, operator = true))
+        assertEquals(Mode.CHAT, noOperators.modeFor(alexId, operator = true))
+    }
+
+    @Test
+    fun `a disabled full mode answers nobody, not even allowed players`() {
+        val config =
+            ConduitConfig(access = AccessConfig(full = ModeAccess(allow = onlyAlex)))
+                .withAgents(full = false)
+
+        assertEquals(Mode.CHAT, config.modeFor(alexId, operator = true))
+    }
+
+    @Test
+    fun `an enabled chat mode answers everyone but the denied players`() {
+        val config = ConduitConfig(access = AccessConfig(chat = ModeAccess(deny = onlyAlex)))
+
+        assertNull(config.modeFor(alexId, operator = false))
+        assertEquals(Mode.CHAT, config.modeFor(steveId, operator = false))
+    }
+
+    @Test
+    fun `a disabled chat mode answers only the allowed players`() {
+        val config =
+            ConduitConfig(access = AccessConfig(chat = ModeAccess(allow = onlyAlex)))
+                .withAgents(chat = false)
+
+        assertEquals(Mode.CHAT, config.modeFor(alexId, operator = false))
+        assertNull(config.modeFor(steveId, operator = false))
+    }
 
     @Test
     fun `full mode may use every tool`() {

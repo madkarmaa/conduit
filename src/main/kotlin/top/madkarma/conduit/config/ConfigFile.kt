@@ -13,7 +13,7 @@ import top.madkarma.conduit.LOGGER
 
 class InvalidConfig(val problems: List<String>) : Exception(problems.joinToString("; "))
 
-private val CONFIG_JSON = Json {
+internal val CONFIG_JSON = Json {
     prettyPrint = true
     prettyPrintIndent = "    "
     encodeDefaults = true
@@ -28,13 +28,38 @@ object ConfigFile {
      */
     fun read(tools: Map<String, Set<String>>): ConduitConfig {
         if (!Files.exists(path)) writeDefaults()
+        return load(parse(Files.readString(path)), tools)
+    }
 
+    /**
+     * Changes the file's JSON as written, without defaults or variables, and saves it. Throws
+     * InvalidConfig and leaves the file as it was when the change makes the config invalid.
+     */
+    fun update(tools: Map<String, Set<String>>, change: (JsonObject) -> JsonObject): ConduitConfig {
+        if (!Files.exists(path)) writeDefaults()
+
+        val written =
+            parse(Files.readString(path)) as? JsonObject
+                ?: throw InvalidConfig(listOf("$path must hold a JSON object"))
+        val changed =
+            try {
+                change(written)
+            } catch (exception: SerializationException) {
+                throw InvalidConfig(listOf(firstLine(exception)))
+            }
+
+        val config = load(changed, tools)
+        Files.writeString(path, CONFIG_JSON.encodeToString(changed) + "\n")
+        return config
+    }
+
+    private fun load(written: JsonElement, tools: Map<String, Set<String>>): ConduitConfig {
         val defaults = CONFIG_JSON.encodeToJsonElement(ConduitConfig())
         val missing = mutableListOf<MissingVariable>()
-        val merged = merge(defaults, parse(Files.readString(path)))
+        val merged = merge(defaults, written)
         val config = decode(expandVariables(merged, System.getenv(), missing))
 
-        // A disabled agent needs no secret, so its variables may stay unset.
+        // An agent that answers nobody needs no secret, so its variables may stay unset.
         val unset = missing.filter { config.uses(it.path) }.map { it.name }.toSortedSet()
 
         val variables =
@@ -53,9 +78,8 @@ object ConfigFile {
 
     // The flag is easy to forget once it is on, so every load repeats the warning.
     private fun warnAboutSubscriptions(config: ConduitConfig) {
-        val agents = mapOf("full" to config.agents.full, "chat" to config.agents.chat)
-        for ((mode, agent) in agents) {
-            if (!agent.enabled || !agent.dangerouslyUseSubscriptionCredentials) continue
+        for ((mode, agent) in config.agentsInUse()) {
+            if (!agent.dangerouslyUseSubscriptionCredentials) continue
             LOGGER.warn(
                 "agents.{} uses the subscription its CLI is logged in to. The providers' terms " +
                     "forbid this, and it can get the account banned.",

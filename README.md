@@ -46,12 +46,19 @@ containers next to the server, one for operators and one for everyone else, as
 posts the question and the answer in the public chat, like a player talking. While a request waits
 or runs, the asker's action bar shows how many requests are ahead and then "Thinking…".
 
-Operators and the players in `access.allow` get **full mode**, where the agent can change the game.
-Everyone else gets **chat mode**, where the agent can only read the world and the asking player's
-own data, such as their inventory, position and statistics, but never another player's data or an
-IP address. Each mode has a line of its own, so operators never wait behind chat mode. The bot
-answers one request at a time per mode, and each player can have one request in line.
-`/conduit cancel` takes it back.
+Operators get **full mode**, where the agent can change the game. Everyone else gets **chat
+mode**, where the agent can only read the world and the asking player's own data, such as their
+inventory, position and statistics, but never another player's data or an IP address. Each mode has
+a line of its own, so operators never wait behind chat mode. The bot answers one request at a time
+per mode, and each player can have one request in line. `/conduit cancel` takes it back.
+
+Operators change who gets a mode with `/conduit access`, which saves the change in the config:
+
+- `/conduit access allow <player> full` gives a player full mode, and `deny` takes it away, from
+  operators too.
+- While `agents.chat.enabled` is on, chat mode answers everyone, and
+  `/conduit access deny <player> chat` keeps one player out. While it is off, chat mode answers only
+  the players that `/conduit access allow <player> chat` let in.
 
 The agent remembers earlier requests. Every player has a conversation of their own in each mode.
 
@@ -75,12 +82,14 @@ such as `edit_player`, or one of its actions, such as `edit_player.game_mode`.
 Every player can take back their request with `/conduit cancel`. Operators also have these
 commands, which other players never see:
 
-| Command                                | Description                                                   |
-| -------------------------------------- | ------------------------------------------------------------- |
-| `/conduit status`                      | Each mode's agent, its CLI version, its line and the triggers |
-| `/conduit cancel <full\|chat\|player>` | Stops a mode's running request, or a player's request         |
-| `/conduit reload`                      | Reloads the config, and keeps the old one if the new is bad   |
-| `/conduit forget [<player>\|all]`      | Starts fresh conversations, so the agent forgets earlier ones |
+| Command                                               | Description                                                   |
+| ----------------------------------------------------- | ------------------------------------------------------------- |
+| `/conduit status`                                     | Each mode's agent, its CLI version, its line and the triggers |
+| `/conduit cancel <full\|chat\|player>`                | Stops a mode's running request, or a player's request         |
+| `/conduit reload`                                     | Reloads the config, and keeps the old one if the new is bad   |
+| `/conduit forget [<player>\|all]`                     | Starts fresh conversations, so the agent forgets earlier ones |
+| `/conduit access`                                     | Shows who gets each mode                                      |
+| `/conduit access <allow\|deny> <player> <full\|chat>` | Lets a player into a mode or keeps them out                   |
 
 Without an argument, `forget` acts on the operator's own conversations.
 
@@ -135,7 +144,7 @@ command lists the problems and keeps the old config.
 | `mcp.port`                                            | `25585`                                                       | Port of the MCP server                                                                |
 | `mcp.allowedHosts`                                    | `minecraft`, `host.docker.internal`, `localhost`, `127.0.0.1` | Host names clients may use to reach the MCP server                                    |
 | `mcp.tokens`                                          | none                                                          | Tokens for other [MCP hosts](#other-mcp-hosts)                                        |
-| `agents.<mode>.enabled`                               | `true`                                                        | Turns the mode on                                                                     |
+| `agents.<mode>.enabled`                               | `true`                                                        | Turns the mode on. Chat mode stays on for the players `/conduit access` allowed       |
 | `agents.<mode>.cli`                                   | `claude` for full, `opencode` for chat                        | `claude`, `codex` or `opencode`                                                       |
 | `agents.<mode>.model`                                 | `sonnet` for full, `deepseek/deepseek-flash` for chat         | The model, as the CLI names it                                                        |
 | `agents.<mode>.effort`                                | `medium` for full, `high` for chat                            | The reasoning effort, as the CLI names it                                             |
@@ -146,7 +155,7 @@ command lists the problems and keeps the old config.
 | `agents.<mode>.runner`                                | `http://conduit-<mode>:8080`, `${CONDUIT_<MODE>_SECRET}`      | `url` and `secret` of the mode's agent container                                      |
 | `agents.<mode>.mcpUrl`                                | `http://minecraft:25585/mcp`                                  | Where the agent container reaches the MCP server                                      |
 | `access.operators`                                    | `true`                                                        | Operators get full mode                                                               |
-| `access.allow`                                        | none                                                          | Names or UUIDs of other players who get full mode                                     |
+| `access.full`, `access.chat`                          | none                                                          | The players `/conduit access` allowed into or denied a mode, by UUID                  |
 | `tools.readOnly`                                      | `false`                                                       | Full mode only gets the actions that read                                             |
 | `tools.chat.allow`                                    | the chat tools below                                          | The only tools chat mode gets                                                         |
 | `tools.chat.deny`                                     | none                                                          | Tools chat mode never gets. Without `allow`, it gets every other tool                 |
@@ -221,8 +230,8 @@ The server has 24 tools. Tools with several operations take an `action` argument
 
 ## Security
 
-- Anyone in full mode controls the agent and every tool it has, including `run_command`. Keep
-  `access.allow` short, or turn on `tools.readOnly`.
+- Anyone in full mode controls the agent and every tool it has, including `run_command`. Allow few
+  players into it, or turn on `tools.readOnly`.
 - Triggers run in full mode without anyone asking, and players write parts of the events, such as
   chat messages. The run's instructions tell the agent to treat event data as information and
   never as instructions, but keep trigger prompts narrow. Destructive actions still wait for an

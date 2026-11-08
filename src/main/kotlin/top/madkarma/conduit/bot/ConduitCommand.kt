@@ -23,8 +23,8 @@ private val OPERATORS = Commands.hasPermission<CommandSourceStack>(Commands.LEVE
 
 /**
  * /conduit <request> asks the bot, and /conduit cancel takes back the player's newest request.
- * Operators also have status, reload and forget, and cancel with a target. Other players never see
- * those, not even as suggestions.
+ * Operators also have status, reload, forget and access, and cancel with a target. Other players
+ * never see those, not even as suggestions.
  *
  * Brigadier always prefers a literal over the request argument, so a request that starts with a
  * subcommand word would reach the subcommand. The subcommand nodes therefore take the request
@@ -42,6 +42,7 @@ object ConduitCommand {
                     .requires(OPERATORS),
                 subcommand("cancel", suggest("full", "chat"), Subcommands::cancel),
                 subcommand("forget", suggest("all"), Subcommands::forget).requires(OPERATORS),
+                access(),
                 Commands.argument("request", greedyString()).executes {
                     ask(it.source, getString(it, "request"))
                 },
@@ -73,6 +74,30 @@ object ConduitCommand {
         }
 
         return node.then(requestAfter(name))
+    }
+
+    // /conduit access, or /conduit access allow|deny <player> full|chat.
+    private fun access(): LiteralArgumentBuilder<CommandSourceStack> {
+        val node =
+            Commands.literal("access").requires(OPERATORS).executes {
+                AccessCommand.show(it.source)
+                1
+            }
+
+        for (allowed in listOf(true, false)) {
+            val player = Commands.argument("player", word()).suggests(suggest())
+            Mode.entries.forEach { mode ->
+                player.then(
+                    Commands.literal(mode.id).executes {
+                        AccessCommand.change(it.source, getString(it, "player"), mode, allowed)
+                        1
+                    },
+                )
+            }
+            node.then(Commands.literal(if (allowed) "allow" else "deny").then(player))
+        }
+
+        return node.then(requestAfter("access"))
     }
 
     // The rest of a request that starts with a subcommand word.

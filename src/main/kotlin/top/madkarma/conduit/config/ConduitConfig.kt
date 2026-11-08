@@ -87,13 +87,27 @@ data class AgentConfig(
 
 @Serializable data class RunnerConfig(val url: String, val secret: String)
 
+/**
+ * Who gets each mode. Full mode goes to operators, chat mode to everyone while it is enabled, and
+ * /conduit access writes the players it lets in or keeps out of a mode.
+ */
 @Serializable
 data class AccessConfig(
     /** Operators get full mode. */
     val operators: Boolean = true,
-    /** Player names or UUIDs that get full mode. */
-    val allow: List<String> = emptyList(),
+    val full: ModeAccess = ModeAccess(),
+    val chat: ModeAccess = ModeAccess(),
 )
+
+/** A denied player never gets the mode, and an allowed one gets it while its agent is in use. */
+@Serializable
+data class ModeAccess(
+    val allow: List<AccessEntry> = emptyList(),
+    val deny: List<AccessEntry> = emptyList(),
+)
+
+/** A player by UUID. The name is the one they had when added, for people who read the file. */
+@Serializable data class AccessEntry(val name: String, val uuid: String)
 
 @Serializable
 data class ToolsConfig(

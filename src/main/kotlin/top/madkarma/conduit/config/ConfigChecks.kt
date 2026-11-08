@@ -1,6 +1,7 @@
 package top.madkarma.conduit.config
 
 import java.net.URI
+import java.util.UUID
 
 private val AGENT_CLIS = setOf("claude", "codex", "opencode")
 
@@ -24,8 +25,8 @@ fun ConduitConfig.problems(tools: Map<String, Set<String>>): List<String> {
     check(game.maxUndoBlocks >= 0, "game.maxUndoBlocks must not be negative")
 
     problems += tokenProblems(tools.keys)
-    problems +=
-        agentProblems("agents.full", agents.full) + agentProblems("agents.chat", agents.chat)
+    problems += agentsInUse().flatMap { (key, agent) -> agentProblems("agents.$key", agent) }
+    problems += accessProblems()
     problems +=
         unknownTools("tools.chat", this.tools.chat.allow.orEmpty() + this.tools.chat.deny, tools)
     problems += unknownTools("approvals", approvals.add + approvals.remove, tools)
@@ -34,20 +35,24 @@ fun ConduitConfig.problems(tools: Map<String, Set<String>>): List<String> {
     return problems
 }
 
+/**
+ * The agents that answer anyone, by their key under agents. Chat mode also answers the players that
+ * /conduit access allowed while it is disabled.
+ */
+fun ConduitConfig.agentsInUse(): Map<String, AgentConfig> = buildMap {
+    if (agents.full.enabled) put("full", agents.full)
+    if (agents.chat.enabled || access.chat.allow.isNotEmpty()) put("chat", agents.chat)
+}
+
 /** Whether a field of the config matters, so a variable it uses must be set. */
 fun ConduitConfig.uses(path: String): Boolean {
-    val (agentPath, agent) =
-        when {
-            path.startsWith("agents.full") -> "agents.full" to agents.full
-            path.startsWith("agents.chat") -> "agents.chat" to agents.chat
-            else -> return true
-        }
+    if (!path.startsWith("agents.")) return true
+
+    val key = path.removePrefix("agents.").substringBefore('.')
+    val agent = agentsInUse()[key] ?: return false
 
     // A subscription login stands in for the API key.
-    if (path == "$agentPath.apiKey")
-        return agent.enabled && !agent.dangerouslyUseSubscriptionCredentials
-
-    return agent.enabled
+    return path != "agents.$key.apiKey" || !agent.dangerouslyUseSubscriptionCredentials
 }
 
 private fun ConduitConfig.tokenProblems(toolNames: Set<String>): List<String> {
@@ -72,10 +77,8 @@ private fun ConduitConfig.tokenProblems(toolNames: Set<String>): List<String> {
     return problems
 }
 
-private fun agentProblems(path: String, agent: AgentConfig): List<String> {
-    if (!agent.enabled) return emptyList()
-
-    return listOfNotNull(
+private fun agentProblems(path: String, agent: AgentConfig): List<String> =
+    listOfNotNull(
         "$path.cli must be claude, codex or opencode. For another CLI, please open an issue."
             .takeIf { agent.cli !in AGENT_CLIS },
         "$path.model must name the model as the CLI names it".takeIf { agent.model.isBlank() },
@@ -89,7 +92,24 @@ private fun agentProblems(path: String, agent: AgentConfig): List<String> {
         "$path.apiKey must be set, or $path.dangerouslyUseSubscriptionCredentials turned on"
             .takeIf { agent.apiKey.isBlank() && !agent.dangerouslyUseSubscriptionCredentials },
     )
+
+private fun ConduitConfig.accessProblems(): List<String> {
+    val lists =
+        mapOf(
+            "access.full.allow" to access.full.allow,
+            "access.full.deny" to access.full.deny,
+            "access.chat.allow" to access.chat.allow,
+            "access.chat.deny" to access.chat.deny,
+        )
+
+    return lists.flatMap { (path, entries) ->
+        entries.mapIndexedNotNull { index, entry ->
+            "$path[$index].uuid must be a UUID".takeIf { !isUuid(entry.uuid) }
+        }
+    }
 }
+
+private fun isUuid(text: String): Boolean = runCatching { UUID.fromString(text) }.isSuccess
 
 /** Names are "tool" or "tool.action". */
 private fun unknownTools(

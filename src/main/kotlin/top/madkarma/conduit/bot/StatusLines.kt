@@ -5,12 +5,14 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import top.madkarma.conduit.config.ConduitConfig
 import top.madkarma.conduit.config.RunnerConfig
+import top.madkarma.conduit.config.agentsInUse
 
 // The lines of /conduit status. They never show secrets.
 
 internal suspend fun describeMode(mode: Mode, config: ConduitConfig): Component {
-    val agent = config.agent(mode)
-    if (!agent.enabled) return Component.literal("${mode.id}: off").withStyle(ChatFormatting.GRAY)
+    val agent =
+        config.agentsInUse()[mode.id]
+            ?: return Component.literal("${mode.id}: off").withStyle(ChatFormatting.GRAY)
 
     val line = Bot.line(mode)
     val asking = line.running()?.let { "answering ${it.asker.name}" } ?: "idle"
