@@ -9,7 +9,7 @@ class ConfigChecksTest {
     private fun problemsOf(config: ConduitConfig): List<String> = config.problems(TOOL_ACTIONS)
 
     @Test
-    fun `the defaults with their secrets set have no problems`() {
+    fun `the defaults with their agents filled in have no problems`() {
         assertEquals(emptyList(), problemsOf(VALID_CONFIG))
     }
 
@@ -86,14 +86,47 @@ class ConfigChecksTest {
         val expected =
             listOf(
                 "agents.full.cli must be claude, codex or opencode. For another CLI, please open an issue.",
-                "agents.full.model must name the model as the CLI names it",
-                "agents.full.effort must name the reasoning effort as the CLI names it",
+                "agents.full.model must be set to the model, as the CLI names it",
+                "agents.full.effort must be set to the reasoning effort, as the CLI names it",
                 "agents.full.runner.url must be an http or https URL with a host name without underscores",
                 "agents.full.runner.secret must have at least 16 letters, digits or -._~+/ characters",
                 "agents.full.mcpUrl must be an http or https URL",
                 "agents.full.apiKey must be set, or agents.full.dangerouslyUseSubscriptionCredentials turned on",
             )
         assertEquals(expected, problemsOf(config))
+    }
+
+    @Test
+    fun `the CLI, model and effort have no defaults`() {
+        val agents = ConduitConfig().agents
+        val config =
+            VALID_CONFIG.copy(
+                agents =
+                    VALID_CONFIG.agents.copy(
+                        chat =
+                            agents.chat.copy(
+                                apiKey = "provider-key",
+                                runner = agents.chat.runner.copy(secret = "0123456789abcdef"),
+                            ),
+                    ),
+            )
+
+        val expected =
+            listOf(
+                "agents.chat.cli must be set to claude, codex or opencode",
+                "agents.chat.model must be set to the model, as the CLI names it",
+                "agents.chat.effort must be set to the reasoning effort, as the CLI names it",
+            )
+        assertEquals(expected, problemsOf(config))
+    }
+
+    @Test
+    fun `a disabled agent needs no CLI, model or effort`() {
+        val config = VALID_CONFIG.withFullAgent {
+            copy(enabled = false, cli = "", model = "", effort = "")
+        }
+
+        assertEquals(emptyList(), problemsOf(config))
     }
 
     @Test

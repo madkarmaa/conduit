@@ -37,7 +37,8 @@ describes. Each uses the agent you pick:
     | `CONDUIT_FULL_SECRET`, `CONDUIT_CHAT_SECRET`   | The runner secrets of the agent containers                            |
     | `CONDUIT_FULL_API_KEY`, `CONDUIT_CHAT_API_KEY` | The API keys of the modes' [providers](./agent/README.md#credentials) |
 
-4. On the first start, the mod writes `config/conduit.json`. Point it at the agents as
+4. On the first start, the mod writes `config/conduit.json`. Pick each mode's `cli`, `model` and
+   `effort`, which have no defaults, point it at the agents as
    [networking](./agent/README.md#networking) describes, then run `/conduit reload`.
 
 ## Using the bot
@@ -143,9 +144,9 @@ command lists the problems and keeps the old config.
 | `mcp.allowedHosts`                                    | `minecraft`, `host.docker.internal`, `localhost`, `127.0.0.1` | Host names clients may use to reach the MCP server                                    |
 | `mcp.tokens`                                          | none                                                          | Tokens for other [MCP hosts](#other-mcp-hosts)                                        |
 | `agents.<mode>.enabled`                               | `true`                                                        | Turns the mode on. Chat mode stays on for the players `/conduit access` allowed       |
-| `agents.<mode>.cli`                                   | `claude` for full, `opencode` for chat                        | `claude`, `codex` or `opencode`                                                       |
-| `agents.<mode>.model`                                 | `sonnet` for full, `deepseek/deepseek-flash` for chat         | The model, as the CLI names it                                                        |
-| `agents.<mode>.effort`                                | `medium` for full, `high` for chat                            | The reasoning effort, as the CLI names it                                             |
+| `agents.<mode>.cli`                                   | required                                                      | `claude`, `codex` or `opencode`                                                       |
+| `agents.<mode>.model`                                 | required                                                      | The model, as the CLI names it                                                        |
+| `agents.<mode>.effort`                                | required                                                      | The reasoning effort, as the CLI names it                                             |
 | `agents.<mode>.options`                               | none                                                          | Extra options for the CLI's SDK, which Conduit's own options override                 |
 | `agents.<mode>.web`                                   | `true` for full, `false` for chat                             | Lets the CLI search and fetch the web                                                 |
 | `agents.<mode>.apiKey`                                | `${CONDUIT_<MODE>_API_KEY}`                                   | The API key of the model's [provider](./agent/README.md#credentials)                  |
@@ -286,7 +287,9 @@ CONDUIT_FULL_SECRET=<secret> CONDUIT_CHAT_SECRET=<secret> MC_VERSION=<minecraft 
 ```
 
 `CONDUIT_DANGEROUSLY_USE_SUBSCRIPTION_CREDENTIALS=true` makes the test server use the containers'
-subscription logins instead, which the caution above warns about.
+subscription logins instead, which the caution above warns about. `CONDUIT_<MODE>_CLI`,
+`CONDUIT_<MODE>_MODEL` and `CONDUIT_<MODE>_EFFORT` pick each mode's agent, which is Claude Code's
+`sonnet` for full mode and OpenCode's free DeepSeek model for chat mode unless they are set.
 
 Docker volumes keep the game data and the agents' logins between runs.
 

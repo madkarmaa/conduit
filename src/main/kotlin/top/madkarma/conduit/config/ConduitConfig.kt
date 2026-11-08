@@ -46,31 +46,28 @@ data class TokenConfig(
 data class AgentsConfig(
     val full: AgentConfig =
         AgentConfig(
-            cli = "claude",
-            model = "sonnet",
-            effort = "medium",
             web = true,
             apiKey = $$"${CONDUIT_FULL_API_KEY}",
             runner = RunnerConfig("http://conduit-full:8080", $$"${CONDUIT_FULL_SECRET}"),
         ),
     val chat: AgentConfig =
         AgentConfig(
-            cli = "opencode",
-            model = "deepseek/deepseek-flash",
-            effort = "high",
             web = false,
             apiKey = $$"${CONDUIT_CHAT_API_KEY}",
             runner = RunnerConfig("http://conduit-chat:8080", $$"${CONDUIT_CHAT_SECRET}"),
         ),
 )
 
-/** The model and effort pass to the CLI as given, since every CLI names them its own way. */
+/**
+ * The model and effort pass to the CLI as given, since every CLI names them its own way. The CLI,
+ * model and effort have no defaults, since the provider and model are the operator's choice.
+ */
 @Serializable
 data class AgentConfig(
     val enabled: Boolean = true,
-    val cli: String,
-    val model: String,
-    val effort: String,
+    val cli: String = "",
+    val model: String = "",
+    val effort: String = "",
     /** Extra options for the CLI's SDK. Conduit's own options win over them. */
     val options: JsonObject = JsonObject(emptyMap()),
     /** Turns the CLI's own web search and fetch tools on. */

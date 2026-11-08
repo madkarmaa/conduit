@@ -43,11 +43,17 @@ cat > "$dir/config/conduit.json" <<EOF
     "agents": {
         "full": {
             "enabled": $agents,
+            "cli": "\${CONDUIT_FULL_CLI}",
+            "model": "\${CONDUIT_FULL_MODEL}",
+            "effort": "\${CONDUIT_FULL_EFFORT}",
             "mcpUrl": "http://server:25585/mcp",
             "dangerouslyUseSubscriptionCredentials": $subscriptions
         },
         "chat": {
             "enabled": $agents,
+            "cli": "\${CONDUIT_CHAT_CLI}",
+            "model": "\${CONDUIT_CHAT_MODEL}",
+            "effort": "\${CONDUIT_CHAT_EFFORT}",
             "mcpUrl": "http://server:25585/mcp",
             "dangerouslyUseSubscriptionCredentials": $subscriptions
         }

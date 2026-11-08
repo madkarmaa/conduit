@@ -103,6 +103,13 @@ class VariablesTest {
             missing.map { it.name to it.path },
         )
         assertEquals("full-key", config.agents.full.apiKey)
-        assertEquals(emptyList(), config.problems(TOOL_ACTIONS))
+        // Only the agent choices, which have no defaults, are left to fill in.
+        val fields = config.problems(TOOL_ACTIONS).map { it.substringBefore(" must") }
+        assertEquals(
+            listOf("cli", "model", "effort").let { names ->
+                names.map { "agents.full.$it" } + names.map { "agents.chat.$it" }
+            },
+            fields,
+        )
     }
 }

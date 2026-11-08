@@ -79,10 +79,12 @@ private fun ConduitConfig.tokenProblems(toolNames: Set<String>): List<String> {
 
 private fun agentProblems(path: String, agent: AgentConfig): List<String> =
     listOfNotNull(
+        "$path.cli must be set to claude, codex or opencode".takeIf { agent.cli.isBlank() },
         "$path.cli must be claude, codex or opencode. For another CLI, please open an issue."
-            .takeIf { agent.cli !in AGENT_CLIS },
-        "$path.model must name the model as the CLI names it".takeIf { agent.model.isBlank() },
-        "$path.effort must name the reasoning effort as the CLI names it"
+            .takeIf { agent.cli.isNotBlank() && agent.cli !in AGENT_CLIS },
+        "$path.model must be set to the model, as the CLI names it"
+            .takeIf { agent.model.isBlank() },
+        "$path.effort must be set to the reasoning effort, as the CLI names it"
             .takeIf { agent.effort.isBlank() },
         "$path.runner.url must be an http or https URL with a host name without underscores"
             .takeIf { httpUri(agent.runner.url)?.host == null },
