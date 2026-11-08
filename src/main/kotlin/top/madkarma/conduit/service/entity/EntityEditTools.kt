@@ -15,7 +15,9 @@ val EDIT_ENTITY =
                 "tags adds and removes scoreboard tags. health sets the health. damage hurts " +
                 "the entity like an attack. nbt merges SNBT into its data. add_effect and " +
                 "remove_effect change status effects. set_attribute sets an attribute base " +
-                "value such as \"minecraft:max_health\".",
+                "value such as \"minecraft:max_health\". calm ends the anger of a neutral mob " +
+                "such as a wolf or a bee. owner tames an animal such as a wolf or a cat for a " +
+                "player. sit makes a tamed animal sit or stand up.",
         input =
             input {
                 optional("uuid", UUID.described("Required for every action but spawn."))
@@ -51,6 +53,8 @@ val EDIT_ENTITY =
                 optional("show_particles", booleanSchema(default = true))
                 optional("attribute", stringSchema("Required for set_attribute."))
                 optional("base", numberSchema("Required for set_attribute."))
+                optional("player", PLAYER.described("Required for owner. May be offline."))
+                optional("sitting", booleanSchema("For sit. false stands up.", default = true))
             },
         actions =
             mapOf(
@@ -144,6 +148,23 @@ val EDIT_ENTITY =
                             input.double("base"),
                         )
                         done("$attribute base set to ${round(input.double("base"))}")
+                    },
+                "calm" to
+                    writeAction { server, input ->
+                        server.calm(input.string("uuid"))
+                        done("No longer angry")
+                    },
+                "owner" to
+                    writeAction { server, input ->
+                        input.require("player")
+                        val owner = server.changeOwner(input.string("uuid"), input.string("player"))
+                        done("Tamed for $owner")
+                    },
+                "sit" to
+                    writeAction { server, input ->
+                        val sitting = input.boolean("sitting")
+                        server.changeSitting(input.string("uuid"), sitting)
+                        done(if (sitting) "Sitting" else "Standing")
                     },
             ),
     )
