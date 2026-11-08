@@ -81,7 +81,7 @@ internal fun MinecraftServer.mergeBlockEntity(
     level.loadBlockEntity(blockEntity, merged)
 }
 
-internal fun MinecraftServer.place(
+internal fun place(
     level: ServerLevel,
     position: BlockPos,
     block: ParsedBlock,

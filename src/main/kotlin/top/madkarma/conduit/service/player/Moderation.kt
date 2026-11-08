@@ -78,7 +78,7 @@ private fun banInfo(target: String, entry: BanListEntry<*>) =
     BanInfo(
         target = target,
         reason = entry.reason.orEmpty(),
-        source = entry.source.orEmpty(),
+        source = entry.source,
         created = entry.created.toInstant().toString(),
         expires = entry.expires?.toInstant()?.toString(),
     )

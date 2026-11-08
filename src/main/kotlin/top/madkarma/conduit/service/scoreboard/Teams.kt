@@ -66,6 +66,9 @@ internal fun MinecraftServer.leaveTeams(members: List<String>) {
     members.forEach { scoreboard.removePlayerFromTeam(it) }
 }
 
+// The prefix and suffix setters take null but their getters never return it, so Kotlin sees
+// read-only properties and needs the setter calls.
+@Suppress("UsePropertyAccessSyntax")
 private fun MinecraftServer.applyChange(team: PlayerTeam, change: TeamChange) {
     val registries = registryAccess()
 

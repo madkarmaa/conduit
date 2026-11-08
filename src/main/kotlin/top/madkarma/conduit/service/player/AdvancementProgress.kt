@@ -1,5 +1,6 @@
 package top.madkarma.conduit.service.player
 
+import kotlin.jvm.optionals.getOrNull
 import kotlinx.serialization.Serializable
 import net.minecraft.advancements.AdvancementHolder
 import net.minecraft.server.MinecraftServer
@@ -70,7 +71,7 @@ private fun statusOf(player: ServerPlayer, advancement: AdvancementHolder): Adva
 
     return AdvancementStatus(
         id = advancement.id().toString(),
-        title = advancement.value().display().map { it.title.string }.orElse(""),
+        title = advancement.value().display().getOrNull()?.title?.string.orEmpty(),
         done = progress.isDone,
         criteriaDone = done,
         criteriaTotal = done + missing.size,
