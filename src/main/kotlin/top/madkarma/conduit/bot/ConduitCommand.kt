@@ -23,8 +23,8 @@ private val OPERATORS = Commands.hasPermission<CommandSourceStack>(Commands.LEVE
 
 /**
  * /conduit <request> asks the bot, and /conduit cancel takes back the player's newest request.
- * Operators also have status, reload, forget and access, and cancel with a target. Other players
- * never see those, not even as suggestions.
+ * Operators also have status, reload, forget, access and telemetry, and cancel with a target. Other
+ * players never see those, not even as suggestions.
  *
  * Brigadier always prefers a literal over the request argument, so a request that starts with a
  * subcommand word would reach the subcommand. The subcommand nodes therefore take the request
@@ -43,6 +43,7 @@ object ConduitCommand {
                 subcommand("cancel", suggest("full", "chat"), Subcommands::cancel),
                 subcommand("forget", suggest("all"), Subcommands::forget).requires(OPERATORS),
                 access(),
+                telemetry(),
                 Commands.argument("request", greedyString()).executes {
                     ask(it.source, getString(it, "request"))
                 },
@@ -98,6 +99,33 @@ object ConduitCommand {
         }
 
         return node.then(requestAfter("access"))
+    }
+
+    // /conduit telemetry, or /conduit telemetry enable|disable|clear.
+    private fun telemetry(): LiteralArgumentBuilder<CommandSourceStack> {
+        val choices =
+            mapOf<String, (CommandSourceStack) -> Unit>(
+                "enable" to { TelemetryCommand.change(it, enabled = true) },
+                "disable" to { TelemetryCommand.change(it, enabled = false) },
+                "clear" to TelemetryCommand::clear,
+            )
+
+        val node =
+            Commands.literal("telemetry").requires(OPERATORS).executes {
+                TelemetryCommand.show(it.source)
+                1
+            }
+
+        choices.forEach { (choice, run) ->
+            node.then(
+                Commands.literal(choice).executes {
+                    run(it.source)
+                    1
+                },
+            )
+        }
+
+        return node.then(requestAfter("telemetry"))
     }
 
     // The rest of a request that starts with a subcommand word.

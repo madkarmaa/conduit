@@ -90,6 +90,7 @@ commands, which other players never see:
 | `/conduit forget [<player>\|all]`                     | Starts fresh conversations, so the agent forgets earlier ones |
 | `/conduit access`                                     | Shows who gets each mode                                      |
 | `/conduit access <allow\|deny> <player> <full\|chat>` | Lets a player into a mode or keeps them out                   |
+| `/conduit telemetry [enable\|disable\|clear]`         | Shows, turns on or off, or empties the telemetry file         |
 
 Without an argument, `forget` acts on the operator's own conversations.
 
@@ -170,6 +171,7 @@ command lists the problems and keeps the old config.
 | `game.maxStructureVolume`                             | `8000000`                                                     | Largest structure the tools save or place, in blocks                                  |
 | `game.maxUndoBlocks`                                  | `2000000`                                                     | Most changed blocks that `undo` keeps for recent edits. `0` turns it off              |
 | `triggers`                                            | none                                                          | Runs that game events or a timer start, as [triggers](#triggers) describes            |
+| `telemetry`                                           | `false`                                                       | Writes each request, the agent's tool calls and its answer to the telemetry file      |
 
 Chat mode gets `server_info`, `world_info`, `get_blocks`, `structures`, `entities`, `get_player`,
 `inventory` and `game_data` by default, and never the tools that list other players. It only gets

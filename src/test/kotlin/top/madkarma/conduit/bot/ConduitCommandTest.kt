@@ -38,7 +38,7 @@ class ConduitCommandTest {
     fun `other players only see cancel and the request`() {
         assertEquals(listOf("cancel", "request"), subcommandsFor(player).sorted())
         assertEquals(
-            listOf("access", "cancel", "forget", "reload", "request", "status"),
+            listOf("access", "cancel", "forget", "reload", "request", "status", "telemetry"),
             subcommandsFor(operator).sorted(),
         )
     }
@@ -62,5 +62,13 @@ class ConduitCommandTest {
         assertEquals("request", runner("conduit status of the farm", operator))
         assertEquals("request", runner("conduit cancel the build now", operator))
         assertEquals("full", runner("conduit access allow Alex full", operator))
+    }
+
+    @Test
+    fun `operators switch telemetry, and other players ask about it`() {
+        assertEquals("telemetry", runner("conduit telemetry", operator))
+        assertEquals("enable", runner("conduit telemetry enable", operator))
+        assertEquals("clear", runner("conduit telemetry clear", operator))
+        assertEquals("request", runner("conduit telemetry enable", player))
     }
 }

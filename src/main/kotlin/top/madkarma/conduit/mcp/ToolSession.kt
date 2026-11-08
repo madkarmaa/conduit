@@ -38,11 +38,15 @@ class ToolSession(val policy: ToolPolicy, tools: List<ToolDefinition>) {
             if (!prepared.tool.definition.approvesItself) approve(listOf(prepared.called()))
 
             log(prepared)
-            toolResult(policy.redact(run(prepared)))
+            val reply = policy.redact(run(prepared))
+            policy.recorder?.record(name, arguments, failed = false, reply.text)
+            toolResult(reply)
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
-            errorResult(describeFailure(exception, name))
+            val failure = describeFailure(exception, name)
+            policy.recorder?.record(name, arguments, failed = true, failure)
+            errorResult(failure)
         }
 
     private suspend fun run(call: PreparedCall): Reply =

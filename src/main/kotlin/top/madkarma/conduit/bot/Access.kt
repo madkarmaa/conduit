@@ -7,6 +7,7 @@ import top.madkarma.conduit.config.AgentConfig
 import top.madkarma.conduit.config.ConduitConfig
 import top.madkarma.conduit.config.ModeAccess
 import top.madkarma.conduit.mcp.ApprovalGate
+import top.madkarma.conduit.mcp.CallRecorder
 import top.madkarma.conduit.mcp.PlayerIdentity
 import top.madkarma.conduit.mcp.ToolPolicy
 
@@ -59,9 +60,21 @@ private fun ModeAccess.lets(uuid: String, byDefault: Boolean): Boolean =
         (byDefault || allow.any { it.uuid.equals(uuid, ignoreCase = true) })
 
 /** What the agent of one request may do with the tools. */
-fun ConduitConfig.toolPolicy(mode: Mode, asker: Asker, approvals: ApprovalGate): ToolPolicy {
+fun ConduitConfig.toolPolicy(
+    mode: Mode,
+    asker: Asker,
+    approvals: ApprovalGate,
+    recorder: CallRecorder? = null,
+): ToolPolicy {
     val name = "${asker.name} in ${mode.id} mode"
-    if (mode == Mode.FULL) return ToolPolicy(name, readOnly = tools.readOnly, approvals = approvals)
+    if (mode == Mode.FULL) {
+        return ToolPolicy(
+            name,
+            readOnly = tools.readOnly,
+            approvals = approvals,
+            recorder = recorder,
+        )
+    }
 
     val chat = tools.chat
     // A deny list on its own allows every other tool, otherwise the default list applies.
@@ -74,5 +87,6 @@ fun ConduitConfig.toolPolicy(mode: Mode, asker: Asker, approvals: ApprovalGate):
         deniedTools = chat.deny.toSet(),
         player = PlayerIdentity(asker.name, asker.uuid.toString()),
         approvals = approvals,
+        recorder = recorder,
     )
 }

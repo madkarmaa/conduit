@@ -14,6 +14,8 @@ data class ConduitConfig(
     val replies: RepliesConfig = RepliesConfig(),
     val game: GameConfig = GameConfig(),
     val triggers: List<TriggerConfig> = emptyList(),
+    /** Writes each request and the agent's tool calls to a text file. Off unless opted in. */
+    val telemetry: Boolean = false,
 )
 
 @Serializable

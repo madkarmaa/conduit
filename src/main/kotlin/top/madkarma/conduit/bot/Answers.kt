@@ -22,16 +22,19 @@ object Answers {
     suspend fun answer(request: BotRequest) {
         val config = Conduit.config ?: return
         LOGGER.info("{} asks in {} mode: {}", request.asker.name, request.mode.id, request.text)
+        val trace = Telemetry.start(request, config)
 
         val reply =
             try {
-                runRequest(config, request)
+                runRequest(config, request, trace)
             } catch (exception: CancellationException) {
+                trace?.finish("The request was cancelled.")
                 withContext(NonCancellable) {
                     say("${request.asker.name}'s request was cancelled.")
                 }
                 throw exception
             }
+        trace?.finish(reply)
 
         if (request.trigger?.config?.announce == false) {
             LOGGER.info("{} answered: {}", request.asker.name, reply)
@@ -42,12 +45,17 @@ object Answers {
     }
 
     // Returns the text to post, which is the answer or what went wrong.
-    private suspend fun runRequest(config: ConduitConfig, request: BotRequest): String {
+    private suspend fun runRequest(
+        config: ConduitConfig,
+        request: BotRequest,
+        trace: RequestTrace?,
+    ): String {
         val agent = config.agent(request.mode)
         val runner = RunnerClient(agent.runner)
         val deadline = Deadline(config.requests.timeoutSeconds)
         val approvals = Approvals.gate(request.asker, config.approvals, deadline)
-        val token = AccessTokens.issue(config.toolPolicy(request.mode, request.asker, approvals))
+        val policy = config.toolPolicy(request.mode, request.asker, approvals, trace)
+        val token = AccessTokens.issue(policy)
 
         try {
             val conversation =

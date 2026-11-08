@@ -28,6 +28,11 @@ fun interface ApprovalGate {
     suspend fun approve(calls: List<CalledAction>)
 }
 
+/** Hears every call made with a policy, with the text it returned or why it failed. */
+fun interface CallRecorder {
+    fun record(tool: String, arguments: JsonObject, failed: Boolean, text: String)
+}
+
 /** What one token may do with the tools. */
 class ToolPolicy(
     /** Shown in the log next to the calls made with this policy. */
@@ -38,6 +43,7 @@ class ToolPolicy(
     val deniedTools: Set<String> = emptySet(),
     val player: PlayerIdentity? = null,
     val approvals: ApprovalGate? = null,
+    val recorder: CallRecorder? = null,
 ) {
     fun offers(tool: ToolDefinition): Boolean {
         if (allowedTools != null && tool.name !in allowedTools) return false
