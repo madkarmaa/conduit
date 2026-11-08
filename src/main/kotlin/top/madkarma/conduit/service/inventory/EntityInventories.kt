@@ -1,6 +1,5 @@
 package top.madkarma.conduit.service.inventory
 
-import java.util.UUID
 import kotlinx.serialization.Serializable
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.entity.Entity
@@ -17,7 +16,7 @@ private const val MOB_INVENTORY = "mob.inventory."
 private val STORAGE_PREFIXES = listOf("container.", "horse.", MOB_INVENTORY)
 
 /** A slot by the name the /item command uses, such as "container.3" or "armor.head". */
-private class NamedSlot(val name: String, val access: SlotAccess)
+internal class NamedSlot(val name: String, val access: SlotAccess)
 
 @Serializable data class EntitySlot(val slot: String, val item: ItemInfo)
 
@@ -33,7 +32,7 @@ private fun MinecraftServer.slotsOf(uuid: String): List<NamedSlot> {
     return entity.namedSlots()
 }
 
-private fun Entity.namedSlots(): List<NamedSlot> {
+internal fun Entity.namedSlots(): List<NamedSlot> {
     val slots =
         SlotRanges.singleSlotNames().toList().mapNotNull { name ->
             val id = SlotRanges.nameToIds(name)?.slots()?.firstOrNull() ?: return@mapNotNull null
@@ -108,25 +107,4 @@ private fun MinecraftServer.slotsBeforeEdit(uuid: String): List<NamedSlot> {
     val entity = entity(uuid)
     EditJournal.before { EntityItems(entity.uuid, slots.map { it.name to it.access.get().copy() }) }
     return slots
-}
-
-/** An entity's items before a recorded call changed them, by slot name. */
-private class EntityItems(private val id: UUID, private val items: List<Pair<String, ItemStack>>) :
-    UndoableChange {
-    override fun changed(): Boolean {
-        val entity = GameServer.current?.findEntity(id) ?: return true
-        val now = entity.namedSlots().associate { it.name to it.access.get() }
-        return items.any { (name, stack) -> !ItemStack.matches(stack, now[name] ?: stack) }
-    }
-
-    override fun overlaps(other: UndoableChange): Boolean = other is EntityItems && other.id == id
-
-    override fun undo(server: MinecraftServer) {
-        val slots = server.findEntity(id)?.namedSlots()?.associateBy { it.name } ?: return
-        items.forEach { (name, stack) -> slots[name]?.access?.set(stack.copy()) }
-    }
-}
-
-private fun MinecraftServer.findEntity(id: UUID): Entity? = allLevels.firstNotNullOfOrNull {
-    it.getEntity(id)
 }

@@ -1,11 +1,8 @@
 package top.madkarma.conduit.bot
 
 import java.io.IOException
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.madkarma.conduit.Conduit
 import top.madkarma.conduit.LOGGER
@@ -84,7 +81,7 @@ object Answers {
                     timeoutSeconds = config.requests.timeoutSeconds * RUNNER_TIMEOUT_FACTOR,
                 )
 
-            val outcome = runWithDeadline(runner, run, deadline)
+            val outcome = runner.runWithDeadline(run, deadline)
             if (outcome.timedOut)
                 return progress.ranOutOfTime(config.requests.timeoutSeconds, policy.name)
             return describe(outcome.result)
@@ -117,42 +114,6 @@ object Answers {
             AccessTokens.revoke(token)
         }
     }
-
-    private class Outcome(val result: RunResult, pastDeadline: Boolean) {
-        val timedOut = pastDeadline || result.timedOut
-    }
-
-    private suspend fun runWithDeadline(
-        runner: RunnerClient,
-        run: RunRequest,
-        deadline: Deadline,
-    ): Outcome = coroutineScope {
-        val pastDeadline = AtomicBoolean(false)
-
-        val watchdog = launch {
-            deadline.awaitExpiry()
-            pastDeadline.set(true)
-            runCatching { runner.cancel() }
-        }
-
-        try {
-            Outcome(runner.run(run), pastDeadline.get())
-        } finally {
-            watchdog.cancel()
-        }
-    }
-
-    private fun describe(result: RunResult): String =
-        when {
-            result.cancelled -> "The request was cancelled."
-
-            result.exitCode != 0 -> {
-                LOGGER.warn("The agent exited with code {}: {}", result.exitCode, result.stderrTail)
-                "Something went wrong. The server log has the details."
-            }
-
-            else -> result.output.trim().ifEmpty { "Done." }
-        }
 
     // An answer to a player names them, like their request named the bot. Other posts do not.
     private suspend fun say(text: String, answering: BotRequest? = null) {
