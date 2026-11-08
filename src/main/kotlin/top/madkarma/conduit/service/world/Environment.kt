@@ -47,7 +47,7 @@ private fun MinecraftServer.timeOf(dimension: String?): TimeInfo {
     )
 }
 
-/** Sets the time of day to time, adds add to it, or sets a named preset such as "noon". */
+/** Sets the time of day to `time`, adds `add` to it, or sets a named preset such as "noon". */
 internal fun MinecraftServer.changeTime(
     dimension: String?,
     time: Long?,

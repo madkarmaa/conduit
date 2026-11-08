@@ -104,7 +104,7 @@ internal fun MinecraftServer.readPlayerData(id: UUID): CompoundTag {
     }
 }
 
-/** Writes like PlayerDataStorage.save, which only saves online players. */
+/** Writes like `PlayerDataStorage.save`, which only saves online players. */
 internal fun MinecraftServer.writePlayerData(id: UUID, data: CompoundTag) {
     NbtUtils.addCurrentDataVersion(data)
 

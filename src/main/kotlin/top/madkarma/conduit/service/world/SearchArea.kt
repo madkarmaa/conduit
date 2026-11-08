@@ -17,7 +17,7 @@ class BlockArea(val from: BlockCoordinates, val to: BlockCoordinates, val center
         get() = ((max.x shr 4) - (min.x shr 4) + 1L) * ((max.z shr 4) - (min.z shr 4) + 1L)
 }
 
-/** A cuboid from from and to searches around its middle, and a radius around its center. */
+/** A cuboid between `from` and `to` searches around its middle, and a radius around its center. */
 internal fun searchArea(input: ToolInput): BlockArea {
     val radius = input.intOrNull("radius")
     if (radius != null) {
