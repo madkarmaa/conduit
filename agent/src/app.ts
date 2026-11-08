@@ -33,32 +33,32 @@ export function createApp(secret: string): Hono {
 
     const limit = bodyLimit({
         maxSize: BODY_LIMIT,
-        onError: (c) => c.json({ error: "The body is too large" }, 413),
+        onError: (context) => context.json({ error: "The body is too large" }, 413),
     });
 
-    const validRun = zValidator("json", RunRequest, (result, c) => {
-        if (!result.success) return c.json({ error: describe(result.error) }, 400);
+    const validRun = zValidator("json", RunRequest, (result, context) => {
+        if (!result.success) return context.json({ error: describe(result.error) }, 400);
     });
 
     app.use(bearerAuth({ token: secret }));
 
-    app.get("/health", (c) => c.json(health()));
-    app.post("/cancel", async (c) => c.json({ cancelled: await cancelRun() }));
-    app.post("/run", limit, validRun, (c) => startRun(c, c.req.valid("json")));
+    app.get("/health", (context) => context.json(health()));
+    app.post("/cancel", async (context) => context.json({ cancelled: await cancelRun() }));
+    app.post("/run", limit, validRun, (context) => startRun(context, context.req.valid("json")));
 
-    app.notFound((c) => c.json({ error: "Unknown route" }, 404));
-    app.onError((error, c) => {
+    app.notFound((context) => context.json({ error: "Unknown route" }, 404));
+    app.onError((error, context) => {
         if (error instanceof HTTPException) return error.getResponse();
         log(`Request failed: ${error.stack ?? error}`);
-        return c.json({ error: "The runner failed" }, 500);
+        return context.json({ error: "The runner failed" }, 500);
     });
 
     return app;
 }
 
-async function startRun(c: Context, request: RunRequest): Promise<Response> {
+async function startRun(context: Context, request: RunRequest): Promise<Response> {
     if (currentRun) {
-        return c.json(
+        return context.json(
             { error: "The agent is still busy with another request, try again in a moment" },
             409,
         );
@@ -70,13 +70,16 @@ async function startRun(c: Context, request: RunRequest): Promise<Response> {
     }
     const maintenance = currentMaintenance();
     if (maintenance) {
-        return c.json({ error: `The runner is ${maintenance}, try again in a few minutes` }, 503);
+        return context.json(
+            { error: `The runner is ${maintenance}, try again in a few minutes` },
+            503,
+        );
     }
 
     lastCli = request.cli;
     currentRun = runAgent(request);
     try {
-        return c.json(await currentRun);
+        return context.json(await currentRun);
     } finally {
         currentRun = undefined;
     }
