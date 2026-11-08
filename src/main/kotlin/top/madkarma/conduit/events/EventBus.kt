@@ -2,6 +2,7 @@ package top.madkarma.conduit.events
 
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 import top.madkarma.conduit.game.GAME_JSON
@@ -44,13 +45,34 @@ class GameEvent(
     /** Server tick count at the time of the event. */
     val tick: Int,
     val payload: JsonObject,
-)
+) {
+    /** Whether the event is about one of these players or entities, by name or UUID. */
+    fun involves(players: List<String>): Boolean {
+        val entity = payload["entity"] as? JsonObject
+        val candidates =
+            listOf(
+                    payload["player"],
+                    payload["playerUuid"],
+                    entity?.get("name"),
+                    entity?.get("uuid"),
+                )
+                .mapNotNull { (it as? JsonPrimitive)?.content }
+
+        return candidates.any { candidate ->
+            players.any { it.equals(candidate, ignoreCase = true) }
+        }
+    }
+}
 
 object EventBus {
     @PublishedApi internal val listeners = CopyOnWriteArrayList<(GameEvent) -> Unit>()
 
     fun listen(listener: (GameEvent) -> Unit) {
         listeners += listener
+    }
+
+    fun stopListening(listener: (GameEvent) -> Unit) {
+        listeners -= listener
     }
 
     fun wants(): Boolean = listeners.isNotEmpty()

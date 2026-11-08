@@ -14,6 +14,7 @@ data class ConduitConfig(
     val requests: RequestsConfig = RequestsConfig(),
     val replies: RepliesConfig = RepliesConfig(),
     val game: GameConfig = GameConfig(),
+    val triggers: List<TriggerConfig> = emptyList(),
 )
 
 @Serializable
@@ -144,4 +145,25 @@ data class GameConfig(
     val maxStructureVolume: Long = 8_000_000,
     /** The most changed blocks that undo keeps for all recent edits together. 0 turns undo off. */
     val maxUndoBlocks: Long = 2_000_000,
+)
+
+/**
+ * Starts a full mode run without a request, on game events or every few minutes. A trigger has
+ * either events or everyMinutes.
+ */
+@Serializable
+data class TriggerConfig(
+    val name: String,
+    val enabled: Boolean = true,
+    /** Event types that start a run, such as "player_join". */
+    val events: List<String> = emptyList(),
+    /** Only events about these player names or UUIDs. Empty means anyone. */
+    val players: List<String> = emptyList(),
+    val everyMinutes: Int = 0,
+    /** What the agent does when the trigger starts it. */
+    val prompt: String,
+    /** The shortest time between two runs. */
+    val cooldownSeconds: Int = 60,
+    /** Posts the agent's answer in the chat. Without it, the answer only goes to the log. */
+    val announce: Boolean = true,
 )

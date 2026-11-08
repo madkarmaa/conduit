@@ -10,6 +10,7 @@ import net.minecraft.resources.Identifier
 import org.slf4j.LoggerFactory
 import top.madkarma.conduit.bot.Bot
 import top.madkarma.conduit.bot.ConduitCommand
+import top.madkarma.conduit.bot.Triggers
 import top.madkarma.conduit.config.ConduitConfig
 import top.madkarma.conduit.config.ConfigFile
 import top.madkarma.conduit.config.GameConfig
@@ -51,6 +52,7 @@ object Conduit : ModInitializer {
         GameEvents.register()
         trackDatapackReloads()
         config = readConfig()
+        config?.let(Triggers::apply)
         EditJournal.maxBlocks = { gameConfig.maxUndoBlocks }
 
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
@@ -58,6 +60,7 @@ object Conduit : ModInitializer {
         }
         ServerTickEvents.END_SERVER_TICK.register { server ->
             if (server.tickCount % STATUS_INTERVAL_TICKS == 0) Bot.showStatus(server)
+            Triggers.onTick(server)
         }
 
         // Singleplayer worlds start and stop an integrated server each time the player opens one.
@@ -87,6 +90,7 @@ object Conduit : ModInitializer {
             }
 
         config = updated
+        Triggers.apply(updated)
         if (GameServer.current != null) startMcp(updated)
         return emptyList()
     }

@@ -7,8 +7,16 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 
-/** One request, from the moment a player asks until the bot answers it. */
-class BotRequest(val asker: Asker, val text: String, val mode: Mode) {
+/**
+ * One request, from the moment a player asks until the bot answers it. A trigger's run carries the
+ * trigger instead of a player.
+ */
+class BotRequest(
+    val asker: Asker,
+    val text: String,
+    val mode: Mode,
+    val trigger: TriggerRun? = null,
+) {
     var job: Job? = null
 }
 

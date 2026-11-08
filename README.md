@@ -71,7 +71,7 @@ such as `edit_player`, or one of its actions, such as `edit_player.game_mode`.
 
 | Command                                   | Description                                                   |
 | ----------------------------------------- | ------------------------------------------------------------- |
-| `/conduit status`                         | Each mode's agent, its CLI version and its line               |
+| `/conduit status`                         | Each mode's agent, its CLI version, its line and the triggers |
 | `/conduit cancel [full\|chat\|<player>]`  | Stops a mode's running request, or a player's request         |
 | `/conduit reload`                         | Reloads the config, and keeps the old one if the new is bad   |
 | `/conduit forget [<player>\|shared\|all]` | Starts fresh conversations, so the agent forgets earlier ones |
@@ -81,6 +81,37 @@ Without an argument, `cancel` and `forget` act on the operator's own request and
 An operator's request runs a command when it is one of these words alone, or `cancel` or `forget`
 followed by one more word. Longer requests that start with these words, such as
 `/conduit status of the farm`, go to the bot. Requests from other players always go to the bot.
+
+### Triggers
+
+Triggers start full mode runs without a request, on game events or on a timer:
+
+```json
+{
+    "triggers": [
+        {
+            "name": "greeter",
+            "events": ["player_join"],
+            "prompt": "Greet the player who joined with a short chat message.",
+            "cooldownSeconds": 60,
+            "announce": false
+        },
+        {
+            "name": "news",
+            "everyMinutes": 60,
+            "prompt": "Tell everyone one fun fact about the world."
+        }
+    ]
+}
+```
+
+A trigger has either `events` or `everyMinutes`. `players` limits events to some players, by name
+or UUID. The agent gets the event as JSON, and the trigger's `prompt`. With `announce` the bot posts
+the answer in the chat, and without it the answer only goes to the log.
+
+An event trigger starts no run within `cooldownSeconds` of its last one, and no trigger has two
+runs in line. Each trigger keeps a conversation of its own. Its runs show up as `trigger <name>`,
+and the online operators decide its approvals. The event types are the ones the `events` tool lists.
 
 ## Configuration
 
@@ -123,6 +154,7 @@ command lists the problems and keeps the old config.
 | `game.backupDirectory`                                | `backups`                                                     | Where backups go, relative to the server folder                                       |
 | `game.maxStructureVolume`                             | `8000000`                                                     | Largest structure the tools save or place, in blocks                                  |
 | `game.maxUndoBlocks`                                  | `2000000`                                                     | Most changed blocks that `undo` keeps for recent edits. `0` turns it off              |
+| `triggers`                                            | none                                                          | Runs that game events or a timer start, as [triggers](#triggers) describes            |
 
 Chat mode gets `server_info`, `world_info`, `get_blocks`, `structures`, `entities`, `get_player`,
 `inventory` and `game_data` by default, and never the tools that list other players. It only gets
@@ -186,6 +218,9 @@ The server has 24 tools. Tools with several operations take an `action` argument
 
 - Anyone in full mode controls the agent and every tool it has, including `run_command`. Keep
   `access.allow` short, or turn on `tools.readOnly`.
+- Triggers run in full mode without anyone asking, and players write parts of the events, such as
+  chat messages. The agent learns to treat event data as information, but keep trigger prompts
+  narrow. Destructive actions still wait for an online operator's approval.
 - The MCP server listens on every interface by default, so the agent containers can reach it.
   Every request needs a token, but keep port 25585 closed to the internet. Each agent request gets
   a token of its own that only works while the request runs.

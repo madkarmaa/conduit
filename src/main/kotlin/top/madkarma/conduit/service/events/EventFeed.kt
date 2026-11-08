@@ -6,8 +6,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import top.madkarma.conduit.events.EventBus
 import top.madkarma.conduit.events.EventType
 import top.madkarma.conduit.events.GameEvent
@@ -85,22 +83,6 @@ object EventFeed {
     private fun matches(buffered: BufferedEvent, query: EventQuery): Boolean {
         if (buffered.cursor <= query.after) return false
         if (query.types.isNotEmpty() && buffered.event.type.id !in query.types) return false
-        return query.players.isEmpty() || involves(buffered.event.payload, query.players)
-    }
-
-    private fun involves(payload: JsonObject, players: List<String>): Boolean {
-        val entity = payload["entity"] as? JsonObject
-        val candidates =
-            listOf(
-                    payload["player"],
-                    payload["playerUuid"],
-                    entity?.get("name"),
-                    entity?.get("uuid"),
-                )
-                .mapNotNull { (it as? JsonPrimitive)?.content }
-
-        return candidates.any { candidate ->
-            players.any { it.equals(candidate, ignoreCase = true) }
-        }
+        return query.players.isEmpty() || buffered.event.involves(query.players)
     }
 }

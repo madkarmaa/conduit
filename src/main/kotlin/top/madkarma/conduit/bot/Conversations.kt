@@ -36,6 +36,14 @@ object Conversations {
         }
     }
 
+    /** Each trigger has a conversation of its own, unless full mode remembers nothing. */
+    @Synchronized
+    fun ofTrigger(name: String, memory: Memory): Conversation {
+        if (memory == Memory.NONE)
+            return Conversation("once-${UUID.randomUUID()}", resumable = false)
+        return remembered("trigger-$name")
+    }
+
     private fun remembered(key: String): Conversation {
         val stored = load()
         return Conversation(

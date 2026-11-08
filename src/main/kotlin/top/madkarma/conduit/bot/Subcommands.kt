@@ -1,12 +1,8 @@
 package top.madkarma.conduit.bot
 
-import java.io.IOException
-import net.minecraft.ChatFormatting
 import net.minecraft.commands.CommandSourceStack
 import net.minecraft.network.chat.Component
 import top.madkarma.conduit.Conduit
-import top.madkarma.conduit.config.ConduitConfig
-import top.madkarma.conduit.config.RunnerConfig
 import top.madkarma.conduit.game.ConduitError
 import top.madkarma.conduit.service.player.resolvePlayerId
 
@@ -23,7 +19,9 @@ object Subcommands {
                 )
 
         Bot.launch {
-            val rows = Mode.entries.map { describeMode(it, config) }
+            val rows =
+                Mode.entries.map { describeMode(it, config) } +
+                    listOfNotNull(describeTriggers(config))
             source.server.execute { rows.forEach { source.sendSystemMessage(botMessage(it)) } }
         }
     }
@@ -81,33 +79,4 @@ object Subcommands {
         }
         return if (target == "all") "everyone" else target
     }
-
-    private suspend fun describeMode(mode: Mode, config: ConduitConfig): Component {
-        val agent = config.agent(mode)
-        if (!agent.enabled)
-            return Component.literal("${mode.id}: off").withStyle(ChatFormatting.GRAY)
-
-        val line = Bot.line(mode)
-        val asking = line.running()?.let { "answering ${it.asker.name}" } ?: "idle"
-        val web = if (agent.web) "web on" else "web off"
-        val credentials =
-            if (agent.dangerouslyUseSubscriptionCredentials) "subscription login" else "API key"
-
-        return Component.literal(
-            "${mode.id}: ${agent.cli} ${agent.model} (${agent.effort}), $web, $credentials. Runner: " +
-                "${runnerState(agent.runner, agent.cli)}. Line: $asking, ${line.waiting().size} waiting.",
-        )
-    }
-
-    private suspend fun runnerState(runner: RunnerConfig, cli: String): String =
-        try {
-            val health = RunnerClient(runner).health()
-            val version = health.versions[cli] ?: "$cli not installed yet"
-            val activity = if (health.updating) "updating" else if (health.busy) "busy" else "idle"
-            "$version, $activity"
-        } catch (_: RunnerRefused) {
-            "refused the secret"
-        } catch (_: IOException) {
-            "unreachable"
-        }
 }

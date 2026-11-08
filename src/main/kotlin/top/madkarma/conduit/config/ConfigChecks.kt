@@ -29,6 +29,7 @@ fun ConduitConfig.problems(tools: Map<String, Set<String>>): List<String> {
     problems +=
         unknownTools("tools.chat", this.tools.chat.allow.orEmpty() + this.tools.chat.deny, tools)
     problems += unknownTools("approvals", approvals.add + approvals.remove, tools)
+    problems += triggerProblems()
     return problems
 }
 

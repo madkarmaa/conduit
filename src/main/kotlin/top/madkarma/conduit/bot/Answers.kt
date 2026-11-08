@@ -35,6 +35,10 @@ object Answers {
                 throw exception
             }
 
+        if (request.trigger?.config?.announce == false) {
+            LOGGER.info("{} answered: {}", request.asker.name, reply)
+            return
+        }
         say(reply)
     }
 
@@ -47,7 +51,10 @@ object Answers {
         val token = AccessTokens.issue(config.toolPolicy(request.mode, request.asker, approvals))
 
         try {
-            val conversation = Conversations.of(request.mode, config.requests.memory, request.asker)
+            val conversation =
+                request.trigger?.let {
+                    Conversations.ofTrigger(it.config.name, config.requests.memory)
+                } ?: Conversations.of(request.mode, config.requests.memory, request.asker)
             val run =
                 RunRequest(
                     cli = agent.cli,
@@ -55,8 +62,11 @@ object Answers {
                     effort = agent.effort,
                     options = agent.options,
                     web = agent.web,
-                    instructions = config.buildInstructions(request.mode, request.asker),
-                    prompt = requestPrompt(request.asker, request.text),
+                    instructions =
+                        config.buildInstructions(request.mode, request.asker, request.trigger),
+                    prompt =
+                        request.trigger?.let(::triggerPrompt)
+                            ?: requestPrompt(request.asker, request.text),
                     conversation = conversation.folder,
                     resume = conversation.resumable,
                     mcp = McpAccess(agent.mcpUrl, token),
