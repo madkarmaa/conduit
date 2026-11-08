@@ -4,13 +4,14 @@ import java.time.Instant
 import net.minecraft.core.BlockPos
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.levelgen.structure.BoundingBox
 
 private const val DEFAULT_MAX_BLOCKS = 2_000_000L
 
 /**
- * Records the blocks that tool calls change, so undo can put them back. Only the server thread uses
- * it, and it forgets everything when the server stops.
+ * Records the blocks that tool calls change and the entities they spawn or remove, so undo can put
+ * them back. Only the server thread uses it, and it forgets everything when the server stops.
  */
 object EditJournal {
     /** The most blocks that all groups hold together. Zero turns recording off. */
@@ -48,6 +49,17 @@ object EditJournal {
         current.get()?.saveBox(level, box)
     }
 
+    /** Notes an entity that a recorded call spawned. Does nothing outside recorded calls. */
+    fun spawned(entity: Entity) {
+        current.get()?.entities?.add(EntityChange.spawned(entity))
+    }
+
+    /** Saves an entity before a recorded call removes it. Does nothing outside recorded calls. */
+    fun beforeRemove(entity: Entity) {
+        val recorder = current.get() ?: return
+        EntityChange.removed(entity)?.let(recorder.entities::add)
+    }
+
     /** The recorded groups, newest first. */
     fun groups(): List<EditGroup> = groups.reversed()
 
@@ -58,6 +70,8 @@ object EditJournal {
 
         for (group in chosen.sortedByDescending { it.id }) {
             group.snapshots.forEach { it.restore(server) }
+            // After the blocks, so returning entities do not end up inside blocks.
+            group.entities.reversed().forEach { it.undo(server) }
             groups.remove(group)
         }
 
@@ -72,9 +86,10 @@ object EditJournal {
         if (recorder.tooLarge) return
 
         val snapshots = recorder.changed()
-        if (snapshots.isEmpty()) return
+        if (snapshots.isEmpty() && recorder.entities.isEmpty()) return
 
-        groups.addLast(EditGroup(nextId++, caller, action, Instant.now(), snapshots))
+        val entities = recorder.entities.toList()
+        groups.addLast(EditGroup(nextId++, caller, action, Instant.now(), snapshots, entities))
         val limit = maxBlocks()
         while (groups.sumOf { it.blocks } > limit) groups.removeFirst()
     }

@@ -17,15 +17,12 @@ import top.madkarma.conduit.game.*
 /** Removes an entity without a trace, or kills it, with loot and death effects. */
 internal fun MinecraftServer.removeEntity(uuid: String, kill: Boolean) {
     val entity = entity(uuid)
-
-    when {
-        kill -> entity.kill(entity.level() as ServerLevel)
-
-        entity is ServerPlayer ->
-            failedPrecondition("Players cannot be removed; kill them or use the kick action")
-
-        else -> entity.discard()
+    if (entity is ServerPlayer && !kill) {
+        failedPrecondition("Players cannot be removed; kill them or use the kick action")
     }
+
+    EditJournal.beforeRemove(entity)
+    if (kill) entity.kill(entity.level() as ServerLevel) else entity.discard()
 }
 
 /** Moves an entity, players included, also across dimensions. Null keeps the dimension. */

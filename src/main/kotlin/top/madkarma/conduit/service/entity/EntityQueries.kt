@@ -52,6 +52,8 @@ internal fun MinecraftServer.spawnEntity(request: SpawnRequest): EntityInfo {
     // max health. The entity's first tick would lower the health to match, so this does it now.
     if (entity is LivingEntity && entity.health > entity.maxHealth) entity.health = entity.maxHealth
 
+    entity.selfAndPassengers.forEach(EditJournal::spawned)
+
     return entity.toInfo()
 }
 

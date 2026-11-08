@@ -15,6 +15,7 @@ data class EditSummary(
     val action: String,
     val time: String,
     val blocks: Long,
+    val entities: Int,
     val dimensions: List<String>,
 )
 
@@ -24,11 +25,13 @@ val UNDO =
         title = "Undo edits",
         description =
             "The server records the block changes of edit_blocks, edit_world explode, " +
-                "structures place and copy, and inventory on containers, one edit per call. " +
-                "list shows the recent edits, newest first. undo restores the blocks and block " +
-                "entities of the given edits, or of your newest one. It does not bring back " +
-                "entities or dropped items, and it cannot undo run_command, fire spread, " +
-                "falling blocks or anything before a server restart.",
+                "structures place and copy, and inventory on containers, and the entities that " +
+                "edit_entity spawns and removes, one edit per call. list shows the recent " +
+                "edits, newest first. undo restores the blocks and block entities of the given " +
+                "edits, or of your newest one, removes the entities they spawned and brings " +
+                "back the ones they removed. It does not bring back dropped items or other " +
+                "changes to entities, and it cannot undo run_command, fire spread, falling " +
+                "blocks or anything before a server restart.",
         seesOtherPlayers = true,
         input =
             input {
@@ -70,9 +73,13 @@ private fun summarize(group: EditGroup) =
         action = group.action,
         time = group.time.truncatedTo(ChronoUnit.SECONDS).toString(),
         blocks = group.blocks,
-        dimensions = group.snapshots.map { it.dimension.identifier().toString() }.distinct(),
+        entities = group.entities.size,
+        dimensions =
+            (group.snapshots.map { it.dimension } + group.entities.map { it.dimension })
+                .map { it.identifier().toString() }
+                .distinct(),
     )
 
 private fun describe(edit: EditSummary): String =
-    "#${edit.id} ${edit.action} by ${edit.caller} at ${edit.time}: ${edit.blocks} blocks in " +
-        edit.dimensions.joinToString(", ")
+    "#${edit.id} ${edit.action} by ${edit.caller} at ${edit.time}: ${edit.blocks} blocks and " +
+        "${edit.entities} entities in ${edit.dimensions.joinToString(", ")}"
