@@ -90,9 +90,16 @@ private suspend fun runBatch(input: ToolInput, session: ToolSession): Reply {
     return lines("${outcomes.size} results", rows, dataOf("results" to JsonArray(results)))
 }
 
+/**
+ * The arguments of one call. Agents sometimes put them next to the tool name instead of under
+ * arguments, which means the same.
+ */
+internal fun callArguments(call: JsonObject): JsonObject =
+    call["arguments"] as? JsonObject ?: JsonObject(call - "tool")
+
 private fun prepare(index: Int, call: JsonObject, session: ToolSession): PreparedCall {
     val tool = serverToolName(call.getValue("tool").jsonPrimitive.content, session.offered.keys)
-    val arguments = call["arguments"] as? JsonObject ?: JsonObject(emptyMap())
+    val arguments = callArguments(call)
 
     val prepared =
         try {
