@@ -1,6 +1,7 @@
 package top.madkarma.conduit.service.entity
 
 import net.minecraft.server.MinecraftServer
+import net.minecraft.world.entity.MobCategory
 import top.madkarma.conduit.game.EntityInfo
 import top.madkarma.conduit.game.Vector3
 import top.madkarma.conduit.mcp.*
@@ -10,8 +11,10 @@ val ENTITIES =
         name = "entities",
         title = "Entities",
         description =
-            "list finds entities by type, area, tag or a vanilla selector, one line each with " +
-                "the uuid, type, name, dimension, position and health. info reads the full state " +
+            "list finds entities by type, mob category, area, tag or a vanilla selector, one " +
+                "line each with the uuid, type, name, dimension, position, health and how far " +
+                "below the surface of its column it is. With center, the list is nearest first " +
+                "and gives each distance. info reads the full state " +
                 "of one entity, nbt its complete data as SNBT, effects its status effects, and " +
                 "attributes its attributes with base and current values. Callers limited to " +
                 "one player's data see no other players.",
@@ -22,6 +25,13 @@ val ENTITIES =
                 optional(
                     "types",
                     arraySchema(stringSchema(), "Entity types, such as [\"minecraft:zombie\"]."),
+                )
+                optional(
+                    "categories",
+                    arraySchema(
+                        enumSchema(MobCategory.entries.map { it.serializedName }),
+                        "Mob categories, such as [\"monster\"] for hostile mobs.",
+                    ),
                 )
                 optional("center", VEC3.described("Requires dimension and radius."))
                 optional("radius", numberSchema(min = 0.0))
@@ -68,6 +78,7 @@ private fun MinecraftServer.listEntities(input: ToolInput): Reply {
         EntityQuery(
             dimension = input.stringOrNull("dimension")?.ifBlank { null },
             types = input.strings("types"),
+            categories = input.strings("categories"),
             box = input.decodeOrNull<Box>("box"),
             center = input.decodeOrNull<Vector3>("center"),
             radius = input.doubleOrNull("radius"),
@@ -79,9 +90,16 @@ private fun MinecraftServer.listEntities(input: ToolInput): Reply {
     val entities = findEntities(query)
     return lines(
         "${entities.size} entities",
-        entities.map(::describeEntity),
+        entities.map(::describeListed),
         dataOf("entities" to encoded(entities)),
     )
+}
+
+private fun describeListed(listed: ListedEntity): String {
+    val distance = listed.distance?.let { " ${round(it)} away" }.orEmpty()
+    val depth = listed.belowSurface
+    val surface = if (depth > 0) " $depth below surface" else " at surface"
+    return describeEntity(listed.entity) + distance + surface
 }
 
 private fun MinecraftServer.visibleUuid(input: ToolInput): String {
