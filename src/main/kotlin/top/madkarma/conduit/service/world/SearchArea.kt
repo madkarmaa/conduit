@@ -2,7 +2,9 @@ package top.madkarma.conduit.service.world
 
 import kotlin.math.max
 import kotlin.math.min
+import kotlinx.serialization.Serializable
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.levelgen.structure.BoundingBox
 import top.madkarma.conduit.game.BlockCoordinates
 import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.toMc
@@ -35,4 +37,10 @@ internal fun searchArea(input: ToolInput): BlockArea {
     val to = input.decode<BlockCoordinates>("to")
     val middle = BlockPos((from.x + to.x) / 2, (from.y + to.y) / 2, (from.z + to.z) / 2)
     return BlockArea(from, to, middle)
+}
+
+/** A cuboid between two corners. */
+@Serializable
+data class Bounds(val from: BlockCoordinates, val to: BlockCoordinates) {
+    fun toBox(): BoundingBox = BoundingBox.fromCorners(from.toMc(), to.toMc())
 }

@@ -9,9 +9,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.levelgen.structure.BoundingBox
-import top.madkarma.conduit.game.BlockCoordinates
 import top.madkarma.conduit.game.level
-import top.madkarma.conduit.game.toMc
 import top.madkarma.conduit.mcp.Reply
 import top.madkarma.conduit.mcp.ToolInput
 import top.madkarma.conduit.mcp.dataOf
@@ -32,10 +30,7 @@ data class Spot(
 )
 
 internal fun MinecraftServer.spotsReply(input: ToolInput): Reply {
-    val outside =
-        input.decodeOrNull<Box>("outside")?.let {
-            BoundingBox.fromCorners(it.from.toMc(), it.to.toMc())
-        }
+    val outside = input.decodeOrNull<Bounds>("outside")?.toBox()
     val limit = if (input.has("limit")) input.int("limit") else SPOT_LIMIT
     val spots =
         findSpots(
@@ -52,8 +47,6 @@ internal fun MinecraftServer.spotsReply(input: ToolInput): Reply {
         dataOf("spots" to encoded(spots)),
     )
 }
-
-@Serializable private class Box(val from: BlockCoordinates, val to: BlockCoordinates)
 
 /**
  * The safe spots of an area nearest to its center, leaving out the ones inside `outside`. Shells

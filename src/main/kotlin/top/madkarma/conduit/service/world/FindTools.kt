@@ -21,9 +21,9 @@ val FIND =
             "blocks finds blocks that match an id, state or #tag, in a cuboid or within " +
                 "radius of center, nearest first. items finds the containers that hold an " +
                 "item, counting shulker boxes and bundles. structure, biome and poi find the " +
-                "nearest one from center, like /locate. Points of interest only exist in " +
-                "chunks loaded since they were placed. spot finds safe places for a player to " +
-                "stand, nearest first.",
+                "nearest one from center, like /locate, and structure gives its box. Points of " +
+                "interest only exist in chunks loaded since they were placed. spot finds safe " +
+                "places for a player to stand, nearest first.",
         input =
             input {
                 optional("dimension", DIMENSION)
@@ -160,9 +160,12 @@ private fun MinecraftServer.itemsReply(input: ToolInput): Reply {
 
 private fun center(input: ToolInput): BlockPos = input.decode<BlockCoordinates>("center").toMc()
 
-private fun locatedReply(found: Located): Reply =
-    Reply(
-        "Nearest ${found.id} at ${found.pos.x} ${found.pos.y} ${found.pos.z}, " +
-            "${found.distance} blocks away",
+private fun locatedReply(found: Located): Reply {
+    val box = found.box?.let { ", spans ${text(it.from)} to ${text(it.to)}" }.orEmpty()
+    return Reply(
+        "Nearest ${found.id} at ${text(found.pos)}, ${found.distance} blocks away$box",
         encodedObject(found),
     )
+}
+
+private fun text(pos: BlockCoordinates) = "${pos.x} ${pos.y} ${pos.z}"

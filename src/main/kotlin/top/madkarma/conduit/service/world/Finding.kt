@@ -15,7 +15,6 @@ import net.minecraft.world.entity.ai.village.poi.PoiManager
 import top.madkarma.conduit.game.*
 
 // The same search ranges as /locate.
-private const val STRUCTURE_RADIUS_CHUNKS = 100
 private const val BIOME_RADIUS = 6400
 private const val BIOME_HORIZONTAL_STEP = 32
 private const val BIOME_VERTICAL_STEP = 64
@@ -29,10 +28,12 @@ private const val POI_RADIUS = 256
 data class Located(
     /** The structure, biome or point of interest type found. */
     val id: String,
-    /** A structure's y is a guess, since only its chunk is known. */
+    /** The middle of a structure's box, or its start chunk at y 0 when it has no box. */
     val pos: BlockCoordinates,
     /** Blocks from the center, leaving out y for structures. */
     val distance: Int,
+    /** The box around all of a structure's pieces. */
+    val box: Bounds? = null,
 )
 
 /** Blocks in an area that match a block id, state or #tag, nearest to the area's center first. */
@@ -61,25 +62,6 @@ internal fun MinecraftServer.findBlocks(
                 BlockMatch(it.toCoordinates(), level.getBlockState(it).toInfo().serialized)
             },
     )
-}
-
-internal fun MinecraftServer.locateStructure(
-    dimension: String?,
-    structure: String,
-    center: BlockPos,
-): Located {
-    val level = level(dimension)
-    val structures = holders(Registries.STRUCTURE, structure, "structure")
-    val found =
-        level.chunkSource.generator.findNearestMapStructure(
-            level,
-            structures,
-            center,
-            STRUCTURE_RADIUS_CHUNKS,
-            false,
-        ) ?: notFound("No $structure within $STRUCTURE_RADIUS_CHUNKS chunks")
-
-    return located(found.second, found.first, center, horizontal = true)
 }
 
 internal fun MinecraftServer.locateBiome(
@@ -114,7 +96,7 @@ internal fun MinecraftServer.locatePoi(dimension: String?, poi: String, center: 
 }
 
 // An id names one entry and a #tag a group of them, like the arguments of /locate.
-private fun <T : Any> MinecraftServer.holders(
+internal fun <T : Any> MinecraftServer.holders(
     registry: ResourceKey<out Registry<T>>,
     idOrTag: String,
     kind: String,
@@ -130,7 +112,7 @@ private fun <T : Any> MinecraftServer.holders(
     return HolderSet.direct(entry ?: notFound("Unknown $kind: $idOrTag"))
 }
 
-private fun located(
+internal fun located(
     holder: Holder<*>,
     pos: BlockPos,
     center: BlockPos,
