@@ -10,7 +10,11 @@ import top.madkarma.conduit.config.RequestsConfig
 import top.madkarma.conduit.config.TriggerConfig
 import top.madkarma.conduit.events.EventType
 import top.madkarma.conduit.events.GameEvent
+import top.madkarma.conduit.game.BlockCoordinates
 import top.madkarma.conduit.parseJson
+import top.madkarma.conduit.service.player.LookTarget
+import top.madkarma.conduit.service.player.LookedAtEntity
+import top.madkarma.conduit.service.player.PlayerPlace
 
 class PromptTest {
     private val alex = Asker("Alex", UUID(0, 1))
@@ -54,6 +58,35 @@ class PromptTest {
         assertEquals(
             "Alex (UUID 00000000-0000-0000-0000-000000000001) asks: where am I?",
             requestPrompt(alex, "where am I?"),
+        )
+    }
+
+    @Test
+    fun `the request says where an online asker is and what they look at`() {
+        val spawner =
+            LookTarget(
+                distance = 12.0,
+                entity =
+                    LookedAtEntity("00000000-0000-0000-0000-000000000002", "minecraft:pig", "Pig"),
+            )
+        val place = PlayerPlace("minecraft:the_nether", BlockCoordinates(506, 63, -262), spawner)
+
+        assertEquals(
+            "Alex (UUID 00000000-0000-0000-0000-000000000001) at minecraft:the_nether 506 63 -262, " +
+                "looking at minecraft:pig \"Pig\" 00000000-0000-0000-0000-000000000002 asks: " +
+                "which pig?",
+            requestPrompt(alex, "which pig?", place),
+        )
+    }
+
+    @Test
+    fun `the request leaves out what an asker who looks at nothing looks at`() {
+        val place = PlayerPlace("minecraft:overworld", BlockCoordinates(1, 64, -2), null)
+
+        assertEquals(
+            "Alex (UUID 00000000-0000-0000-0000-000000000001) at minecraft:overworld 1 64 -2 " +
+                "asks: hi",
+            requestPrompt(alex, "hi", place),
         )
     }
 

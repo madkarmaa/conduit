@@ -24,7 +24,7 @@ data class LookedAtBlock(
 
 @Serializable data class LookedAtEntity(val uuid: String, val type: String, val name: String)
 
-/** What a player looks at within their reach, which is the nearer of a block and an entity. */
+/** What a player looks at, which is the nearer of a block and an entity. */
 @Serializable
 data class LookTarget(
     /** Blocks from the player's eyes. */
@@ -33,12 +33,12 @@ data class LookTarget(
     val entity: LookedAtEntity? = null,
 )
 
-internal fun lookTarget(player: ServerPlayer): LookTarget? {
+/** What the player looks at within range, or within their reach when range is null. */
+internal fun lookTarget(player: ServerPlayer, range: Double? = null): LookTarget? {
     val block =
-        (player.pick(player.blockInteractionRange(), 1f, false) as? BlockHitResult)?.takeIf {
-            it.type == HitResult.Type.BLOCK
-        }
-    val entity = lookedAtEntity(player)
+        (player.pick(range ?: player.blockInteractionRange(), 1f, false) as? BlockHitResult)
+            ?.takeIf { it.type == HitResult.Type.BLOCK }
+    val entity = lookedAtEntity(player, range ?: player.entityInteractionRange())
 
     if (entity != null && (block == null || distance(player, entity) < distance(player, block))) {
         return LookTarget(distance(player, entity), entity = describe(entity.entity))
@@ -48,8 +48,7 @@ internal fun lookTarget(player: ServerPlayer): LookTarget? {
     return LookTarget(distance(player, block), block = describe(player, block))
 }
 
-private fun lookedAtEntity(player: ServerPlayer): EntityHitResult? {
-    val reach = player.entityInteractionRange()
+private fun lookedAtEntity(player: ServerPlayer, reach: Double): EntityHitResult? {
     val eyes = player.eyePosition
     val view = player.getViewVector(1f).scale(reach)
     val area = player.boundingBox.expandTowards(view).inflate(1.0)

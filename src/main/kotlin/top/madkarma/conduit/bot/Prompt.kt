@@ -1,6 +1,8 @@
 package top.madkarma.conduit.bot
 
 import top.madkarma.conduit.config.ConduitConfig
+import top.madkarma.conduit.service.player.LookTarget
+import top.madkarma.conduit.service.player.PlayerPlace
 
 /** The system prompt of a request, which tells the agent where it is and how to answer. */
 fun ConduitConfig.buildInstructions(mode: Mode, asker: Asker, trigger: TriggerRun? = null): String {
@@ -23,9 +25,28 @@ fun ConduitConfig.buildInstructions(mode: Mode, asker: Asker, trigger: TriggerRu
         .joinToString(" ")
 }
 
-/** The request as the agent reads it, with the player who asks. */
-fun requestPrompt(asker: Asker, request: String): String =
-    "${asker.name} (UUID ${asker.uuid}) asks: $request"
+/**
+ * The request as the agent reads it, with the player who asks and, when they are online, where they
+ * are, so the agent does not rely on an old position from earlier in the conversation.
+ */
+fun requestPrompt(asker: Asker, request: String, place: PlayerPlace? = null): String {
+    val where = place?.let { " at ${describePlace(it)}" }.orEmpty()
+    return "${asker.name} (UUID ${asker.uuid})$where asks: $request"
+}
+
+private fun describePlace(place: PlayerPlace): String {
+    val position = place.position
+    val looking = place.lookingAt?.let { ", looking at ${describeLookTarget(it)}" }.orEmpty()
+    return "${place.dimension} ${position.x} ${position.y} ${position.z}$looking"
+}
+
+private fun describeLookTarget(target: LookTarget): String {
+    target.entity?.let {
+        return "${it.type} \"${it.name}\" ${it.uuid}"
+    }
+    val block = target.block ?: return "nothing"
+    return "${block.state.id} at ${block.pos.x} ${block.pos.y} ${block.pos.z}"
+}
 
 // Players control parts of an event, such as chat messages and names, so its data must not steer
 // the agent.

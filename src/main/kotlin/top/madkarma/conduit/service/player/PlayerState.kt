@@ -1,5 +1,6 @@
 package top.madkarma.conduit.service.player
 
+import java.util.UUID
 import kotlinx.serialization.Serializable
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
@@ -33,6 +34,22 @@ internal fun MinecraftServer.listPlayers(): PlayerList =
 internal fun MinecraftServer.describePlayer(ref: String): PlayerInfo {
     val player = player(ref)
     return describePlayer(player).copy(lookingAt = lookTarget(player))
+}
+
+// Players point at things farther away than they can reach, such as a spawner across a room.
+private const val POINTING_RANGE = 32.0
+
+/** Where an online player is and what they point at. */
+class PlayerPlace(val dimension: String, val position: BlockCoordinates, val lookingAt: LookTarget?)
+
+/** Where the player is, or null when they are offline. */
+internal fun MinecraftServer.placeOf(uuid: UUID): PlayerPlace? {
+    val player = playerList.getPlayer(uuid) ?: return null
+    return PlayerPlace(
+        player.level().dimension().identifier().toString(),
+        player.blockPosition().toCoordinates(),
+        lookTarget(player, POINTING_RANGE),
+    )
 }
 
 internal fun MinecraftServer.describePlayer(player: ServerPlayer): PlayerInfo {
