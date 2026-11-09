@@ -1,9 +1,9 @@
 <div align="center">
     <img src="../docs/conduit.gif" alt="Conduit" />
-    <h1>Conduit Agent</h1>
+    <h1>Conduit agent</h1>
 </div>
 
-The agent image that runs the AI agents of the [Conduit](../README.md) mod.
+This image runs the AI agents of the [Conduit](../README.md) mod.
 
 Each container holds a runner that takes requests from the mod over HTTP. It answers them with
 Antigravity CLI, Claude Code, Codex or OpenCode, through the

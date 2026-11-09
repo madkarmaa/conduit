@@ -279,8 +279,8 @@ The server has 25 tools. Tools with several operations take an `action` argument
 - The MCP server listens on every interface by default, so the agent containers can reach it.
   Every request needs a token, but keep port 25585 closed to the internet. Each agent request gets
   a token of its own that only works while the request runs.
-- The agent only has the Conduit tools, and web search when `agents.<mode>.web` allows it. Its
-  container keeps it away from the rest of the machine.
+- The agent only has the Conduit tools, and web search when `agents.<mode>.web` allows it. It runs
+  in a container that cannot reach the server's files.
   [`agent/README.md`](./agent/README.md#security) has the details.
 
 ## Building
