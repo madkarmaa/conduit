@@ -100,8 +100,27 @@ object EditJournal {
         if (snapshots.isEmpty() && changes.isEmpty()) return
 
         groups.addLast(EditGroup(nextId++, caller, action, Instant.now(), snapshots, changes))
-        val limit = maxBlocks()
-        while (groups.sumOf { it.blocks } > limit) groups.removeFirst()
+        trim(maxBlocks(), explosions = false)
+    }
+
+    /** Whether a recorded call is running, which then records the blocks it changes itself. */
+    fun isRecording(): Boolean = current.get() != null
+
+    /** Keeps the damage of an explosion, as an edit by its source. */
+    fun keepExplosion(source: String, damage: ExplosionDamage, limit: Long) {
+        val center = damage.center
+        val action = "explosion at ${center.x} ${center.y} ${center.z}"
+        groups.addLast(
+            EditGroup(nextId++, source, action, Instant.now(), emptyList(), listOf(damage)),
+        )
+        trim(limit, explosions = true)
+    }
+
+    // Drops the oldest groups of one kind until that kind fits its limit.
+    private fun trim(limit: Long, explosions: Boolean) {
+        while (groups.filter { it.isExplosion == explosions }.sumOf { it.blocks } > limit) {
+            groups.remove(groups.first { it.isExplosion == explosions })
+        }
     }
 
     private fun choose(ids: List<Int>, caller: String): List<EditGroup> {

@@ -60,6 +60,12 @@ class BlockSnapshot(val dimension: ResourceKey<Level>) {
         return changed
     }
 
+    fun isNear(dimension: ResourceKey<Level>, pos: BlockPos, radius: Int): Boolean =
+        dimension == this.dimension &&
+            (0 until size).any {
+                BlockPos.of(positions.getLong(it)).closerThan(pos, radius.toDouble())
+            }
+
     fun overlaps(other: BlockSnapshot): Boolean {
         if (dimension != other.dimension) return false
 

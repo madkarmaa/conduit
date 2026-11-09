@@ -9,6 +9,10 @@ interface UndoableChange {
     val subject: UUID?
         get() = null
 
+    /** Blocks that the change holds, which count toward the undo limits. */
+    val blocks: Long
+        get() = 0
+
     /** Called once the call ended. False when the call left it as it was, so undo forgets it. */
     fun changed(): Boolean = true
 

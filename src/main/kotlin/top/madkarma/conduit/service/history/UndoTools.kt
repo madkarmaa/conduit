@@ -2,15 +2,21 @@ package top.madkarma.conduit.service.history
 
 import java.time.temporal.ChronoUnit
 import kotlinx.serialization.Serializable
+import net.minecraft.server.MinecraftServer
+import top.madkarma.conduit.game.BlockCoordinates
 import top.madkarma.conduit.game.EditGroup
 import top.madkarma.conduit.game.EditJournal
 import top.madkarma.conduit.game.EntityChange
 import top.madkarma.conduit.game.EntitySnapshot
 import top.madkarma.conduit.game.UndoableChange
+import top.madkarma.conduit.game.level
+import top.madkarma.conduit.game.toMc
 import top.madkarma.conduit.mcp.*
 import top.madkarma.conduit.service.player.AdvancementChange
 import top.madkarma.conduit.service.player.PlayerItems
 import top.madkarma.conduit.service.player.PlayerSnapshot
+
+private const val DEFAULT_RADIUS = 32
 
 @Serializable
 data class EditSummary(
@@ -34,9 +40,11 @@ val UNDO =
         description =
             "Undoes edits of edit_blocks, edit_world explode, structures, inventory, " +
                 "edit_entity, move_entity and edit_player, one edit per call, offline players " +
-                "included. list shows the recent edits, newest first. undo restores the given " +
-                "edits, or your newest, and overwrites what changed since. It cannot undo " +
-                "run_command, dropped items, fire, falling blocks or edits before a restart.",
+                "included, and the damage of recent explosions, such as creeper holes. list " +
+                "shows the recent edits, newest first, optionally near center. undo restores " +
+                "the given edits, or your newest, and overwrites what changed since, except " +
+                "that an explosion keeps blocks placed since. It cannot undo run_command, " +
+                "dropped items, fire, falling blocks or edits before a restart.",
         seesOtherPlayers = true,
         input =
             input {
@@ -44,13 +52,20 @@ val UNDO =
                     "ids",
                     arraySchema(integerSchema(min = 1), "Edits to undo. Defaults to your newest."),
                 )
+                optional("dimension", DIMENSION)
+                optional("center", BLOCK_POS.described("list only shows edits near it."))
+                optional(
+                    "radius",
+                    integerSchema("Blocks around center.", min = 1, default = DEFAULT_RADIUS),
+                )
                 optional("limit", LIMIT)
             },
         actions =
             mapOf(
                 "list" to
-                    readAction { _, input ->
-                        val edits = EditJournal.groups().take(input.int("limit")).map(::summarize)
+                    readAction { server, input ->
+                        val edits =
+                            server.nearbyGroups(input).take(input.int("limit")).map(::summarize)
                         lines(
                             "${edits.size} recent edits",
                             edits.map(::describe),
@@ -70,6 +85,12 @@ val UNDO =
                     },
             ),
     )
+
+private fun MinecraftServer.nearbyGroups(input: ToolInput): List<EditGroup> {
+    val center = input.decodeOrNull<BlockCoordinates>("center") ?: return EditJournal.groups()
+    val dimension = level(input.stringOrNull("dimension")).dimension()
+    return EditJournal.groups().filter { it.isNear(dimension, center.toMc(), input.int("radius")) }
+}
 
 private fun summarize(group: EditGroup) =
     EditSummary(

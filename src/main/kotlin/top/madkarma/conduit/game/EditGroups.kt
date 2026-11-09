@@ -4,7 +4,9 @@ import java.time.Instant
 import kotlin.math.max
 import kotlin.math.min
 import net.minecraft.core.BlockPos
+import net.minecraft.resources.ResourceKey
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.level.Level
 import net.minecraft.world.level.levelgen.structure.BoundingBox
 
 /**
@@ -19,7 +21,15 @@ class EditGroup(
     val snapshots: List<BlockSnapshot>,
     val changes: List<UndoableChange>,
 ) {
-    val blocks: Long = snapshots.sumOf { it.size.toLong() }
+    val blocks: Long = snapshots.sumOf { it.size.toLong() } + changes.sumOf { it.blocks }
+
+    /** Explosions have their own limit, so they never push the recorded calls out. */
+    val isExplosion: Boolean = changes.any { it is ExplosionDamage }
+
+    /** Whether the group changed blocks within the radius, or is an explosion there. */
+    fun isNear(dimension: ResourceKey<Level>, pos: BlockPos, radius: Int): Boolean =
+        snapshots.any { it.isNear(dimension, pos, radius) } ||
+            changes.any { it is ExplosionDamage && it.isNear(dimension, pos, radius) }
 
     fun overlaps(other: EditGroup): Boolean =
         snapshots.any { mine -> other.snapshots.any { mine.overlaps(it) } } ||

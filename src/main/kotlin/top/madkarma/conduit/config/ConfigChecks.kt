@@ -23,6 +23,7 @@ fun ConduitConfig.problems(tools: Map<String, Set<String>>): List<String> {
     check(replies.maxLength >= 20, "replies.maxLength must be at least 20")
     check(game.maxStructureVolume > 0, "game.maxStructureVolume must be positive")
     check(game.maxUndoBlocks >= 0, "game.maxUndoBlocks must not be negative")
+    check(game.maxExplosionUndoBlocks >= 0, "game.maxExplosionUndoBlocks must not be negative")
 
     problems += tokenProblems(tools.keys)
     problems += agentsInUse().flatMap { (key, agent) -> agentProblems("agents.$key", agent) }

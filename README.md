@@ -198,6 +198,7 @@ command lists the problems and keeps the old config.
 | `game.backupDirectory`                                | `backups`                                                     | Where backups go, relative to the server folder                                       |
 | `game.maxStructureVolume`                             | `8000000`                                                     | Largest structure the tools save or place, in blocks                                  |
 | `game.maxUndoBlocks`                                  | `2000000`                                                     | Most changed blocks that `undo` keeps for recent edits. `0` turns it off              |
+| `game.maxExplosionUndoBlocks`                         | `200000`                                                      | Most blocks that `undo` keeps for recent explosion damage. `0` turns it off           |
 | `triggers`                                            | none                                                          | Runs that game events or a timer start, as [triggers](#triggers) describes            |
 | `telemetry`                                           | `false`                                                       | Writes each request, the agent's tool calls and its answer to the telemetry file      |
 

@@ -17,6 +17,7 @@ import top.madkarma.conduit.config.GameConfig
 import top.madkarma.conduit.config.InvalidConfig
 import top.madkarma.conduit.events.GameEvents
 import top.madkarma.conduit.game.EditJournal
+import top.madkarma.conduit.game.ExplosionJournal
 import top.madkarma.conduit.game.GameServer
 import top.madkarma.conduit.mcp.AccessTokens
 import top.madkarma.conduit.mcp.McpHost
@@ -55,6 +56,7 @@ object Conduit : ModInitializer {
         config?.let(Triggers::apply)
 
         EditJournal.maxBlocks = { gameConfig.maxUndoBlocks }
+        ExplosionJournal.maxBlocks = { gameConfig.maxExplosionUndoBlocks }
 
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             ConduitCommand.register(dispatcher)

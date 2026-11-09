@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import top.madkarma.conduit.events.EntityLifecycle;
+import top.madkarma.conduit.game.ExplosionJournal;
 
 /**
  * New entities enter the world through addFreshEntity. Entities loaded with their chunk, players
@@ -20,6 +21,7 @@ public abstract class ServerLevelMixin {
             return;
         }
 
+        ExplosionJournal.spawned(entity);
         EntityLifecycle.onEntitySpawned(entity);
     }
 }
