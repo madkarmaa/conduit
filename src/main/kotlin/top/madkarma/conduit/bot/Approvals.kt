@@ -10,6 +10,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withTimeoutOrNull
 import net.minecraft.nbt.StringTag
 import net.minecraft.nbt.Tag
+import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.server.level.ServerPlayer
 import top.madkarma.conduit.Conduit
@@ -95,19 +96,40 @@ object Approvals {
                 server.tellAudience(asker, prompt(nonce, asker, actions, calls, timeoutSeconds))
             }
 
-            val decision = withTimeoutOrNull(timeoutSeconds.seconds) { waiting.decision.await() }
+            val firstWait = timeoutSeconds / 2
+            val decision =
+                withTimeoutOrNull(firstWait.seconds) { waiting.decision.await() }
+                    ?: remindAndWait(asker, timeoutSeconds - firstWait, waiting.decision) { left ->
+                        prompt(nonce, asker, actions, calls, left)
+                    }
             announce(asker, outcome(decision, actions))
 
-            if (decision == null)
-                throw ConduitError.NotApproved("Nobody approved this in $timeoutSeconds seconds.")
+            // Agents tend to send a refused call again right away, which only asks again.
+            if (decision == null) {
+                throw ConduitError.NotApproved(
+                    "Nobody approved this in $timeoutSeconds seconds. Ask the player before " +
+                        "trying it again.",
+                )
+            }
 
-            if (!decision.approved)
-                throw ConduitError.NotApproved("${decision.player} denied this.")
+            if (!decision.approved) {
+                throw ConduitError.NotApproved("${decision.player} denied this. Do not retry it.")
+            }
 
             return decision.all
         } finally {
             pending.remove(nonce)
         }
+    }
+
+    private suspend fun remindAndWait(
+        asker: Asker,
+        seconds: Int,
+        decision: CompletableDeferred<Decision>,
+        prompt: (Int) -> Component,
+    ): Decision? {
+        GameServer.run { it.remindAudience(asker, prompt(seconds)) }
+        return withTimeoutOrNull(seconds.seconds) { decision.await() }
     }
 
     private fun outcome(decision: Decision?, actions: String): String =

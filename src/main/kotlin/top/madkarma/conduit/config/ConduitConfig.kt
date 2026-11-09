@@ -128,7 +128,7 @@ data class ChatToolsConfig(val allow: List<String>? = null, val deny: List<Strin
  */
 @Serializable
 data class ApprovalsConfig(
-    val timeoutSeconds: Int = 30,
+    val timeoutSeconds: Int = 60,
     val add: List<String> = emptyList(),
     val remove: List<String> = emptyList(),
 )

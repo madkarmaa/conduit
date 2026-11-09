@@ -189,7 +189,7 @@ command lists the problems and keeps the old config.
 | `tools.readOnly`                                      | `false`                                                       | Full mode only gets the actions that read                                             |
 | `tools.chat.allow`                                    | the chat tools below                                          | The only tools chat mode gets                                                         |
 | `tools.chat.deny`                                     | none                                                          | Tools chat mode never gets. Without `allow`, it gets every other tool                 |
-| `approvals.timeoutSeconds`                            | `30`                                                          | How long an approval waits for a click                                                |
+| `approvals.timeoutSeconds`                            | `60`                                                          | How long an approval waits for a click                                                |
 | `approvals.add`                                       | none                                                          | Tools or actions that also need approval                                              |
 | `approvals.remove`                                    | none                                                          | Tools or actions that never need approval                                             |
 | `requests.timeoutSeconds`                             | `900`                                                         | How long a request may run, not counting approvals                                    |

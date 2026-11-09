@@ -6,7 +6,11 @@ import net.minecraft.nbt.StringTag
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.server.MinecraftServer
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
 import top.madkarma.conduit.LOGGER
 import top.madkarma.conduit.game.GameServer
 import top.madkarma.conduit.mcp.CalledAction
@@ -15,10 +19,30 @@ private const val ARGUMENTS_LENGTH = 200
 
 /** Sends a message to the asker and every online operator, who decide on approvals. */
 internal fun MinecraftServer.tellAudience(asker: Asker, message: Component) {
-    playerList.players
-        .filter { it.uuid == asker.uuid || playerList.isOp(it.nameAndId()) }
-        .forEach { it.sendSystemMessage(message) }
+    audience(asker).forEach { it.sendSystemMessage(message) }
 }
+
+/** Sends the prompt again with a sound, since chat scrolls past a prompt that waits long. */
+internal fun MinecraftServer.remindAudience(asker: Asker, message: Component) {
+    for (player in audience(asker)) {
+        player.sendSystemMessage(message)
+        player.connection.send(
+            ClientboundSoundPacket(
+                SoundEvents.NOTE_BLOCK_PLING,
+                SoundSource.MASTER,
+                player.x,
+                player.y,
+                player.z,
+                1f,
+                1f,
+                player.random.nextLong(),
+            ),
+        )
+    }
+}
+
+private fun MinecraftServer.audience(asker: Asker): List<ServerPlayer> =
+    playerList.players.filter { it.uuid == asker.uuid || playerList.isOp(it.nameAndId()) }
 
 /** The approval prompt, with `[Approve]`, `[Approve all]` and `[Deny]` buttons with the nonce. */
 internal fun prompt(
