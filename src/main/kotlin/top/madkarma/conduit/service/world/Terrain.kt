@@ -39,6 +39,9 @@ internal fun MinecraftServer.describeDimensions(): List<DimensionInfo> = allLeve
     )
 }
 
+/** A block column. */
+@Serializable data class Column(val x: Int, val z: Int)
+
 /**
  * The y of the first free block above the surface of a column. Heightmap is WORLD_SURFACE,
  * MOTION_BLOCKING, MOTION_BLOCKING_NO_LEAVES or OCEAN_FLOOR.
