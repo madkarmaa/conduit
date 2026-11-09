@@ -14,7 +14,10 @@ val TRIGGERS =
                 "every few minutes. The agent gets the trigger's prompt and the event as JSON. " +
                 "list shows the triggers. add saves one with a name, a prompt, and either " +
                 "events or every_minutes. remove deletes one, and enable and disable turn one " +
-                "on or off. Changes go to the config file and apply at once. The event types " +
+                "on or off. Changes go to the config file and apply at once. A run takes as " +
+                "long as a request, often a minute or more, so a trigger cannot react within " +
+                "seconds, such as to catch a dropped item; a datapack function can. The event " +
+                "types " +
                 "are ${EVENT_NAMES.joinToString(", ")}.",
         input =
             input {
@@ -78,7 +81,10 @@ val TRIGGERS =
                                 announce = input.boolean("announce"),
                             )
                         changeConfig { it.addingTrigger(trigger) }
-                        done("Trigger added")
+                        done(
+                            "Trigger added. Each run takes as long as a request, so tell the " +
+                                "player if the trigger needs to react within seconds.",
+                        )
                     },
                 "remove" to
                     destructiveAction { _, input ->
