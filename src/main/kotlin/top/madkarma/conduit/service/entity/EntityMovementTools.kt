@@ -11,13 +11,22 @@ val MOVE_ENTITY =
         description =
             "teleport moves an entity, players included, also across dimensions. rotate turns " +
                 "it. push sets its velocity in blocks per tick. mount puts it on a vehicle, and " +
-                "dismount takes it off. walk makes a mob walk to position along a path, though " +
-                "its own goals can take over, and stop ends the walk.",
+                "dismount takes it off. walk makes a mob walk along a path to position, or to " +
+                "target, which it follows while the target moves. Its own goals can take over. " +
+                "The mob does not despawn on the way, and the walk ends on arrival, after 2 " +
+                "minutes, or with stop.",
         input =
             input {
                 required("uuid", UUID)
                 optional("dimension", stringSchema("Target dimension for teleport."))
-                optional("position", VEC3.described("Required for teleport and walk."))
+                optional(
+                    "position",
+                    VEC3.described("Required for teleport. For walk, unless target is set."),
+                )
+                optional(
+                    "target",
+                    stringSchema("For walk: a player name or entity UUID to walk to and follow."),
+                )
                 optional(
                     "speed",
                     numberSchema(
@@ -84,9 +93,16 @@ val MOVE_ENTITY =
                     },
                 "walk" to
                     writeAction { server, input ->
-                        val target = input.decode<Vector3>("position")
-                        server.walkTo(input.string("uuid"), target, input.double("speed"))
-                        done("Walking to ${position(target)}")
+                        val goal =
+                            WalkGoal(
+                                input.decodeOrNull<Vector3>("position"),
+                                input.stringOrNull("target"),
+                            )
+                        val walk = server.walkTo(input.string("uuid"), goal, input.double("speed"))
+                        val name = walk.targetName?.let { "following $it at " }.orEmpty()
+                        done(
+                            "Walking, ${name}${position(walk.goal)}, ${round(walk.distance)} blocks away",
+                        )
                     },
                 "stop" to
                     writeAction { server, input ->

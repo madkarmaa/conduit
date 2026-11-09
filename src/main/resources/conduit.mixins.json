@@ -12,6 +12,7 @@
         "ItemEntityMixin",
         "LivingEntityMixin",
         "MerchantResultSlotMixin",
+        "MobMixin",
         "PlayerAdvancementsMixin",
         "ResultSlotMixin",
         "ServerCommonPacketListenerImplMixin",

@@ -21,6 +21,7 @@ import top.madkarma.conduit.game.GameServer
 import top.madkarma.conduit.mcp.AccessTokens
 import top.madkarma.conduit.mcp.McpHost
 import top.madkarma.conduit.service.ALL_TOOLS
+import top.madkarma.conduit.service.entity.Walks
 import top.madkarma.conduit.service.server.trackDatapackReloads
 
 object Conduit : ModInitializer {
@@ -62,6 +63,7 @@ object Conduit : ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register { server ->
             if (server.tickCount % STATUS_INTERVAL_TICKS == 0) Bot.showStatus(server)
             Triggers.onTick(server)
+            Walks.onTick(server)
         }
 
         // Singleplayer worlds start and stop an integrated server each time the player opens one.
@@ -75,6 +77,7 @@ object Conduit : ModInitializer {
         ServerLifecycleEvents.SERVER_STOPPED.register { server ->
             McpHost.stop()
             EditJournal.clear()
+            Walks.clear()
             if (GameServer.current === server) GameServer.current = null
         }
     }
