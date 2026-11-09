@@ -1,6 +1,7 @@
 package top.madkarma.conduit.service.player
 
 import java.util.UUID
+import kotlin.jvm.optionals.getOrNull
 import kotlinx.serialization.Serializable
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
@@ -22,6 +23,7 @@ data class PlayerInfo(
     val operator: Boolean,
     val mainHand: ItemInfo,
     val offHand: ItemInfo,
+    val lastDeath: DimensionPos? = null,
     /** What the player looks at. Only get_player info reads it. */
     val lookingAt: LookTarget? = null,
 )
@@ -69,6 +71,7 @@ internal fun MinecraftServer.describePlayer(player: ServerPlayer): PlayerInfo {
         operator = playerList.isOp(player.nameAndId()),
         mainHand = player.mainHandItem.toInfo(registries),
         offHand = player.offhandItem.toInfo(registries),
+        lastDeath = player.lastDeathLocation.getOrNull()?.toDimensionPos(),
     )
 }
 

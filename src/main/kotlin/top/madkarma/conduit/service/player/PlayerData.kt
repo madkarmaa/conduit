@@ -3,6 +3,7 @@ package top.madkarma.conduit.service.player
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
 import kotlinx.serialization.Serializable
+import net.minecraft.core.GlobalPos
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
@@ -47,6 +48,7 @@ data class OfflinePlayerInfo(
     val effects: List<EffectInfo>,
     /** Bed or respawn anchor, if the player has one. */
     val spawnPoint: SpawnPoint?,
+    val lastDeath: DimensionPos? = null,
 )
 
 internal fun MinecraftServer.describePlayerData(
@@ -91,6 +93,7 @@ internal fun MinecraftServer.describePlayerData(
                 .getOrNull()
                 ?.respawnData()
                 ?.toSpawnPoint(),
+        lastDeath = input.read("LastDeathLocation", GlobalPos.CODEC).getOrNull()?.toDimensionPos(),
     )
 }
 

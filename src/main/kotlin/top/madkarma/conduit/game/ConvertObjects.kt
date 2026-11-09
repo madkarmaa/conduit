@@ -3,6 +3,7 @@ package top.madkarma.conduit.game
 import kotlin.jvm.optionals.getOrNull
 import kotlinx.serialization.Serializable
 import net.minecraft.commands.arguments.blocks.BlockStateParser
+import net.minecraft.core.GlobalPos
 import net.minecraft.core.HolderLookup
 import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.registries.BuiltInRegistries
@@ -65,6 +66,12 @@ data class EntityInfo(
     val passengers: List<String>,
     val vehicle: String?,
 )
+
+/** A block in a dimension, such as where a player last died. */
+@Serializable data class DimensionPos(val dimension: String, val pos: BlockCoordinates)
+
+fun GlobalPos.toDimensionPos(): DimensionPos =
+    DimensionPos(dimension().identifier().toString(), pos().toCoordinates())
 
 @Serializable
 data class SpawnPoint(

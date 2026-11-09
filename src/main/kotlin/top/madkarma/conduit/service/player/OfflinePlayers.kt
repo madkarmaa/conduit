@@ -2,6 +2,7 @@ package top.madkarma.conduit.service.player
 
 import java.util.*
 import kotlinx.serialization.Serializable
+import net.minecraft.commands.arguments.NbtPathArgument
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.TagParser
 import net.minecraft.server.MinecraftServer
@@ -29,9 +30,21 @@ internal fun MinecraftServer.offlinePlayer(ref: String): OfflinePlayerInfo {
     return describePlayerData(id, currentPlayerData(id), ProblemReporter.DISCARDING)
 }
 
-/** The full saved data as SNBT, updated to the current game version. */
-internal fun MinecraftServer.offlinePlayerNbt(ref: String): String =
-    currentPlayerData(resolvePlayerId(ref)).toString()
+/**
+ * The saved data as SNBT, updated to the current game version. A path such as "Inventory[0]" only
+ * returns the tags it matches, one per line.
+ */
+internal fun MinecraftServer.offlinePlayerNbt(ref: String, path: String?): String {
+    val data = currentPlayerData(resolvePlayerId(ref))
+    return if (path.isNullOrBlank()) data.toString() else tagsAt(data, path)
+}
+
+/** The tags that an NBT path matches, one per line. */
+internal fun tagsAt(data: CompoundTag, path: String): String {
+    val nbtPath = NbtPathArgument.NbtPath.of(path)
+    if (nbtPath.countMatching(data) == 0) notFound("The saved data has nothing at $path")
+    return nbtPath.get(data).joinToString("\n")
+}
 
 /** Merges SNBT into the saved data, like /data merge. */
 internal fun MinecraftServer.mergeOfflinePlayerNbt(ref: String, snbt: String) {

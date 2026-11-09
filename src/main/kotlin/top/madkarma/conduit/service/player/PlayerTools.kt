@@ -56,7 +56,8 @@ val GET_PLAYER =
         description =
             "info reads an online player and what they look at. stats reads any player's " +
                 "statistics. advancements reads an online player's advancements and missing " +
-                "criteria. saved and saved_nbt read any player's saved data, also offline. " +
+                "criteria. saved and saved_nbt read any player's saved data, also offline, and " +
+                "saved_nbt takes an NBT path. " +
                 "The inventory tool reads inventories.",
         input =
             input {
@@ -66,6 +67,12 @@ val GET_PLAYER =
                     stringSchema(
                         "Substring for stats and advancements, such as \"mined\" or \"nether\".",
                         default = "",
+                    ),
+                )
+                optional(
+                    "path",
+                    stringSchema(
+                        "NBT path for saved_nbt, such as \"LastDeathLocation\" or \"Inventory[0]\".",
                     ),
                 )
                 optional(
@@ -96,7 +103,12 @@ val GET_PLAYER =
                     },
                 "saved_nbt" to
                     readAction { server, input ->
-                        done(server.offlinePlayerNbt(input.string("player")))
+                        done(
+                            server.offlinePlayerNbt(
+                                input.string("player"),
+                                input.stringOrNull("path"),
+                            ),
+                        )
                     },
             ),
     )
