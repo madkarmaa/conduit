@@ -38,7 +38,12 @@ object GameServer {
                 CompletableFuture.supplyAsync({ block(server) }, server).await()
             }
         } catch (_: TimeoutCancellationException) {
-            throw ConduitError.TimedOut("Game thread did not respond in time")
+            // The task stays queued on the server thread, so it may still run after this.
+            throw ConduitError.TimedOut(
+                "The game thread did not respond within ${GAME_THREAD_TIMEOUT_MS / 1000} s. The " +
+                    "call may still finish on the server, such as while it generates chunks, so " +
+                    "check its result before repeating it.",
+            )
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
