@@ -9,15 +9,8 @@ import net.minecraft.network.chat.Component
 import top.madkarma.conduit.Conduit
 import top.madkarma.conduit.LOGGER
 import top.madkarma.conduit.config.ConduitConfig
-import top.madkarma.conduit.game.ConduitError
 import top.madkarma.conduit.game.GameServer
 import top.madkarma.conduit.mcp.AccessTokens
-import top.madkarma.conduit.service.player.PlayerPlace
-import top.madkarma.conduit.service.player.placeOf
-
-// The runner stops a run on its own after this many request timeouts. The mod's deadline, which
-// waits for approvals, ends runs long before that by cancelling them.
-private const val RUNNER_TIMEOUT_FACTOR = 4
 
 /** Runs one request with its mode's agent and posts the answer for everyone. */
 object Answers {
@@ -67,30 +60,7 @@ object Answers {
         val afterCancel = Conversations.takeCancelled(conversation)
 
         try {
-            val run =
-                RunRequest(
-                    cli = agent.cli,
-                    model = agent.model,
-                    effort = agent.effort,
-                    options = agent.options,
-                    web = agent.web,
-                    instructions =
-                        config.buildInstructions(request.mode, request.asker, request.trigger),
-                    prompt =
-                        request.trigger?.let(::triggerPrompt)
-                            ?: requestPrompt(
-                                request.asker,
-                                request.text,
-                                askerPlace(request),
-                                afterCancel,
-                            ),
-                    conversation = conversation,
-                    mcp = McpAccess(agent.mcpUrl, token),
-                    apiKey = agent.apiKey,
-                    dangerouslyUseSubscriptionCredentials =
-                        agent.dangerouslyUseSubscriptionCredentials,
-                    timeoutSeconds = config.requests.timeoutSeconds * RUNNER_TIMEOUT_FACTOR,
-                )
+            val run = runRequestOf(config, request, conversation, token, afterCancel)
 
             val outcome = runner.runWithDeadline(run, deadline)
             if (outcome.timedOut)
@@ -129,14 +99,6 @@ object Answers {
             AccessTokens.revoke(token)
         }
     }
-
-    // A missing server only costs the agent the hint, so the request goes on without it.
-    private suspend fun askerPlace(request: BotRequest): PlayerPlace? =
-        try {
-            GameServer.run { it.placeOf(request.asker.uuid) }
-        } catch (exception: ConduitError) {
-            null
-        }
 
     // An answer to a player names them, like their request named the bot. Errors and other posts
     // do not, and errors show in red.

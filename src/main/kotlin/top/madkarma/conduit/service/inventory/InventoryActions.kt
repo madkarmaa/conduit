@@ -111,30 +111,5 @@ internal fun MinecraftServer.give(input: ToolInput): Reply {
     return done("$result. The player now holds $held ${item.id}.")
 }
 
-internal fun describeInventory(header: String, inventory: InventoryContents): Reply =
-    lines(
-        header,
-        inventory.slots.map { (slot, item) -> "$slot: ${itemText(item)}" },
-        dataOf("slots" to encoded(inventory.slots)),
-    )
-
-private fun describeEntityItems(slots: List<EntitySlot>): Reply =
-    lines(
-        "Entity slots that hold items:",
-        slots.map { (slot, item) -> "$slot: ${itemText(item)}" },
-        dataOf("slots" to encoded(slots)),
-    )
-
 private fun MinecraftServer.playerItems(player: String, enderChest: Boolean): InventoryContents =
     if (enderChest) enderChestOf(player) else inventoryOf(player)
-
-private fun slotLine(slot: Int, contents: InventoryContents): String =
-    slotLine(slot.toString(), contents.slots.find { it.slot == slot }?.item)
-
-private fun slotLine(slot: String, item: ItemInfo?): String =
-    "Slot $slot: ${item?.let(::itemText) ?: "empty"}"
-
-private fun itemText(item: ItemInfo): String {
-    val components = if (item.components.isEmpty()) "" else " ${item.components}"
-    return "${item.count} ${item.id}$components"
-}
