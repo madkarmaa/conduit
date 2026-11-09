@@ -22,7 +22,8 @@ val FIND =
                 "radius of center, nearest first. items finds the containers that hold an " +
                 "item, counting shulker boxes and bundles. structure, biome and poi find the " +
                 "nearest one from center, like /locate. Points of interest only exist in " +
-                "chunks loaded since they were placed.",
+                "chunks loaded since they were placed. spot finds safe places for a player to " +
+                "stand, nearest first.",
         input =
             input {
                 optional("dimension", DIMENSION)
@@ -56,12 +57,12 @@ val FIND =
                 optional(
                     "radius",
                     integerSchema(
-                        "For blocks and items, around center.",
+                        "For blocks, items and spot, around center.",
                         min = 0,
                         max = MAX_RADIUS,
                     ),
                 )
-                optional("from", BLOCK_POS.described("Cuboid corner for blocks and items."))
+                optional("from", BLOCK_POS.described("Cuboid corner for blocks, items and spot."))
                 optional("to", BLOCK_POS.described("Opposite cuboid corner."))
                 optional(
                     "loaded_only",
@@ -70,12 +71,20 @@ val FIND =
                         default = false,
                     ),
                 )
+                optional(
+                    "outside",
+                    objectSchema("spot leaves out this box, such as a structure's.") {
+                        required("from", BLOCK_POS)
+                        required("to", BLOCK_POS)
+                    },
+                )
                 optional("limit", LIMIT)
             },
         actions =
             mapOf(
                 "blocks" to readAction { server, input -> server.blocksReply(input) },
                 "items" to readAction { server, input -> server.itemsReply(input) },
+                "spot" to readAction { server, input -> server.spotsReply(input) },
                 "structure" to
                     readAction { server, input ->
                         locatedReply(
