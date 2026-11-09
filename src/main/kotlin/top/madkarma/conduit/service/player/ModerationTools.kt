@@ -8,20 +8,16 @@ val MODERATION =
         title = "Moderation",
         description =
             "kick disconnects a player. ban bans a player, also an offline one, for some " +
-                "minutes or for good. pardon lifts a ban. whitelist_add, whitelist_remove and " +
-                "whitelist_enabled change the whitelist.",
+                "minutes or for good. pardon lifts a ban. whitelist_add and whitelist_remove " +
+                "change the whitelist, and server_settings turns it on.",
         input =
             input {
-                optional(
-                    "player",
-                    PLAYER.described("Required for every action but whitelist_enabled."),
-                )
+                required("player", PLAYER)
                 optional("reason", stringSchema("Kick or ban message."))
                 optional(
                     "minutes",
                     integerSchema("How long ban lasts. Leave it out for good.", min = 1),
                 )
-                optional("enabled", booleanSchema("Required for whitelist_enabled."))
             },
         actions =
             mapOf(
@@ -51,12 +47,6 @@ val MODERATION =
                     writeAction { server, input ->
                         server.removeFromWhitelist(input.string("player"))
                         done("Removed from the whitelist")
-                    },
-                "whitelist_enabled" to
-                    destructiveAction { server, input ->
-                        val enabled = input.boolean("enabled")
-                        server.changeWhitelistEnabled(enabled)
-                        done(if (enabled) "Whitelist on" else "Whitelist off")
                     },
             ),
     )

@@ -64,11 +64,6 @@ internal fun MinecraftServer.removeFromWhitelist(ref: String) {
     kickUnlistedPlayers()
 }
 
-internal fun MinecraftServer.changeWhitelistEnabled(enabled: Boolean) {
-    isUsingWhitelist = enabled
-    kickUnlistedPlayers()
-}
-
 private fun MinecraftServer.profile(ref: String): NameAndId {
     val id = resolvePlayerId(ref)
     return NameAndId(id, lastKnownName(id).ifEmpty { ref })

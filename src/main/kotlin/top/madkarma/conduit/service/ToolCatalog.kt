@@ -14,6 +14,7 @@ import top.madkarma.conduit.service.server.DATAPACKS
 import top.madkarma.conduit.service.server.RUN_COMMAND
 import top.madkarma.conduit.service.server.SERVER_ADMIN
 import top.madkarma.conduit.service.server.SERVER_INFO
+import top.madkarma.conduit.service.server.SERVER_SETTINGS
 import top.madkarma.conduit.service.structure.STRUCTURES
 import top.madkarma.conduit.service.world.*
 
@@ -22,6 +23,7 @@ val ALL_TOOLS: List<ToolDefinition> =
     listOf(
         SERVER_INFO,
         SERVER_ADMIN,
+        SERVER_SETTINGS,
         RUN_COMMAND,
         DATAPACKS,
         WORLD_INFO,

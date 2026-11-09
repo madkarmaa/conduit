@@ -256,11 +256,12 @@ claude mcp add --transport http conduit http://localhost:25585/mcp \
 
 The host name in the URL must be in `mcp.allowedHosts`.
 
-The server has 25 tools. Tools with several operations take an `action` argument.
+The server has 26 tools. Tools with several operations take an `action` argument.
 
 | Area       | Read                                       | Write                                              |
 | ---------- | ------------------------------------------ | -------------------------------------------------- |
 | Server     | `server_info`, `datapacks`                 | `server_admin`, `run_command`, `datapacks`         |
+| Settings   | `server_settings`                          | `server_settings`                                  |
 | World      | `world_info`                               | `edit_world`                                       |
 | Blocks     | `get_blocks`, `find`, `structures`, `undo` | `edit_blocks`, `structures`, `undo`                |
 | Entities   | `entities`                                 | `edit_entity`, `move_entity`                       |
