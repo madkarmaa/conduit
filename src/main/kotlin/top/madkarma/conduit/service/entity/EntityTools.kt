@@ -95,7 +95,12 @@ private fun MinecraftServer.listEntities(input: ToolInput): Reply {
 private fun describeListed(listed: ListedEntity): String {
     val distance = listed.distance?.let { " ${round(it)} away" }.orEmpty()
     val depth = listed.belowSurface
-    val surface = if (depth > 0) " $depth below surface" else " at surface"
+    val surface =
+        when {
+            depth == null -> ""
+            depth > 0 -> " $depth below surface"
+            else -> " at surface"
+        }
     return describeEntity(listed.entity) + distance + surface
 }
 

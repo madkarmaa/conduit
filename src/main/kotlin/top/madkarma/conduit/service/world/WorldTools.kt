@@ -13,7 +13,8 @@ val WORLD_INFO =
         description =
             "info reads the time, weather, spawn and world border. A day is 24000 ticks, " +
                 "and noon is 6000. game_rules lists the game rules. height returns the y of " +
-                "the first free block above a column, or above each column in points. chunk " +
+                "the first free block above a column, or above each column in points. Under " +
+                "a ceiling, such as in the Nether, it lists the floors to stand on. chunk " +
                 "tells whether a column's chunk is loaded or forced, with entity counts.",
         input =
             input {
@@ -75,12 +76,13 @@ private fun heights(server: MinecraftServer, input: ToolInput): Reply {
     val points = input.decodeOrNull<List<Column>>("points")
 
     if (points == null) {
-        return done("y=${server.heightAt(dimension, input.int("x"), input.int("z"), heightmap)}")
+        val height = server.columnHeight(dimension, input.int("x"), input.int("z"), heightmap)
+        return done(if (height.first().isLetter()) height else "y=$height")
     }
     if (input.has("x") || input.has("z")) invalidInput("Set either x and z, or points")
 
     val lines = points.map {
-        "${it.x} ${it.z} ${server.heightAt(dimension, it.x, it.z, heightmap)}"
+        "${it.x} ${it.z} ${server.columnHeight(dimension, it.x, it.z, heightmap)}"
     }
     return done(lines.joinToString("\n"))
 }

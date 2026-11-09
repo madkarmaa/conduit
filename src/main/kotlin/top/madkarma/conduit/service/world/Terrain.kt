@@ -10,6 +10,8 @@ import net.minecraft.world.phys.AABB
 import top.madkarma.conduit.game.enumByName
 import top.madkarma.conduit.game.level
 
+private const val MAX_FLOORS = 8
+
 @Serializable
 data class DimensionInfo(
     val id: String,
@@ -44,15 +46,31 @@ internal fun MinecraftServer.describeDimensions(): List<DimensionInfo> = allLeve
 
 /**
  * The y of the first free block above the surface of a column. Heightmap is WORLD_SURFACE,
- * MOTION_BLOCKING, MOTION_BLOCKING_NO_LEAVES or OCEAN_FLOOR.
+ * MOTION_BLOCKING, MOTION_BLOCKING_NO_LEAVES or OCEAN_FLOOR. In a dimension with a ceiling, every
+ * column's surface is the roof, so this gives the floors under it instead, such as "floors 81 64".
  */
-internal fun MinecraftServer.heightAt(dimension: String?, x: Int, z: Int, heightmap: String?): Int {
+internal fun MinecraftServer.columnHeight(
+    dimension: String?,
+    x: Int,
+    z: Int,
+    heightmap: String?,
+): String {
     val type = enumByName(heightmap, Heightmap.Types.MOTION_BLOCKING, "heightmap")
     val level = level(dimension)
 
     // Heightmaps of unloaded chunks read as the world bottom, so this loads the chunk first.
     level.getChunk(SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(z))
-    return level.getHeight(type, x, z)
+    if (!level.dimensionType().hasCeiling()) return level.getHeight(type, x, z).toString()
+
+    // Above the logical height, such as on top of the Nether's bedrock, is not part of the world.
+    val logicalTop = level.minY + level.dimensionType().logicalHeight()
+    val top = minOf(level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z), logicalTop) - 1
+    val floors = columnFloors(level, x, z, top, level.minY + 1)
+    if (floors.isEmpty()) return "no floors"
+
+    val more = floors.size - MAX_FLOORS
+    val shown = floors.take(MAX_FLOORS).joinToString(" ")
+    return if (more > 0) "floors $shown and $more more" else "floors $shown"
 }
 
 internal fun MinecraftServer.describeChunk(

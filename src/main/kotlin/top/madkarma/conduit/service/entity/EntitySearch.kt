@@ -42,8 +42,11 @@ data class ListedEntity(
     val entity: EntityInfo,
     /** Blocks from the center of the search, when it has one. */
     val distance: Double? = null,
-    /** Blocks from the surface of the entity's column down to its feet, 0 or less above ground. */
-    val belowSurface: Int,
+    /**
+     * Blocks from the surface of the entity's column down to its feet, 0 or less above ground. Null
+     * under a ceiling, where the surface is the roof.
+     */
+    val belowSurface: Int? = null,
 )
 
 internal fun MinecraftServer.findEntities(query: EntityQuery): List<ListedEntity> {
@@ -57,8 +60,11 @@ internal fun MinecraftServer.findEntities(query: EntityQuery): List<ListedEntity
 }
 
 private fun Entity.toListed(center: Vec3?): ListedEntity {
+    val distance = center?.let { position().distanceTo(it) }
+    if (level().dimensionType().hasCeiling()) return ListedEntity(toInfo(), distance)
+
     val surface = level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, blockX, blockZ)
-    return ListedEntity(toInfo(), center?.let { position().distanceTo(it) }, surface - blockY)
+    return ListedEntity(toInfo(), distance, surface - blockY)
 }
 
 /** Hides every player but onlyPlayer from a caller limited to that player's data. */

@@ -49,3 +49,7 @@ private fun isFree(level: BlockGetter, pos: BlockPos): Boolean {
         state.fluidState.isEmpty &&
         state.getCollisionShape(level, pos).isEmpty
 }
+
+/** The feet heights in a column where a player can stand, from the top down. */
+internal fun columnFloors(level: BlockGetter, x: Int, z: Int, top: Int, bottom: Int): List<Int> =
+    (top downTo bottom).filter { isSafeSpot(level, BlockPos(x, it, z)) }

@@ -52,4 +52,16 @@ class SpotsTest {
         assertEquals(26, shell.toSet().size)
         assertEquals(98, shellPositions(center, 2).count())
     }
+
+    @Test
+    fun `a column lists every floor from the top down`() {
+        val blocks =
+            FakeBlocks()
+                .set(0, 0, 0, Blocks.NETHERRACK)
+                .set(0, 3, 0, Blocks.NETHERRACK)
+                .set(0, 4, 0, Blocks.NETHERRACK)
+                .set(0, 9, 0, Blocks.BEDROCK)
+
+        assertEquals(listOf(5, 1), columnFloors(blocks, 0, 0, top = 8, bottom = 1))
+    }
 }
