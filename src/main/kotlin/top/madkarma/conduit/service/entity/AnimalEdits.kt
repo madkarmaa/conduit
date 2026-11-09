@@ -39,9 +39,9 @@ internal fun MinecraftServer.changeOwner(uuid: String, player: String): String {
     if (animal is TamableAnimal) {
         // Taming an animal for the first time sets it up, such as a wolf's higher health.
         if (!animal.isTame) animal.setTame(true, true)
-        animal.setOwnerReference(reference)
+        animal.ownerReference = reference
     } else if (animal is AbstractHorse) {
-        animal.setTamed(true)
+        animal.isTamed = true
         (animal as AbstractHorseAccessor).setOwnerReference(reference)
     }
 
@@ -56,8 +56,8 @@ internal fun MinecraftServer.changeSitting(uuid: String, sitting: Boolean) {
             ?: failedPrecondition("A ${entity.typeId()} cannot sit. Wolves, cats and parrots can.")
     if (!animal.isTame) failedPrecondition("Only tamed animals sit. Tame it with owner first.")
 
-    animal.setOrderedToSit(sitting)
-    animal.setInSittingPose(sitting)
+    animal.isOrderedToSit = sitting
+    animal.isInSittingPose = sitting
 }
 
 private fun Entity.typeId(): String = BuiltInRegistries.ENTITY_TYPE.getKey(type).toString()

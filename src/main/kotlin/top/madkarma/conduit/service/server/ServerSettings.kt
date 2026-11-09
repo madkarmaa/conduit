@@ -67,7 +67,7 @@ internal val LIVE_SETTINGS: List<ServerSetting> =
             "max_players",
             atLeastZero,
             { it.maxPlayers },
-            { server, value -> server.setMaxPlayers(value) },
+            { server, value -> server.maxPlayers = value },
         ),
         number(
             "player_idle_timeout",
@@ -82,7 +82,7 @@ internal val LIVE_SETTINGS: List<ServerSetting> =
             { server, value -> server.setPauseWhenEmptySeconds(value) },
         ),
         ServerSetting("motd", false, "any text", { it.motd }) { server, value ->
-            server.setMotd(value)
+            server.motd = value
         },
         number(
             "status_heartbeat_interval",
@@ -90,5 +90,5 @@ internal val LIVE_SETTINGS: List<ServerSetting> =
             { it.statusHeartbeatInterval() },
             { server, value -> server.setStatusHeartbeatInterval(value) },
         ),
-        flag("auto_save", { it.isAutoSave }, { server, value -> server.setAutoSave(value) }),
+        flag("auto_save", { it.isAutoSave }, { server, value -> server.isAutoSave = value }),
     ) + ACCESS_SETTINGS

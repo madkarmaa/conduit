@@ -2,6 +2,7 @@ package top.madkarma.conduit.service.world
 
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.roundToInt
 import kotlin.math.sqrt
 import kotlinx.serialization.Serializable
 import net.minecraft.core.BlockPos
@@ -97,7 +98,7 @@ private fun spotAt(pos: BlockPos, center: BlockPos, floor: Block): Spot {
         pos.y,
         pos.z + 0.5,
         BuiltInRegistries.BLOCK.getKey(floor).toString(),
-        Math.round(distance * 10) / 10.0,
+        (distance * 10).roundToInt() / 10.0,
     )
 }
 

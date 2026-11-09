@@ -104,7 +104,7 @@ object ConduitCommand {
     // /conduit telemetry, or /conduit telemetry enable|disable|clear.
     private fun telemetry(): LiteralArgumentBuilder<CommandSourceStack> {
         val choices =
-            mapOf<String, (CommandSourceStack) -> Unit>(
+            mapOf(
                 "enable" to { TelemetryCommand.change(it, enabled = true) },
                 "disable" to { TelemetryCommand.change(it, enabled = false) },
                 "clear" to TelemetryCommand::clear,

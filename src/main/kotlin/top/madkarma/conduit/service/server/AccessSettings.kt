@@ -21,7 +21,7 @@ internal val ACCESS_SETTINGS: List<ServerSetting> =
             "enforce_whitelist",
             { it.isEnforceWhitelist },
             { server, value ->
-                server.setEnforceWhitelist(value)
+                server.isEnforceWhitelist = value
                 server.kickUnlistedPlayers()
             },
             access = true,

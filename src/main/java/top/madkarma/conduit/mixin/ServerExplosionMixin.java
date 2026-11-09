@@ -16,12 +16,12 @@ import top.madkarma.conduit.game.ExplosionJournal;
 @Mixin(ServerExplosion.class)
 public abstract class ServerExplosionMixin {
     @Inject(method = "interactWithBlocks", at = @At("HEAD"))
-    private void conduit$beforeBlocks(List<BlockPos> positions, CallbackInfo info) {
-        ExplosionJournal.before((ServerExplosion) (Object) this, positions);
+    private void conduit$beforeBlocks(List<BlockPos> targetBlocks, CallbackInfo info) {
+        ExplosionJournal.before((ServerExplosion) (Object) this, targetBlocks);
     }
 
     @Inject(method = "interactWithBlocks", at = @At("RETURN"))
-    private void conduit$afterBlocks(List<BlockPos> positions, CallbackInfo info) {
+    private void conduit$afterBlocks(List<BlockPos> targetBlocks, CallbackInfo info) {
         ExplosionJournal.after((ServerExplosion) (Object) this);
     }
 }

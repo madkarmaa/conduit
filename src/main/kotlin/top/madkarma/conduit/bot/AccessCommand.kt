@@ -50,10 +50,10 @@ object AccessCommand {
     private fun describe(mode: Mode, config: ConduitConfig): String {
         val access = if (mode == Mode.FULL) config.access.full else config.access.chat
         val default =
-            when {
-                mode == Mode.FULL && !config.agents.full.enabled -> "off"
-                mode == Mode.FULL && config.access.operators -> "operators by default"
-                mode == Mode.CHAT && config.agents.chat.enabled -> "everyone by default"
+            when (mode) {
+                Mode.FULL if !config.agents.full.enabled -> "off"
+                Mode.FULL if config.access.operators -> "operators by default"
+                Mode.CHAT if config.agents.chat.enabled -> "everyone by default"
                 else -> "nobody by default"
             }
 
