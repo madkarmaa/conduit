@@ -62,6 +62,16 @@ class ToolPolicyTest {
         limited.checkPlayers(parseJson("""{"other": "Steve"}"""))
     }
 
+    // The game resolves a prefix to a player, so a prefix of the policy's own name could still
+    // name someone else, such as "Alex" for a player called Alexander.
+    @Test
+    fun `checkPlayers refuses a prefix of the policy's player`() {
+        assertEquals(
+            "Only the data of Alex is available",
+            checkPlayersMessage(limited, """{"player": "Al"}"""),
+        )
+    }
+
     @Test
     fun `checkPlayers refuses other players`() {
         assertEquals(

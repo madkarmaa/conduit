@@ -25,7 +25,8 @@ val ROTATION =
 
 val UUID = stringSchema("Entity UUID.")
 
-val PLAYER = stringSchema("Player name or UUID.")
+val PLAYER =
+    stringSchema("Player name or UUID. The start of a name works when only one player has it.")
 
 val SNBT = stringSchema("SNBT, such as {CustomName:\"Bob\",NoAI:1b}.")
 

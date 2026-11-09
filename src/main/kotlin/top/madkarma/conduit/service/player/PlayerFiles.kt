@@ -17,6 +17,7 @@ import net.minecraft.world.level.storage.LevelResource
 import top.madkarma.conduit.game.failedPrecondition
 import top.madkarma.conduit.game.invalidInput
 import top.madkarma.conduit.game.notFound
+import top.madkarma.conduit.game.uniqueNameMatch
 
 // This reads and writes saved player data on the server thread, each call within one
 // GameServer.run block. Logins load this data on the server thread too, so a login never reads a
@@ -44,8 +45,15 @@ internal fun MinecraftServer.resolvePlayerId(ref: String): UUID {
 
     // The name cache's own lookup by name calls the Mojang API on a miss, which would block the
     // server thread. Comparing the cached names of the known players avoids that.
-    val known = knownPlayerIds().firstOrNull { lastKnownName(it).equals(ref, ignoreCase = true) }
-    if (known != null) return known
+    val known = knownPlayerIds().associateBy { lastKnownName(it) }.filterKeys { it.isNotEmpty() }
+    known.entries
+        .firstOrNull { it.key.equals(ref, ignoreCase = true) }
+        ?.let {
+            return it.value
+        }
+    uniqueNameMatch(known.keys, ref)?.let {
+        return known.getValue(it)
+    }
 
     if (!usesAuthentication()) return UUIDUtil.createOfflinePlayerUUID(ref)
     notFound("Unknown player: $ref")
