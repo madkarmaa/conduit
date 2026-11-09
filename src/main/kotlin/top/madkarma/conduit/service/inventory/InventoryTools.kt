@@ -19,9 +19,10 @@ val INVENTORY =
                 "fills an entity's storage, such as a chest minecart's, a donkey's chest or a " +
                 "villager's inventory. With ender_chest, the actions but " +
                 "select_slot work on the player's ender chest, slots 0-26, instead. read lists " +
-                "the items. set_slot puts an item in a slot or empties it. clear empties " +
-                "every slot. select_slot picks a player's held hotbar slot. give adds an item " +
-                "stack. Items that do not fit drop at a player's feet, or stay out of a " +
+                "the items. set_slot puts an item in a slot or empties it, and replies with what the " +
+                "slot now holds. clear empties every slot. select_slot picks a player's held " +
+                "hotbar slot. give adds an item stack, and for a player replies with how many of " +
+                "the item they now hold. Items that do not fit drop at a player's feet, or stay out of a " +
                 "container. Player slots 0-8 are the hotbar, 9-35 the main inventory, 36-39 " +
                 "armor from feet to head and 40 the offhand.",
         input =
@@ -52,10 +53,7 @@ val INVENTORY =
         actions =
             mapOf(
                 "read" to readAction { server, input -> server.readInventory(input) },
-                "set_slot" to
-                    writeAction { server, input ->
-                        done("Slot ${server.setSlot(input)} set")
-                    },
+                "set_slot" to writeAction { server, input -> done(server.setSlot(input)) },
                 "clear" to
                     destructiveAction { server, input ->
                         server.clear(input)

@@ -50,20 +50,28 @@ internal fun MinecraftServer.readInventory(input: ToolInput): Reply {
     )
 }
 
-// Returns the slot it set.
+// Returns a line with the slot it set and the item now in it.
 internal fun MinecraftServer.setSlot(input: ToolInput): String {
     val item = input.decodeOrNull<ItemInfo>("item")
     entityTarget(input)?.let { uuid ->
         input.require("slot_name")
-        changeEntitySlot(uuid, input.string("slot_name"), item)
-        return input.string("slot_name")
+        val name = input.string("slot_name")
+        changeEntitySlot(uuid, name, item)
+        return slotLine(name, entityItems(uuid).find { it.slot == name }?.item)
     }
 
     val slot = input.int("slot")
+    val dimension = input.stringOrNull("dimension")
     val pos = containerPos(input)
-    if (pos != null) changeContainerSlot(input.stringOrNull("dimension"), pos, slot, item)
-    else changeInventorySlot(input.string("player"), slot, item, input.boolean("ender_chest"))
-    return slot.toString()
+    if (pos != null) {
+        changeContainerSlot(dimension, pos, slot, item)
+        return slotLine(slot, containerContents(dimension, pos))
+    }
+
+    val player = input.string("player")
+    val enderChest = input.boolean("ender_chest")
+    changeInventorySlot(player, slot, item, enderChest)
+    return slotLine(slot, playerItems(player, enderChest))
 }
 
 internal fun MinecraftServer.clear(input: ToolInput) {
@@ -91,26 +99,42 @@ internal fun MinecraftServer.give(input: ToolInput): Reply {
         return done(if (left > 0) "$gave, $left did not fit" else gave)
     }
 
-    val dropped = giveItem(input.string("player"), item, input.boolean("ender_chest"))
-    return done(if (dropped > 0) "$gave, $dropped dropped" else gave)
+    val player = input.string("player")
+    val enderChest = input.boolean("ender_chest")
+    val dropped = giveItem(player, item, enderChest)
+    val held =
+        playerItems(player, enderChest)
+            .slots
+            .filter { it.item.id == item.id }
+            .sumOf { it.item.count }
+    val result = if (dropped > 0) "$gave, $dropped dropped" else gave
+    return done("$result. The player now holds $held ${item.id}.")
 }
 
 internal fun describeInventory(header: String, inventory: InventoryContents): Reply =
     lines(
         header,
-        inventory.slots.map { (slot, item) ->
-            val components = if (item.components.isEmpty()) "" else " ${item.components}"
-            "$slot: ${item.count} ${item.id}$components"
-        },
+        inventory.slots.map { (slot, item) -> "$slot: ${itemText(item)}" },
         dataOf("slots" to encoded(inventory.slots)),
     )
 
 private fun describeEntityItems(slots: List<EntitySlot>): Reply =
     lines(
         "Entity slots that hold items:",
-        slots.map { (slot, item) ->
-            val components = if (item.components.isEmpty()) "" else " ${item.components}"
-            "$slot: ${item.count} ${item.id}$components"
-        },
+        slots.map { (slot, item) -> "$slot: ${itemText(item)}" },
         dataOf("slots" to encoded(slots)),
     )
+
+private fun MinecraftServer.playerItems(player: String, enderChest: Boolean): InventoryContents =
+    if (enderChest) enderChestOf(player) else inventoryOf(player)
+
+private fun slotLine(slot: Int, contents: InventoryContents): String =
+    slotLine(slot.toString(), contents.slots.find { it.slot == slot }?.item)
+
+private fun slotLine(slot: String, item: ItemInfo?): String =
+    "Slot $slot: ${item?.let(::itemText) ?: "empty"}"
+
+private fun itemText(item: ItemInfo): String {
+    val components = if (item.components.isEmpty()) "" else " ${item.components}"
+    return "${item.count} ${item.id}$components"
+}
