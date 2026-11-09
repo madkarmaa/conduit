@@ -9,6 +9,8 @@ import net.minecraft.resources.ResourceKey
 import net.minecraft.server.MinecraftServer
 import net.minecraft.tags.TagKey
 import top.madkarma.conduit.game.*
+import top.madkarma.conduit.service.player.advancementTitles
+import top.madkarma.conduit.service.player.looselyContains
 
 private const val DEFAULT_PAGE_SIZE = 1000
 private const val MAX_PAGE_SIZE = 10000
@@ -28,7 +30,13 @@ data class TagInfo(
 )
 
 /** One page of ids, with the number of matching ids before paging. */
-@Serializable data class IdPage(val total: Int, val ids: List<String>)
+/** A page of ids, with the titles of those that have one, such as advancements. */
+@Serializable
+data class IdPage(
+    val total: Int,
+    val ids: List<String>,
+    val titles: Map<String, String> = emptyMap(),
+)
 
 internal fun requireId(id: String, kind: String): Identifier {
     if (id.isBlank()) invalidInput("A $kind id is required")
@@ -56,7 +64,7 @@ internal fun MinecraftServer.describeRegistries(): List<RegistryInfo> {
 
 /**
  * Entry ids of a registry in id order, filtered by a case-insensitive substring and optionally by a
- * tag such as "#minecraft:logs".
+ * tag such as "#minecraft:logs". Advancements also match by title.
  */
 internal fun MinecraftServer.readRegistryEntries(
     registry: String,
@@ -65,8 +73,16 @@ internal fun MinecraftServer.readRegistryEntries(
     offset: Int,
     limit: Int,
 ): IdPage {
-    val ids = memberIds(registry, tag.orEmpty()).filter { it.contains(filter, ignoreCase = true) }
-    return IdPage(ids.size, ids.page(offset, limit))
+    val titles =
+        if (registry.removePrefix("minecraft:") == "advancement") advancementTitles()
+        else emptyMap()
+    val ids =
+        memberIds(registry, tag.orEmpty()).filter { id ->
+            id.contains(filter, ignoreCase = true) ||
+                titles[id]?.let { looselyContains(it, filter) } == true
+        }
+    val page = ids.page(offset, limit)
+    return IdPage(ids.size, page, titles.filterKeys { it in page })
 }
 
 internal fun MinecraftServer.readTags(registry: String): List<TagInfo> {

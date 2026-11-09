@@ -33,10 +33,7 @@ internal fun MinecraftServer.advancementsOf(
         .asSequence()
         .filter { it.value().display().isPresent && !it.id().path.startsWith("recipes/") }
         .map { statusOf(player, it) }
-        .filter {
-            it.id.contains(filter, ignoreCase = true) ||
-                it.title.contains(filter, ignoreCase = true)
-        }
+        .filter { it.id.contains(filter, ignoreCase = true) || looselyContains(it.title, filter) }
         .filter { status == "all" || it.done == (status == "done") }
         .sortedBy { it.id }
         .toList()
@@ -81,8 +78,36 @@ private fun statusOf(player: ServerPlayer, advancement: AdvancementHolder): Adva
     )
 }
 
-private fun MinecraftServer.advancement(id: String): AdvancementHolder =
-    advancements.get(parseId(id)) ?: notFound("Unknown advancement: $id")
+/** The titles of the advancements that have one, by id. */
+internal fun MinecraftServer.advancementTitles(): Map<String, String> =
+    advancements.allAdvancements
+        .mapNotNull { holder ->
+            holder.value().display().getOrNull()?.let { holder.id().toString() to it.title.string }
+        }
+        .toMap()
+
+/**
+ * Whether a title contains filter, ignoring case and punctuation, so "how_did" matches "How Did We
+ * Get Here?".
+ */
+internal fun looselyContains(title: String, filter: String): Boolean =
+    loose(title).contains(loose(filter))
+
+private fun loose(text: String): String = text.lowercase().replace(NOT_LETTERS, " ").trim()
+
+private val NOT_LETTERS = Regex("[^\\p{L}\\p{N}]+")
+
+// Agents often guess an id from the title, so a matching title names the real id.
+private fun MinecraftServer.advancement(id: String): AdvancementHolder {
+    advancements.get(parseId(id))?.let {
+        return it
+    }
+
+    val name = id.substringAfterLast(':').substringAfterLast('/')
+    val match = advancementTitles().entries.firstOrNull { loose(it.value) == loose(name) }
+    val hint = match?.let { ". \"${it.value}\" is ${it.key}" }.orEmpty()
+    notFound("Unknown advancement: $id$hint")
+}
 
 private fun checkedCriterion(advancement: AdvancementHolder, criterion: String): String {
     if (criterion !in advancement.value().criteria()) {

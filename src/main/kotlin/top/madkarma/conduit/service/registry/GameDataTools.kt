@@ -23,7 +23,8 @@ val GAME_DATA =
                 optional(
                     "filter",
                     stringSchema(
-                        "Case-insensitive substring of the id, for registries, entries and tags.",
+                        "Case-insensitive substring of the id, for registries, entries and tags. " +
+                            "Advancements also match by title, such as \"how did we get here\".",
                         default = "",
                     ),
                 )
@@ -98,7 +99,8 @@ private fun MinecraftServer.entriesReply(input: ToolInput): Reply {
             input.int("offset"),
             input.int("limit"),
         )
-    return lines("${entries.total} matching entries", entries.ids, encodedObject(entries))
+    val rows = entries.ids.map { id -> entries.titles[id]?.let { "$id \"$it\"" } ?: id }
+    return lines("${entries.total} matching entries", rows, encodedObject(entries))
 }
 
 private fun MinecraftServer.recipesReply(input: ToolInput): Reply {
