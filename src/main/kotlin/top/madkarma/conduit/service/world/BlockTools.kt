@@ -93,19 +93,27 @@ private fun MinecraftServer.regionReply(input: ToolInput): Reply {
         return imageReply(image, from, to)
     }
 
-    if (drawing && volume(from, to) > MAX_DRAWN_VOLUME) {
-        invalidInput("draw supports up to $MAX_DRAWN_VOLUME blocks")
-    }
+    if (drawing) checkDrawable(from, to)
 
     val region = readRegion(input.stringOrNull("dimension"), from, to, input.boolean("loaded_only"))
     if (!drawing) return summarizeRegion(region)
-    if (!paletteFits(region)) invalidInput("Too many block states to draw")
+    if (!paletteFits(region)) {
+        invalidInput(
+            "The region has ${region.palette.size} block states, too many to draw. Draw fewer " +
+                "layers at a time, or read it with summary.",
+        )
+    }
     return drawRegion(region)
 }
 
-private fun volume(from: BlockCoordinates, to: BlockCoordinates): Long {
+private fun checkDrawable(from: BlockCoordinates, to: BlockCoordinates) {
     fun side(first: Int, second: Int) = abs(first.toLong() - second) + 1
-    return side(from.x, to.x) * side(from.y, to.y) * side(from.z, to.z)
+    val sizeX = side(from.x, to.x)
+    val sizeY = side(from.y, to.y)
+    val sizeZ = side(from.z, to.z)
+    if (sizeX * sizeY * sizeZ > MAX_DRAWN_VOLUME) {
+        invalidInput(tooLarge(sizeX, sizeY, sizeZ, MAX_DRAWN_VOLUME.toLong()))
+    }
 }
 
 private fun imageReply(image: RegionImage, from: BlockCoordinates, to: BlockCoordinates): Reply {

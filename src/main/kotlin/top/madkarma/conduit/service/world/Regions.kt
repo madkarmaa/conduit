@@ -113,11 +113,15 @@ internal fun bounds(from: BlockCoordinates, to: BlockCoordinates): Pair<BlockPos
 }
 
 // Says how to split the region, so the agent needs one more try instead of several.
-private fun tooLarge(sizeX: Long, sizeY: Long, sizeZ: Long): String {
+internal fun tooLarge(
+    sizeX: Long,
+    sizeY: Long,
+    sizeZ: Long,
+    limit: Long = MAX_REGION_VOLUME,
+): String {
     val volume = sizeX * sizeY * sizeZ
-    val problem =
-        "Region of $volume blocks (${sizeX}x${sizeY}x$sizeZ) exceeds the limit of $MAX_REGION_VOLUME."
-    val fittingHeight = MAX_REGION_VOLUME / (sizeX * sizeZ)
+    val problem = "Region of $volume blocks (${sizeX}x${sizeY}x$sizeZ) exceeds the limit of $limit."
+    val fittingHeight = limit / (sizeX * sizeZ)
     if (fittingHeight < 1) return "$problem Split it along x or z."
 
     val parts = (sizeY + fittingHeight - 1) / fittingHeight
