@@ -91,6 +91,15 @@ class PromptTest {
     }
 
     @Test
+    fun `the request after a cancelled one says not to continue it`() {
+        assertEquals(
+            "The player cancelled the previous request. Do not continue it unless this request " +
+                "asks for it.\n\nAlex (UUID 00000000-0000-0000-0000-000000000001) asks: hi",
+            requestPrompt(alex, "hi", afterCancel = true),
+        )
+    }
+
+    @Test
     fun `a trigger prompt names the event or the timer that started it`() {
         assertEquals(
             "The trigger started because of the event player_join: {\"player\":\"Alex\"}\n\nGreet them.",

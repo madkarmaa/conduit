@@ -29,10 +29,20 @@ fun ConduitConfig.buildInstructions(mode: Mode, asker: Asker, trigger: TriggerRu
  * The request as the agent reads it, with the player who asks and, when they are online, where they
  * are, so the agent does not rely on an old position from earlier in the conversation.
  */
-fun requestPrompt(asker: Asker, request: String, place: PlayerPlace? = null): String {
+fun requestPrompt(
+    asker: Asker,
+    request: String,
+    place: PlayerPlace? = null,
+    afterCancel: Boolean = false,
+): String {
     val where = place?.let { " at ${describePlace(it)}" }.orEmpty()
-    return "${asker.name} (UUID ${asker.uuid})$where asks: $request"
+    val asks = "${asker.name} (UUID ${asker.uuid})$where asks: $request"
+    return if (afterCancel) "$CANCELLED_NOTE\n\n$asks" else asks
 }
+
+// The conversation keeps a cancelled request, and agents tend to finish it in the next one.
+private const val CANCELLED_NOTE =
+    "The player cancelled the previous request. Do not continue it unless this request asks for it."
 
 private fun describePlace(place: PlayerPlace): String {
     val position = place.position

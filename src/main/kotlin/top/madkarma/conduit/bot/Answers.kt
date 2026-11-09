@@ -61,11 +61,12 @@ object Answers {
         val policy = config.toolPolicy(request.mode, request.asker, approvals, progress)
         val token = AccessTokens.issue(policy)
 
-        try {
-            val conversation =
-                request.trigger?.let { Conversations.ofTrigger(it.config.name) }
-                    ?: Conversations.of(request.mode, request.asker)
+        val conversation =
+            request.trigger?.let { Conversations.ofTrigger(it.config.name) }
+                ?: Conversations.of(request.mode, request.asker)
+        val afterCancel = Conversations.takeCancelled(conversation)
 
+        try {
             val run =
                 RunRequest(
                     cli = agent.cli,
@@ -77,7 +78,12 @@ object Answers {
                         config.buildInstructions(request.mode, request.asker, request.trigger),
                     prompt =
                         request.trigger?.let(::triggerPrompt)
-                            ?: requestPrompt(request.asker, request.text, askerPlace(request)),
+                            ?: requestPrompt(
+                                request.asker,
+                                request.text,
+                                askerPlace(request),
+                                afterCancel,
+                            ),
                     conversation = conversation,
                     mcp = McpAccess(agent.mcpUrl, token),
                     apiKey = agent.apiKey,
@@ -89,8 +95,10 @@ object Answers {
             val outcome = runner.runWithDeadline(run, deadline)
             if (outcome.timedOut)
                 return BotReply(progress.ranOutOfTime(config.requests.timeoutSeconds, policy.name))
+            if (outcome.result.cancelled) Conversations.markCancelled(conversation)
             return describe(outcome.result)
         } catch (exception: CancellationException) {
+            Conversations.markCancelled(conversation)
             withContext(NonCancellable) { runCatching { runner.cancel() } }
             throw exception
         } catch (exception: RunnerRefused) {

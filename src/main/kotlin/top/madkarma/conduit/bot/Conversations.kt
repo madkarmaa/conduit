@@ -20,6 +20,9 @@ object Conversations {
 
     private var generations: Generations? = null
 
+    // Folders whose last request was cancelled. A restart forgets them, which only loses a hint.
+    private val cancelled = mutableSetOf<String>()
+
     /** The folder of the asker's conversation in a mode. */
     @Synchronized
     fun of(mode: Mode, asker: Asker): String =
@@ -62,6 +65,17 @@ object Conversations {
         generations = updated
         Files.writeString(PATH, JSON.encodeToString(updated))
     }
+
+    /** Remembers that the last request of a conversation was cancelled. */
+    @Synchronized
+    fun markCancelled(folder: String) {
+        cancelled += folder
+    }
+
+    /**
+     * Whether the last request of a conversation was cancelled. Forgets it, since it is told once.
+     */
+    @Synchronized fun takeCancelled(folder: String): Boolean = cancelled.remove(folder)
 
     private fun chatKey(uuid: UUID) = "chat-$uuid"
 }
