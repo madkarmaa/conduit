@@ -9,10 +9,9 @@ val NOTIFY =
         name = "notify",
         title = "Notify players",
         description =
-            "message sends a chat or action bar message to a player, or to everyone when no " +
-                "player is given. title shows a title and subtitle to a player. sound plays a " +
-                "sound to a player. bossbar creates or changes the boss bar with an id, named " +
-                "by message, and remove_bossbar removes it.",
+            "message sends chat or action bar text to a player, or to everyone. title " +
+                "shows a title and subtitle. sound plays a sound. bossbar creates or changes " +
+                "a boss bar, and remove_bossbar removes it.",
         input =
             input {
                 optional("player", PLAYER.described("Required for title and sound."))

@@ -9,11 +9,11 @@ val EDIT_PLAYER =
         name = "edit_player",
         title = "Edit player",
         description =
-            "Changes an online player: game_mode, food (level 0-20 and saturation), experience " +
-                "(levels and points within the level) and operator status. saved_merge_nbt and " +
-                "saved_set_slot edit the saved data of an offline player, which applies at their " +
-                "next login. saved_set_slot with ender_chest sets a slot of the ender chest, 0-26. get_player reads saved data. grant_advancement and " +
-                "revoke_advancement grant or revoke an advancement, or one of its criteria.",
+            "game_mode, food, experience and operator change an online player. " +
+                "grant_advancement and revoke_advancement change an advancement or one of its " +
+                "criteria. saved_merge_nbt and saved_set_slot edit an offline player's saved " +
+                "data, which applies at their next login. With ender_chest, saved_set_slot " +
+                "uses ender chest slots 0-26.",
         input =
             input {
                 required("player", PLAYER)
@@ -30,7 +30,7 @@ val EDIT_PLAYER =
                 optional(
                     "advancement",
                     stringSchema(
-                        "Advancement id, such as \"minecraft:story/mine_diamond\". For the advancement actions.",
+                        "Advancement id, such as \"minecraft:story/mine_diamond\".",
                     ),
                 )
                 optional("criterion", stringSchema("One criterion. Leave it out for all of them."))

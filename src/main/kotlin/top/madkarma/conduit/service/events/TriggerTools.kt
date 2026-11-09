@@ -10,15 +10,10 @@ val TRIGGERS =
         name = "triggers",
         title = "Triggers",
         description =
-            "Triggers start runs of the full mode agent without a request, on game events or " +
-                "every few minutes. The agent gets the trigger's prompt and the event as JSON. " +
-                "list shows the triggers. add saves one with a name, a prompt, and either " +
-                "events or every_minutes. remove deletes one, and enable and disable turn one " +
-                "on or off. Changes go to the config file and apply at once. A run takes as " +
-                "long as a request, often a minute or more, so a trigger cannot react within " +
-                "seconds, such as to catch a dropped item; a datapack function can. The event " +
-                "types " +
-                "are ${EVENT_NAMES.joinToString(", ")}.",
+            "Triggers run the full mode agent on game events or every few minutes, with " +
+                "the trigger's prompt and the event as JSON. list, add, remove, enable and " +
+                "disable manage them in the config. A run takes a minute or more, so a " +
+                "trigger cannot react within seconds. A datapack function can.",
         input =
             input {
                 optional("name", stringSchema("The trigger's name.", maxLength = 64))

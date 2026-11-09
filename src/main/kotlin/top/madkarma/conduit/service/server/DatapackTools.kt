@@ -13,13 +13,10 @@ val DATAPACKS =
         name = "datapacks",
         title = "Datapacks",
         description =
-            "list shows every datapack and whether it is enabled. enable and disable turn one " +
-                "on or off and reload the data, like /datapack. write adds a recipe, loot table, " +
-                "function, advancement, predicate, item modifier or tag to the world's Conduit " +
-                "pack, after checking it the way the game reads it. files lists the pack's " +
-                "files, read shows one and delete removes one. reload applies the pack's files " +
-                "and enables the pack, so write several files and then reload once. Functions " +
-                "run with run_command \"function <id>\".",
+            "list, enable and disable work like /datapack. write adds a file to the " +
+                "world's Conduit pack after validating it, and files, read and delete manage " +
+                "those files. reload applies them, so write several files, then reload once. " +
+                "Run functions with run_command \"function <id>\".",
         input =
             input {
                 optional(

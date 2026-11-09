@@ -8,12 +8,10 @@ val STRUCTURES =
         name = "structures",
         title = "Structures",
         description =
-            "Structure templates, the same ones structure blocks and /place template use. list " +
-                "finds saved and datapack templates, including vanilla ones such as " +
-                "\"minecraft:village/plains/houses/plains_small_house_1\". save copies a region " +
-                "into a template. place pastes a template with its lowest corner at origin. copy " +
-                "pastes a region at origin without saving a template, also into " +
-                "target_dimension.",
+            "Structure templates, as structure blocks use them. list finds saved, " +
+                "datapack and vanilla templates. save copies a region into a template. place " +
+                "pastes one with its lowest corner at origin. copy pastes a region at origin " +
+                "without saving it, also into target_dimension.",
         input =
             input {
                 optional(

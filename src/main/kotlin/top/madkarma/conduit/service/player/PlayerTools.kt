@@ -9,10 +9,9 @@ val LIST_PLAYERS =
         name = "list_players",
         title = "List players",
         description =
-            "online lists the online players with their game mode, position, health and food. " +
-                "known lists every player with saved data, also offline ones. banned lists the " +
-                "player and IP bans. whitelisted tells whether the whitelist is on, and who is " +
-                "on it.",
+            "online lists the online players with game mode, position, health and food. " +
+                "known lists every player with saved data. banned lists the player and IP " +
+                "bans. whitelisted shows the whitelist.",
         seesOtherPlayers = true,
         input = input {},
         defaultAction = "online",
@@ -55,11 +54,10 @@ val GET_PLAYER =
         name = "get_player",
         title = "Get player",
         description =
-            "info reads an online player, with the block or entity they look at. stats reads " +
-                "the statistics of any player. advancements reads an online player's " +
-                "advancements, with the criteria still missing. saved and saved_nbt read the " +
-                "saved data of any player, also offline ones. The inventory tool reads " +
-                "inventories.",
+            "info reads an online player and what they look at. stats reads any player's " +
+                "statistics. advancements reads an online player's advancements and missing " +
+                "criteria. saved and saved_nbt read any player's saved data, also offline. " +
+                "The inventory tool reads inventories.",
         input =
             input {
                 required("player", PLAYER)

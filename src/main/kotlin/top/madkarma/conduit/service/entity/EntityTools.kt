@@ -11,13 +11,10 @@ val ENTITIES =
         name = "entities",
         title = "Entities",
         description =
-            "list finds entities by type, mob category, area, tag or a vanilla selector, one " +
-                "line each with the uuid, type, name, dimension, position, health and how far " +
-                "below the surface of its column it is. With center, the list is nearest first " +
-                "and gives each distance. info reads the full state " +
-                "of one entity, nbt its complete data as SNBT, effects its status effects, and " +
-                "attributes its attributes with base and current values. Callers limited to " +
-                "one player's data see no other players.",
+            "list finds entities by type, mob category, area, tag or selector, with their " +
+                "uuid, type, name, position, health and depth below the surface. With center, " +
+                "it lists the nearest first, with distances. info reads one entity's state, " +
+                "nbt its SNBT, effects its effects and attributes its attributes.",
         input =
             input {
                 optional("uuid", UUID.described("Required for info, nbt, effects and attributes."))

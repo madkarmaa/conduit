@@ -18,13 +18,11 @@ val FIND =
         name = "find",
         title = "Find",
         description =
-            "blocks finds the blocks that match a block id, state or #tag, in a cuboid between " +
-                "from and to or within radius of center, nearest to the center first. items " +
-                "finds the containers that hold an item id or #tag the same way, and counts the " +
-                "items inside shulker boxes and bundles. structure, biome and poi find the " +
-                "nearest structure, biome or point of interest from center, like /locate, such " +
-                "as \"minecraft:home\" for beds. Each takes an id or a #tag. The game only " +
-                "knows the points of interest of chunks loaded since they were placed.",
+            "blocks finds blocks that match an id, state or #tag, in a cuboid or within " +
+                "radius of center, nearest first. items finds the containers that hold an " +
+                "item, counting shulker boxes and bundles. structure, biome and poi find the " +
+                "nearest one from center, like /locate. Points of interest only exist in " +
+                "chunks loaded since they were placed.",
         input =
             input {
                 optional("dimension", DIMENSION)

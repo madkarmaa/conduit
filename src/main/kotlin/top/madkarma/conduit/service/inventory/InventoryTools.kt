@@ -9,22 +9,14 @@ val INVENTORY =
         name = "inventory",
         title = "Inventory",
         description =
-            "Works on an online player's inventory, with pos on a container such as a chest, " +
-                "or with uuid on an entity's items. A double chest counts as one container, " +
-                "and a lectern's book and a campfire's food count as containers of one item " +
-                "per slot. " +
-                "Entities name their slots like the /item command, such as \"container.3\", " +
-                "\"armor.head\", \"weapon.mainhand\", \"saddle\" or \"mob.inventory.0\", and read " +
-                "lists the slots that hold items. give " +
-                "fills an entity's storage, such as a chest minecart's, a donkey's chest or a " +
-                "villager's inventory. With ender_chest, the actions but " +
-                "select_slot work on the player's ender chest, slots 0-26, instead. read lists " +
-                "the items. set_slot puts an item in a slot or empties it, and replies with what the " +
-                "slot now holds. clear empties every slot. select_slot picks a player's held " +
-                "hotbar slot. give adds an item stack, and for a player replies with how many of " +
-                "the item they now hold. Items that do not fit drop at a player's feet, or stay out of a " +
-                "container. Player slots 0-8 are the hotbar, 9-35 the main inventory, 36-39 " +
-                "armor from feet to head and 40 the offhand.",
+            "Works on a player's inventory, a container at pos, or an entity's items by " +
+                "uuid. read lists the items. set_slot sets or empties a slot and returns what " +
+                "it holds. clear empties every slot. select_slot picks the held hotbar slot. " +
+                "give adds a stack, drops what does not fit at a player's feet, and returns " +
+                "the player's new total. ender_chest uses the ender chest, slots 0-26. Player " +
+                "slots are 0-8 hotbar, 9-35 main, 36-39 armor from feet to head and 40 " +
+                "offhand. Entity slots use /item names, such as \"armor.head\" or " +
+                "\"container.3\". A double chest is one container.",
         input =
             input {
                 optional("player", PLAYER.described("Player name or UUID. Leave it out for pos."))

@@ -32,17 +32,11 @@ val UNDO =
         name = "undo",
         title = "Undo edits",
         description =
-            "The server records the block changes of edit_blocks, edit_world explode, " +
-                "structures place and copy, and inventory on containers, and every change that " +
-                "edit_entity, move_entity, inventory and edit_player make to entities and " +
-                "players, one edit per call. list shows the recent edits, newest first. undo " +
-                "puts the blocks, block entities, entities and players of the given edits, or " +
-                "of your newest one, back as they were: it removes spawned entities, brings back " +
-                "removed or dead ones, and restores entity data, riding, position, dimension, " +
-                "player items, game mode, food, experience, health, effects, attributes, " +
-                "operator status and advancement criteria, for offline players too. Undo also " +
-                "overwrites what happened to them since. It cannot undo run_command, dropped " +
-                "items, fire spread, falling blocks or anything before a server restart.",
+            "Undoes edits of edit_blocks, edit_world explode, structures, inventory, " +
+                "edit_entity, move_entity and edit_player, one edit per call, offline players " +
+                "included. list shows the recent edits, newest first. undo restores the given " +
+                "edits, or your newest, and overwrites what changed since. It cannot undo " +
+                "run_command, dropped items, fire, falling blocks or edits before a restart.",
         seesOtherPlayers = true,
         input =
             input {

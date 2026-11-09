@@ -11,20 +11,16 @@ val GAME_DATA =
         name = "game_data",
         title = "Game data",
         description =
-            "Looks up valid ids and game content, including datapacks. registries lists every " +
-                "registry, such as \"minecraft:block\", \"minecraft:item\", " +
-                "\"minecraft:entity_type\" and \"minecraft:worldgen/biome\". entries lists the " +
-                "ids in one, and tags its tags. recipes finds recipe ids, optionally by type or " +
-                "result item. recipe reads a recipe and loot_table a loot table, such as " +
-                "\"minecraft:blocks/diamond_ore\", as datapack JSON.",
+            "Looks up ids and content, datapacks included. registries lists the " +
+                "registries, entries the ids in one, and tags its tags. recipes finds recipes " +
+                "by type or result. recipe and loot_table return datapack JSON.",
         input =
             input {
                 optional("registry", stringSchema("Required for entries and tags."))
                 optional(
                     "filter",
                     stringSchema(
-                        "Case-insensitive substring of the id, for registries, entries and tags. " +
-                            "Advancements also match by title, such as \"how did we get here\".",
+                        "Substring of the id, any case. Advancements also match their title.",
                         default = "",
                     ),
                 )
@@ -37,8 +33,7 @@ val GAME_DATA =
                 optional(
                     "id",
                     stringSchema(
-                        "Recipe or loot table id, such as \"minecraft:crafting_table\". Required " +
-                            "for recipe and loot_table.",
+                        "Recipe or loot table id. Required for recipe and loot_table.",
                     ),
                 )
                 optional(

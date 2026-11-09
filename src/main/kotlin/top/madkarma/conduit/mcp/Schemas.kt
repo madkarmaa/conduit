@@ -2,8 +2,7 @@ package top.madkarma.conduit.mcp
 
 // Schemas that several tools share.
 
-val DIMENSION =
-    stringSchema("Dimension id, such as \"minecraft:the_nether\". Defaults to the overworld.")
+val DIMENSION = stringSchema("Dimension id, such as \"minecraft:the_nether\".")
 
 val BLOCK_POS = objectSchema {
     required("x", integerSchema())
@@ -25,8 +24,7 @@ val ROTATION =
 
 val UUID = stringSchema("Entity UUID.")
 
-val PLAYER =
-    stringSchema("Player name or UUID. The start of a name works when only one player has it.")
+val PLAYER = stringSchema("Player name, unique start of a name, or UUID.")
 
 val SNBT = stringSchema("SNBT, such as {CustomName:\"Bob\",NoAI:1b}.")
 

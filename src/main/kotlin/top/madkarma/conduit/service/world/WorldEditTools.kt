@@ -7,11 +7,11 @@ val EDIT_WORLD =
         name = "edit_world",
         title = "Edit world",
         description =
-            "time sets the time of day from exactly one of time, add or preset. weather sets the " +
-                "weather. spawn sets the world spawn. force_chunk force-loads or releases the " +
-                "chunk that contains a column, so entities can spawn or move there. border " +
-                "changes a dimension's world border and keeps the fields left out. game_rule " +
-                "sets a game rule. explode creates an explosion. TNT has power 4 and a creeper 3.",
+            "time sets the time from time, add or preset. weather sets the weather. spawn " +
+                "sets the world spawn. force_chunk loads or releases a column's chunk, so " +
+                "entities can spawn or move there. border changes the world border and keeps " +
+                "the fields left out. game_rule sets a game rule. explode makes an explosion. " +
+                "TNT has power 4.",
         input =
             input {
                 optional("dimension", DIMENSION)

@@ -16,9 +16,8 @@ val SERVER_INFO =
         name = "server_info",
         title = "Server info",
         description =
-            "summary reads the Minecraft and mod versions, players, seed, difficulty, " +
-                "performance (TPS, MSPT, memory) and the dimensions with their height range. " +
-                "mods and backups list those.",
+            "summary reads the versions, players, seed, difficulty, TPS, MSPT, memory and " +
+                "dimensions. mods and backups list those.",
         input = input {},
         defaultAction = "summary",
         actions =
@@ -43,8 +42,8 @@ val RUN_COMMAND =
         name = "run_command",
         title = "Run command",
         description =
-            "Runs any command like the server console, and returns whether it succeeded, its " +
-                "result value and its feedback. Can run as a player or entity and at a position.",
+            "Runs a command like the console and returns its success, result value and " +
+                "feedback. It can run as a player or entity, at a position.",
         input =
             input {
                 required(
@@ -87,8 +86,8 @@ val SERVER_ADMIN =
         name = "server_admin",
         title = "Server administration",
         description =
-            "save writes worlds and players to disk. backup saves the world and zips it while " +
-                "the server keeps running. stop saves and stops the server.",
+            "save writes worlds and players to disk. backup zips the world while the " +
+                "server runs. stop saves and stops the server.",
         input =
             input {
                 optional(

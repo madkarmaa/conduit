@@ -11,12 +11,10 @@ val WORLD_INFO =
         name = "world_info",
         title = "World info",
         description =
-            "info reads the time, weather, world spawn and world border of a dimension. A day " +
-                "is 24000 ticks, with sunrise at 0 and noon at 6000. game_rules lists every game " +
-                "rule with its value. height is the y of the first free block above the surface " +
-                "of a column, or of each column in points, which reads many columns in one call. " +
-                "chunk tells whether the chunk containing a column is loaded or " +
-                "force-loaded, with its entity counts.",
+            "info reads the time, weather, spawn and world border. A day is 24000 ticks, " +
+                "and noon is 6000. game_rules lists the game rules. height returns the y of " +
+                "the first free block above a column, or above each column in points. chunk " +
+                "tells whether a column's chunk is loaded or forced, with entity counts.",
         input =
             input {
                 optional("dimension", DIMENSION)
@@ -35,8 +33,7 @@ val WORLD_INFO =
                             required("x", integerSchema())
                             required("z", integerSchema())
                         },
-                        "Columns for height, instead of x and z. The reply has one x z y line " +
-                            "per column, in this order.",
+                        "Columns for height, instead of x and z.",
                         minItems = 1,
                         maxItems = MAX_HEIGHT_POINTS,
                     ),

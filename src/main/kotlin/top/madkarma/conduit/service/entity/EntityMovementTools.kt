@@ -9,13 +9,11 @@ val MOVE_ENTITY =
         name = "move_entity",
         title = "Move entity",
         description =
-            "teleport moves an entity, players included, also across dimensions, and replies " +
-                "with the block it stands on. rotate turns " +
-                "it. push sets its velocity in blocks per tick. mount puts it on a vehicle, and " +
-                "dismount takes it off. walk makes a mob walk along a path to position, or to " +
-                "target, which it follows while the target moves. Its own goals can take over. " +
-                "The mob does not despawn on the way, and the walk ends on arrival, after 2 " +
-                "minutes, or with stop.",
+            "teleport moves any entity, also across dimensions, and names the block it " +
+                "lands on. rotate turns it, push sets its velocity, and mount and dismount " +
+                "change what it rides. walk makes a mob walk to position, or follow target " +
+                "while it moves. A walking mob does not despawn, and the walk ends on " +
+                "arrival, after 2 minutes or with stop.",
         input =
             input {
                 required("uuid", UUID)

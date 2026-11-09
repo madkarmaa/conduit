@@ -8,11 +8,9 @@ val EDIT_BLOCKS =
         name = "edit_blocks",
         title = "Edit blocks",
         description =
-            "set places block states at positions in one tick. fill fills a cuboid, corners " +
-                "inclusive. shape fills a sphere or a cylinder around center, a box, its four " +
-                "walls or a line from one corner to the other. hollow keeps only the outer " +
-                "layer. break breaks a block like a player. merge_nbt merges SNBT into a block " +
-                "entity.",
+            "set places states at positions in one tick. fill fills a cuboid. shape fills " +
+                "a sphere, cylinder, box, walls or line, and hollow keeps the shell. break " +
+                "breaks a block like a player. merge_nbt merges SNBT into a block entity.",
         input =
             input {
                 optional("dimension", DIMENSION)

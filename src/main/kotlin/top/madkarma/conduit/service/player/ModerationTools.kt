@@ -7,10 +7,9 @@ val MODERATION =
         name = "moderation",
         title = "Moderation",
         description =
-            "kick disconnects an online player with a message. ban bans a player, also an " +
-                "offline one, for some minutes or for good, and kicks them if online. pardon " +
-                "lifts a ban. whitelist_add and whitelist_remove change the whitelist, and " +
-                "whitelist_enabled turns it on or off. list_players reads bans and the whitelist.",
+            "kick disconnects a player. ban bans a player, also an offline one, for some " +
+                "minutes or for good. pardon lifts a ban. whitelist_add, whitelist_remove and " +
+                "whitelist_enabled change the whitelist.",
         input =
             input {
                 optional(
