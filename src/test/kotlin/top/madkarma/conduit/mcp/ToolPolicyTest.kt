@@ -3,7 +3,6 @@ package top.madkarma.conduit.mcp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import top.madkarma.conduit.invalidInputMessage
 import top.madkarma.conduit.parseJson
@@ -82,39 +81,5 @@ class ToolPolicyTest {
     @Test
     fun `checkPlayers refuses an empty players filter, which means everyone`() {
         assertEquals("Set players to Alex", checkPlayersMessage(limited, """{"players": []}"""))
-    }
-
-    @Test
-    fun `redact leaves replies alone without a player limit`() {
-        val reply =
-            Reply("""{"ipAddress":"10.0.0.1"}""", parseJson("""{"ipAddress": "10.0.0.1"}"""))
-
-        assertSame(reply, ToolPolicy("full").redact(reply))
-    }
-
-    @Test
-    fun `redact takes IP addresses out of the data and the text at every level`() {
-        val data =
-            parseJson(
-                """{"players": [{"name": "Alex", "ipAddress": "10.0.0.1", "stats": {"ipAddress": "x"}}]}""",
-            )
-
-        val redacted = limited.redact(Reply(data.toString(), data))
-
-        val expected = parseJson("""{"players": [{"name": "Alex", "stats": {}}]}""")
-        assertEquals(expected, redacted.data)
-        assertEquals(expected.toString(), redacted.text)
-    }
-
-    @Test
-    fun `redact keeps a text that names no IP address`() {
-        val data = parseJson("""{"name": "Alex", "ipAddress": "10.0.0.1"}""")
-        val image = Pixels(1, 1, intArrayOf(0))
-
-        val redacted = limited.redact(Reply("Alex is online", data, image))
-
-        assertEquals("Alex is online", redacted.text)
-        assertEquals(parseJson("""{"name": "Alex"}"""), redacted.data)
-        assertSame(image, redacted.image)
     }
 }

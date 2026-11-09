@@ -96,21 +96,6 @@ class ToolCallTest {
     }
 
     @Test
-    fun `call redacts the reply for a policy limited to one player`() {
-        val data = parseJson("""{"name": "Alex", "ipAddress": "10.0.0.1"}""")
-        val who =
-            singleActionTool(
-                "who",
-                AsyncAction(Access.READ) { _, _ -> Reply(data.toString(), data) },
-            )
-
-        val result = call(ToolPolicy("chat", player = ALEX), who)
-
-        assertEquals("""{"name":"Alex"}""", text(result))
-        assertEquals(parseJson("""{"name": "Alex"}"""), result.structuredContent)
-    }
-
-    @Test
     fun `call of a game action without a running server says so`() {
         val time = singleActionTool("time", readAction { _, _ -> Reply("noon") })
 

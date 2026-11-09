@@ -19,7 +19,6 @@ data class PlayerInfo(
     val selectedSlot: Int,
     val pingMs: Int,
     val operator: Boolean,
-    val ipAddress: String,
     val mainHand: ItemInfo,
     val offHand: ItemInfo,
     /** What the player looks at. Only get_player info reads it. */
@@ -51,7 +50,6 @@ internal fun MinecraftServer.describePlayer(player: ServerPlayer): PlayerInfo {
         selectedSlot = player.inventory.selectedSlot,
         pingMs = player.connection.latency(),
         operator = playerList.isOp(player.nameAndId()),
-        ipAddress = player.ipAddress,
         mainHand = player.mainHandItem.toInfo(registries),
         offHand = player.offhandItem.toInfo(registries),
     )

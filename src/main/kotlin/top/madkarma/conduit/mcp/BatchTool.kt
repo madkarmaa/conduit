@@ -130,7 +130,7 @@ private fun runInOneTick(
 
         try {
             val reply = call.runGameAction(server)
-            BatchOutcome(call, policy.redact(reply).text, "ok")
+            BatchOutcome(call, reply.text, "ok")
         } catch (exception: Exception) {
             failed = true
             BatchOutcome(call, describeFailure(exception, call.tool.name), "failed")

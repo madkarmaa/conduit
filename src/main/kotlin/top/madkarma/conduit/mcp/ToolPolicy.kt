@@ -1,13 +1,9 @@
 package top.madkarma.conduit.mcp
 
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import top.madkarma.conduit.game.invalidInput
-
-// IP addresses identify a player outside the game.
-private const val PRIVATE_KEY = "ipAddress"
 
 /** The one player whose data a policy may use. */
 class PlayerIdentity(val name: String, val uuid: String) {
@@ -84,23 +80,4 @@ class ToolPolicy(
         val allowed = named.all { it is JsonPrimitive && it.isString && player.matches(it.content) }
         if (!allowed) invalidInput("Only the data of ${player.name} is available")
     }
-
-    /** Takes IP addresses out of a reply when the policy is limited to one player. */
-    fun redact(reply: Reply): Reply {
-        if (player == null) return reply
-
-        val data = reply.data?.let { withoutPrivateKeys(it) as JsonObject }
-        val leaks = "\"$PRIVATE_KEY\"" in reply.text
-        return Reply(if (leaks && data != null) data.toString() else reply.text, data, reply.image)
-    }
 }
-
-private fun withoutPrivateKeys(value: JsonElement): JsonElement =
-    when (value) {
-        is JsonObject ->
-            JsonObject(
-                value.filterKeys { it != PRIVATE_KEY }.mapValues { withoutPrivateKeys(it.value) },
-            )
-        is JsonArray -> JsonArray(value.map(::withoutPrivateKeys))
-        else -> value
-    }

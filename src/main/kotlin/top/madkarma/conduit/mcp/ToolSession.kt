@@ -40,7 +40,7 @@ class ToolSession(val policy: ToolPolicy, tools: List<ToolDefinition>) {
             if (!prepared.tool.definition.approvesItself) approve(listOf(prepared.called()))
 
             log(prepared, arguments)
-            val reply = policy.redact(run(prepared))
+            val reply = run(prepared)
             val called = prepared.called()
             policy.recorder?.finished(RecordedCall(name, called, arguments, false, reply.text))
             toolResult(reply)
