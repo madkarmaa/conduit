@@ -70,7 +70,7 @@ private suspend fun runBatch(input: ToolInput, session: ToolSession): Reply {
 
     val stopOnError = input.boolean("stop_on_error")
     val outcomes = GameServer.run { server ->
-        runInOneTick(server, calls, stopOnError, session.policy)
+        runInOneTick(server, calls, stopOnError)
     }
 
     val rows = outcomes.mapIndexed { index, outcome ->
@@ -126,7 +126,6 @@ private fun runInOneTick(
     server: MinecraftServer,
     calls: List<PreparedCall>,
     stopOnError: Boolean,
-    policy: ToolPolicy,
 ): List<BatchOutcome> {
     var failed = false
 
