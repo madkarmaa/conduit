@@ -9,7 +9,8 @@ val MOVE_ENTITY =
         name = "move_entity",
         title = "Move entity",
         description =
-            "teleport moves an entity, players included, also across dimensions. rotate turns " +
+            "teleport moves an entity, players included, also across dimensions, and replies " +
+                "with the block it stands on. rotate turns " +
                 "it. push sets its velocity in blocks per tick. mount puts it on a vehicle, and " +
                 "dismount takes it off. walk makes a mob walk along a path to position, or to " +
                 "target, which it follows while the target moves. Its own goals can take over. " +
@@ -55,14 +56,18 @@ val MOVE_ENTITY =
                 "teleport" to
                     writeAction { server, input ->
                         input.require("position")
-                        val moved =
+                        val landing =
                             server.teleportEntity(
                                 input.string("uuid"),
                                 input.stringOrNull("dimension"),
                                 input.decode("position"),
                                 input.decodeOrNull<Rotation>("rotation"),
                             )
-                        done(describeEntity(moved))
+                        val stuck = if (landing.free) "" else ", stuck inside blocks"
+                        done(
+                            "${describeEntity(landing.entity)}, standing on " +
+                                "${landing.blockBelow}$stuck",
+                        )
                     },
                 "rotate" to
                     writeAction { server, input ->
