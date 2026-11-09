@@ -18,6 +18,7 @@ import top.madkarma.conduit.mcp.RecordedCall
 private const val SHOWN_LENGTH = 2000
 private val DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 private val TIME = DateTimeFormatter.ofPattern("HH:mm:ss")
+private const val HEADER_PREFIX = "### "
 
 /**
  * Writes each request, the agent's tool calls and the answer to a text file while the telemetry
@@ -30,20 +31,30 @@ object Telemetry {
 
     private val path: Path = FabricLoader.getInstance().gameDir.resolve(FILE)
 
-    // The header this server wrote last. A restart may run a new version, so it starts unknown.
+    // The last header in the file. It is read from the file once, so a restart with the same setup
+    // writes no new one.
     private var lastHeader: String? = null
+    private var headerKnown = false
 
     /** A new trace of the request, or null while telemetry is off. */
     fun start(request: BotRequest, config: ConduitConfig): RequestTrace? =
         if (config.telemetry) RequestTrace(request, telemetryHeader(Conduit.version, config))
         else null
 
-    /** Writes the header first when the file is new or empty, or when the setup changed. */
+    /**
+     * Writes the header first when the file is new or empty, or when the mod version or an agent
+     * differs from the file's last header.
+     */
     @Synchronized
     fun append(text: String, header: String) {
         try {
             Files.createDirectories(path.parent)
             val empty = !Files.exists(path) || Files.size(path) == 0L
+            if (!headerKnown) {
+                lastHeader = if (empty) null else lastHeaderIn(Files.readString(path))
+                headerKnown = true
+            }
+
             val start = if (empty || header != lastHeader) header else ""
             Files.writeString(path, start + text, CREATE, APPEND)
             lastHeader = header
@@ -60,12 +71,23 @@ object Telemetry {
     }
 }
 
+/** The last header of a telemetry file, or null when it has none. */
+internal fun lastHeaderIn(text: String): String? {
+    val lines = text.lines()
+    val end = lines.indexOfLast { it.startsWith(HEADER_PREFIX) }
+    if (end < 0) return null
+
+    var start = end
+    while (start > 0 && lines[start - 1].startsWith(HEADER_PREFIX)) start--
+    return lines.subList(start, end + 1).joinToString("\n", postfix = "\n\n")
+}
+
 /** The header of the file: the mod version and each mode's agent, never their keys or secrets. */
 internal fun telemetryHeader(version: String, config: ConduitConfig): String =
     listOf(
-            "### Conduit $version",
-            "### full: ${describeAgent(config.agent(Mode.FULL))}",
-            "### chat: ${describeAgent(config.agent(Mode.CHAT))}",
+            "${HEADER_PREFIX}Conduit $version",
+            "${HEADER_PREFIX}full: ${describeAgent(config.agent(Mode.FULL))}",
+            "${HEADER_PREFIX}chat: ${describeAgent(config.agent(Mode.CHAT))}",
         )
         .joinToString("\n", postfix = "\n\n")
 

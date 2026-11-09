@@ -73,4 +73,14 @@ class RequestTraceTest {
 
         assertTrue("Note:" !in trace.text("The request was cancelled."))
     }
+
+    @Test
+    fun `the last header of a file is the newest block of header lines`() {
+        val newer = telemetryHeader("1.3.0+26.3", config)
+        val file = header + "=== request\nAnswer after 1 s: Hi.\n\n" + newer + "=== request\n"
+
+        assertEquals(newer, lastHeaderIn(file))
+        assertEquals(header, lastHeaderIn(header + "=== request\n"))
+        assertEquals(null, lastHeaderIn("=== request\nAnswer after 1 s: Hi.\n"))
+    }
 }
