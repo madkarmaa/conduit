@@ -43,7 +43,7 @@ fun dimensionKey(id: String?): ResourceKey<Level> =
         parseId(id.orEmpty().ifBlank { "minecraft:overworld" }),
     )
 
-/** Plain text, or a JSON text component when it starts with { or [. */
+/** Plain text, or a JSON text component when it starts with a brace or a square bracket. */
 fun textComponent(text: String, registries: HolderLookup.Provider): Component {
     val trimmed = text.trimStart()
     if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) return Component.literal(text)

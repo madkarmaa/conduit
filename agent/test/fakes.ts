@@ -1,5 +1,5 @@
-// Stands in for the agent CLIs, their installs and the log, so tests never start a CLI, install a
-// package or use real credentials. Test files import this before the runner's modules.
+// Stands in for the agent CLIs, their installations and the log, so tests never start a CLI,
+// install a package or use real credentials. Test files import this before the runner's modules.
 import { mock } from "bun:test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";

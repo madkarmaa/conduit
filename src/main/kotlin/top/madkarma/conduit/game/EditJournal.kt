@@ -106,7 +106,7 @@ object EditJournal {
     /** Whether a recorded call is running, which then records the blocks it changes itself. */
     fun isRecording(): Boolean = current.get() != null
 
-    /** Keeps the damage of an explosion, as an edit by its source. */
+    /** Keeps the blocks that an explosion destroyed, as an edit by its source. */
     fun keepExplosion(source: String, damage: ExplosionDamage, limit: Long) {
         val center = damage.center
         val action = "explosion at ${center.x} ${center.y} ${center.z}"

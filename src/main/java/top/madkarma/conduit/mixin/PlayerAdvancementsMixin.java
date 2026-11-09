@@ -11,8 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import top.madkarma.conduit.events.Advancements;
 
 /**
- * `award` only grants the rewards when the criterion completes an advancement that was not done
- * yet, so that call marks the transition to done.
+ * `award` only grants the rewards when the criterion completes an advancement that was not complete
+ * yet, so that call marks the moment it completes.
  */
 @Mixin(PlayerAdvancements.class)
 public abstract class PlayerAdvancementsMixin {

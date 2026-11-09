@@ -30,8 +30,8 @@ volume on first use and updates it once a day while idle, so a new CLI version n
    [mod's setup](../README.md#setup) describes, and point the mod at the containers as
    [networking](#networking) describes.
 
-A container installs its CLI on the first request. Until the install finishes, the bot answers
-requests with "try again in a few minutes".
+A container installs its CLI on the first request. Until the installation finishes, the bot
+answers requests with "try again in a few minutes".
 
 ## Credentials
 

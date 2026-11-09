@@ -32,7 +32,7 @@ data class Located(
     val pos: BlockCoordinates,
     /** Blocks from the center, leaving out y for structures. */
     val distance: Int,
-    /** The box around all of a structure's pieces. */
+    /** The box that holds all of a structure's pieces. */
     val box: Bounds? = null,
 )
 

@@ -15,7 +15,7 @@ fun MinecraftServer.player(ref: String): ServerPlayer {
         ?: notFound("Player not online: $ref")
 }
 
-// Players often call others by the start of their name, such as "alex" for "alex1pg".
+// Players often call others by the start of their name, such as "alex" for "Alexandra".
 private fun MinecraftServer.playerByPrefix(prefix: String): ServerPlayer? {
     val name =
         uniqueNameMatch(playerList.players.map { it.gameProfile.name }, prefix) ?: return null

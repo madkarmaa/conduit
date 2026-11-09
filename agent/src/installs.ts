@@ -63,7 +63,7 @@ export async function ensureInstalled(cli: Cli): Promise<void> {
     log(`Installed ${cli} ${versions[cli]}`);
 }
 
-/** Runs an install or update in the background. Runs are refused meanwhile. */
+/** Runs an installation or update in the background. Runs are refused meanwhile. */
 export function maintain(description: string, task: () => Promise<void>): void {
     maintenance = description;
     task()
@@ -71,7 +71,7 @@ export function maintain(description: string, task: () => Promise<void>): void {
         .finally(() => (maintenance = undefined));
 }
 
-/** Updates the installed CLIs now and once a day, but never during a run or an install. */
+/** Updates the installed CLIs now and once a day, but never during a run or an installation. */
 export function scheduleUpdates(isBusy: () => boolean, delay = 0): void {
     setTimeout(() => {
         if (isBusy() || maintenance) return scheduleUpdates(isBusy, UPDATE_RETRY_MS);
