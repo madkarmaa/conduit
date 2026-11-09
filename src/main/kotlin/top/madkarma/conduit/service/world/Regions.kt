@@ -105,11 +105,22 @@ internal fun MinecraftServer.blockFilter(input: String): (BlockState) -> Boolean
 internal fun bounds(from: BlockCoordinates, to: BlockCoordinates): Pair<BlockPos, BlockPos> {
     val min = BlockPos(min(from.x, to.x), min(from.y, to.y), min(from.z, to.z))
     val max = BlockPos(max(from.x, to.x), max(from.y, to.y), max(from.z, to.z))
-    val volume = (max.x - min.x + 1L) * (max.y - min.y + 1L) * (max.z - min.z + 1L)
-
-    if (volume > MAX_REGION_VOLUME) {
-        invalidInput("Region of $volume blocks exceeds the limit of $MAX_REGION_VOLUME")
-    }
+    val sizeX = max.x - min.x + 1L
+    val sizeY = max.y - min.y + 1L
+    val sizeZ = max.z - min.z + 1L
+    if (sizeX * sizeY * sizeZ > MAX_REGION_VOLUME) invalidInput(tooLarge(sizeX, sizeY, sizeZ))
 
     return min to max
+}
+
+// Says how to split the region, so the agent needs one more try instead of several.
+private fun tooLarge(sizeX: Long, sizeY: Long, sizeZ: Long): String {
+    val volume = sizeX * sizeY * sizeZ
+    val problem =
+        "Region of $volume blocks (${sizeX}x${sizeY}x$sizeZ) exceeds the limit of $MAX_REGION_VOLUME."
+    val fittingHeight = MAX_REGION_VOLUME / (sizeX * sizeZ)
+    if (fittingHeight < 1) return "$problem Split it along x or z."
+
+    val parts = (sizeY + fittingHeight - 1) / fittingHeight
+    return "$problem Split it into $parts parts of up to $fittingHeight blocks of height."
 }

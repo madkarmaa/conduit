@@ -39,7 +39,8 @@ class StraightShapesTest {
     @Test
     fun `a box stays within the region limit`() {
         assertEquals(
-            "Region of 1030301 blocks exceeds the limit of 1000000",
+            "Region of 1030301 blocks (101x101x101) exceeds the limit of 1000000. Split it " +
+                "into 2 parts of up to 98 blocks of height.",
             invalidInputMessage { box(origin, BlockCoordinates(100, 100, 100), hollow = true) },
         )
     }
