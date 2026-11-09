@@ -91,9 +91,8 @@ internal fun MinecraftServer.blockFilter(input: String): (BlockState) -> Boolean
     if (input.startsWith("#")) {
         val tag = TagKey.create(Registries.BLOCK, parseId(input.removePrefix("#")))
 
-        if (registryAccess().lookupOrThrow(Registries.BLOCK).get(tag).isEmpty) {
-            notFound("Unknown block tag: $input")
-        }
+        val blocks = registryAccess().lookupOrThrow(Registries.BLOCK)
+        if (blocks.get(tag).isEmpty) unknownTag("block", input, blocks)
 
         return { it.`is`(tag) }
     }

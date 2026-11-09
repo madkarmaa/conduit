@@ -102,7 +102,7 @@ private fun MinecraftServer.memberIds(registryId: String, tag: String): List<Str
 
     val registry = taggedRegistry(registryId)
     val tagKey = TagKey.create(registry.key(), requireId(tag.removePrefix("#"), "tag"))
-    val members = registry.get(tagKey).getOrNull() ?: notFound("Unknown tag: $tag")
+    val members = registry.get(tagKey).getOrNull() ?: unknownTag(null, tag, registry)
 
     return members.map { it.registeredName }.sorted()
 }

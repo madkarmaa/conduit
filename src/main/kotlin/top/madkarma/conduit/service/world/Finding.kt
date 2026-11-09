@@ -105,7 +105,7 @@ internal fun <T : Any> MinecraftServer.holders(
 
     if (idOrTag.startsWith("#")) {
         val tag = TagKey.create(registry, parseId(idOrTag.removePrefix("#")))
-        return lookup.get(tag).getOrNull() ?: notFound("Unknown $kind tag: $idOrTag")
+        return lookup.get(tag).getOrNull() ?: unknownTag(kind, idOrTag, lookup)
     }
 
     val entry = lookup.get(ResourceKey.create(registry, parseId(idOrTag))).getOrNull()

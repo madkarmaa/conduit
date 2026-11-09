@@ -65,9 +65,8 @@ internal fun MinecraftServer.findItems(
 private fun MinecraftServer.itemFilter(input: String): (ItemStack) -> Boolean {
     if (input.startsWith("#")) {
         val tag = TagKey.create(Registries.ITEM, parseId(input.removePrefix("#")))
-        if (registryAccess().lookupOrThrow(Registries.ITEM).get(tag).isEmpty) {
-            notFound("Unknown item tag: $input")
-        }
+        val items = registryAccess().lookupOrThrow(Registries.ITEM)
+        if (items.get(tag).isEmpty) unknownTag("item", input, items)
         return { stack -> stack.`is` { it.`is`(tag) } }
     }
 
