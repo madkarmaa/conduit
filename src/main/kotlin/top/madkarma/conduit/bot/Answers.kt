@@ -95,6 +95,7 @@ object Answers {
             val outcome = runner.runWithDeadline(run, deadline)
             if (outcome.timedOut)
                 return BotReply(progress.ranOutOfTime(config.requests.timeoutSeconds, policy.name))
+            trace?.noteRun(outcome.result)
             if (outcome.result.cancelled) Conversations.markCancelled(conversation)
             return describe(outcome.result)
         } catch (exception: CancellationException) {

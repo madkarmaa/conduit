@@ -34,6 +34,7 @@ class ToolSession(val policy: ToolPolicy, tools: List<ToolDefinition>) {
 
     suspend fun call(name: String, arguments: JsonObject): CallToolResult {
         policy.recorder?.started(name)
+        val startedAt = System.currentTimeMillis()
 
         return try {
             val prepared = prepare(name, arguments)
@@ -42,13 +43,17 @@ class ToolSession(val policy: ToolPolicy, tools: List<ToolDefinition>) {
             log(prepared, arguments)
             val reply = run(prepared)
             val called = prepared.called()
-            policy.recorder?.finished(RecordedCall(name, called, arguments, false, reply.text))
+            val took = System.currentTimeMillis() - startedAt
+            policy.recorder?.finished(
+                RecordedCall(name, called, arguments, false, reply.text, took),
+            )
             toolResult(reply)
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
             val failure = describeFailure(exception, name)
-            policy.recorder?.finished(RecordedCall(name, null, arguments, true, failure))
+            val took = System.currentTimeMillis() - startedAt
+            policy.recorder?.finished(RecordedCall(name, null, arguments, true, failure, took))
             errorResult(failure)
         }
     }

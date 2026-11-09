@@ -36,6 +36,8 @@ class RecordedCall(
     val arguments: JsonObject,
     val failed: Boolean,
     val text: String,
+    /** How long the call took, approvals included. */
+    val milliseconds: Long = 0,
 )
 
 /** Hears every call made with a policy. */

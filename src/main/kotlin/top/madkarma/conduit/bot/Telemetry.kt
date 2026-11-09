@@ -5,10 +5,12 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption.APPEND
 import java.nio.file.StandardOpenOption.CREATE
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import net.fabricmc.loader.api.FabricLoader
 import top.madkarma.conduit.LOGGER
+import top.madkarma.conduit.config.AgentConfig
 import top.madkarma.conduit.config.ConduitConfig
 import top.madkarma.conduit.mcp.RecordedCall
 
@@ -28,7 +30,7 @@ object Telemetry {
 
     /** A new trace of the request, or null while telemetry is off. */
     fun start(request: BotRequest, config: ConduitConfig): RequestTrace? =
-        if (config.telemetry) RequestTrace(request) else null
+        if (config.telemetry) RequestTrace(request, config.agent(request.mode)) else null
 
     @Synchronized
     fun append(text: String) {
@@ -50,29 +52,53 @@ object Telemetry {
 
 /**
  * The lines of one request. They go to the file together when the request ends, so the requests of
- * the two modes never mix.
+ * the two modes never mix. The header names the agent, so a slow model shows apart from slow tools.
  */
-class RequestTrace(request: BotRequest) {
+class RequestTrace(request: BotRequest, agent: AgentConfig) {
     private val startedAt = System.currentTimeMillis()
+    private var calls = 0
     private val lines =
         mutableListOf(
             "=== ${LocalDateTime.now().format(DATE_TIME)} ${request.asker.name} in " +
-                "${request.mode.id} mode",
-            "Request: ${shorten(request.trigger?.config?.prompt ?: request.text)}",
+                "${request.mode.id} mode with ${describeAgent(agent)}",
+            "Request: ${shorten(request.trigger?.let(::triggerPrompt) ?: request.text)}",
         )
 
+    /** Each call shows when it started and how long it ran, so the gaps show the model's time. */
     @Synchronized
     fun record(call: RecordedCall) {
+        calls++
+        val start = LocalDateTime.now().minus(Duration.ofMillis(call.milliseconds))
         lines +=
-            "${LocalDateTime.now().format(TIME)} ${call.tool} ${shorten(call.arguments.toString())}"
+            "${start.format(TIME)} ${call.tool} (${call.milliseconds} ms) " +
+                shorten(call.arguments.toString())
         lines += "  ${if (call.failed) "failed" else "ok"}: ${shorten(call.text)}"
+    }
+
+    /** Notes what the run itself showed, such as an agent that failed or made no tool calls. */
+    @Synchronized
+    fun noteRun(result: RunResult) {
+        val error =
+            result.stderrTail.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
+        when {
+            result.cancelled -> return
+            result.exitCode != 0 ->
+                lines +=
+                    "Note: the agent exited with code ${result.exitCode}: ${shorten(error.orEmpty())}"
+            calls == 0 -> lines += "Note: the agent made no tool calls"
+        }
     }
 
     @Synchronized
     fun finish(answer: String) {
+        Telemetry.append(text(answer))
+    }
+
+    @Synchronized
+    fun text(answer: String): String {
         val seconds = (System.currentTimeMillis() - startedAt) / 1000
-        lines += "Answer after $seconds s: ${shorten(answer)}"
-        Telemetry.append(lines.joinToString("\n", postfix = "\n\n"))
+        val all = lines + "Answer after $seconds s: ${shorten(answer)}"
+        return all.joinToString("\n", postfix = "\n\n")
     }
 
     // Results can be long, such as a region's blocks, and their own lines would break the layout.
@@ -80,4 +106,11 @@ class RequestTrace(request: BotRequest) {
         val shown = if (text.length > SHOWN_LENGTH) text.take(SHOWN_LENGTH) + "…" else text
         return shown.replace("\n", "\n    ")
     }
+}
+
+// Only the CLI, model and effort, never the agent's keys or runner secret.
+private fun describeAgent(agent: AgentConfig): String {
+    val model = agent.model.ifBlank { "its default model" }
+    val effort = agent.effort.takeIf { it.isNotBlank() }?.let { ", $it effort" }.orEmpty()
+    return "${agent.cli} $model$effort"
 }
