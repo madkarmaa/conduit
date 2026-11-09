@@ -42,7 +42,7 @@ class EditJournalTest {
     @Test
     fun `a call that changed nothing leaves no edit behind`() {
         EditJournal.record("Alex", "edit_entity.sit") { EditJournal.before { Change(wolf, false) } }
-        assertEquals(emptyList(), EditJournal.groups())
+        assertTrue(EditJournal.groups().isEmpty())
 
         EditJournal.record("Alex", "edit_entity.name") { EditJournal.before { Change(wolf) } }
         assertEquals(listOf("edit_entity.name"), EditJournal.groups().map { it.action })

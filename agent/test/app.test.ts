@@ -28,7 +28,7 @@ afterAll(() => rmSync(home, { recursive: true, force: true }));
 
 describe("auth", () => {
     test("refuses requests without the runner secret", async () => {
-        const response = await Promise.resolve(app.request("/health"));
+        const response = await app.request("/health");
 
         expect(response.status).toBe(401);
     });

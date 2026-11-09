@@ -4,6 +4,7 @@ import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 import top.madkarma.conduit.config.ConduitConfig
 import top.madkarma.conduit.config.RequestsConfig
@@ -120,6 +121,6 @@ class PromptTest {
 
         assertEquals("trigger welcome", first.name)
         assertEquals(first.uuid, again.uuid)
-        assertFalse(first.uuid == TriggerRun(welcome.copy(name = "other"), null).asker.uuid)
+        assertNotEquals(first.uuid, TriggerRun(welcome.copy(name = "other"), null).asker.uuid)
     }
 }

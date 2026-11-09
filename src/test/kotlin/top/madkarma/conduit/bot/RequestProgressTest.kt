@@ -7,7 +7,6 @@ import kotlin.test.assertNull
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
 import top.madkarma.conduit.mcp.Access
-import top.madkarma.conduit.mcp.ApprovalGate
 import top.madkarma.conduit.mcp.CalledAction
 import top.madkarma.conduit.mcp.RecordedCall
 
@@ -34,9 +33,7 @@ class RequestProgressTest {
 
         var shown: String? = null
         runBlocking {
-            progress
-                .showingApprovals(ApprovalGate { shown = request.activity })
-                .approve(emptyList())
+            progress.showingApprovals { shown = request.activity }.approve(emptyList())
         }
         assertEquals("Waiting for approval…", shown)
         assertEquals("Using edit_blocks…", request.activity)

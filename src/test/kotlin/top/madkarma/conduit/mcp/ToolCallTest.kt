@@ -5,6 +5,7 @@ import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
 import top.madkarma.conduit.game.ConduitError
@@ -29,7 +30,7 @@ class ToolCallTest {
         val result = call(ToolPolicy("full"), tool, parseJson("""{"action": "set"}"""))
 
         assertEquals("set", text(result))
-        assertFalse(result.isError == true)
+        assertNotEquals(true, result.isError)
     }
 
     @Test

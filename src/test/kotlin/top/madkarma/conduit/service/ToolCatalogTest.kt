@@ -14,14 +14,12 @@ import top.madkarma.conduit.config.VALID_CONFIG
 import top.madkarma.conduit.config.problems
 import top.madkarma.conduit.game.ConduitError
 import top.madkarma.conduit.mcp.Access
-import top.madkarma.conduit.mcp.ApprovalGate
 import top.madkarma.conduit.mcp.OfferedTool
 import top.madkarma.conduit.mcp.ToolSession
 import top.madkarma.conduit.mcp.validateArguments
 
 class ToolCatalogTest {
-    private val chatPolicy =
-        VALID_CONFIG.toolPolicy(Mode.CHAT, Asker("Alex", UUID(0, 1)), ApprovalGate {})
+    private val chatPolicy = VALID_CONFIG.toolPolicy(Mode.CHAT, Asker("Alex", UUID(0, 1)), {})
 
     @Test
     fun `tool names are unique`() {

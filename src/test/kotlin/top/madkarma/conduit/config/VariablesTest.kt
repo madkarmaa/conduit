@@ -20,7 +20,7 @@ class VariablesTest {
 
     @Test
     fun `replaces every reference in a string`() {
-        assertEquals("http://minecraft:25585/mcp", expanded($$"http://${HOST}:${PORT}/mcp"))
+        assertEquals("https://minecraft:25585/mcp", expanded($$"https://${HOST}:${PORT}/mcp"))
     }
 
     @Test
