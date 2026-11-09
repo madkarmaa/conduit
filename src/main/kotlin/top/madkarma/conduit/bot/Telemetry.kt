@@ -9,6 +9,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import net.fabricmc.loader.api.FabricLoader
+import top.madkarma.conduit.Conduit
 import top.madkarma.conduit.LOGGER
 import top.madkarma.conduit.config.AgentConfig
 import top.madkarma.conduit.config.ConduitConfig
@@ -20,7 +21,8 @@ private val TIME = DateTimeFormatter.ofPattern("HH:mm:ss")
 
 /**
  * Writes each request, the agent's tool calls and the answer to a text file while the telemetry
- * config is on, so operators can see how the agent works.
+ * config is on, so operators can see how the agent works. A header names the mod version and the
+ * agents once, and again where they change.
  */
 object Telemetry {
     /** Relative to the server folder. */
@@ -28,15 +30,23 @@ object Telemetry {
 
     private val path: Path = FabricLoader.getInstance().gameDir.resolve(FILE)
 
+    // The header this server wrote last. A restart may run a new version, so it starts unknown.
+    private var lastHeader: String? = null
+
     /** A new trace of the request, or null while telemetry is off. */
     fun start(request: BotRequest, config: ConduitConfig): RequestTrace? =
-        if (config.telemetry) RequestTrace(request, config.agent(request.mode)) else null
+        if (config.telemetry) RequestTrace(request, telemetryHeader(Conduit.version, config))
+        else null
 
+    /** Writes the header first when the file is new or empty, or when the setup changed. */
     @Synchronized
-    fun append(text: String) {
+    fun append(text: String, header: String) {
         try {
             Files.createDirectories(path.parent)
-            Files.writeString(path, text, CREATE, APPEND)
+            val empty = !Files.exists(path) || Files.size(path) == 0L
+            val start = if (empty || header != lastHeader) header else ""
+            Files.writeString(path, start + text, CREATE, APPEND)
+            lastHeader = header
         } catch (exception: IOException) {
             LOGGER.warn("Cannot write the telemetry to {}: {}", FILE, exception.toString())
         }
@@ -50,17 +60,27 @@ object Telemetry {
     }
 }
 
+/** The header of the file: the mod version and each mode's agent, never their keys or secrets. */
+internal fun telemetryHeader(version: String, config: ConduitConfig): String =
+    listOf(
+            "### Conduit $version",
+            "### full: ${describeAgent(config.agent(Mode.FULL))}",
+            "### chat: ${describeAgent(config.agent(Mode.CHAT))}",
+        )
+        .joinToString("\n", postfix = "\n\n")
+
 /**
  * The lines of one request. They go to the file together when the request ends, so the requests of
- * the two modes never mix. The header names the agent, so a slow model shows apart from slow tools.
+ * the two modes never mix. The file's header names the agents, so a slow model shows apart from
+ * slow tools.
  */
-class RequestTrace(request: BotRequest, agent: AgentConfig) {
+class RequestTrace(request: BotRequest, private val header: String) {
     private val startedAt = System.currentTimeMillis()
     private var calls = 0
     private val lines =
         mutableListOf(
             "=== ${LocalDateTime.now().format(DATE_TIME)} ${request.asker.name} in " +
-                "${request.mode.id} mode with ${describeAgent(agent)}",
+                "${request.mode.id} mode",
             "Request: ${shorten(request.trigger?.let(::triggerPrompt) ?: request.text)}",
         )
 
@@ -91,7 +111,7 @@ class RequestTrace(request: BotRequest, agent: AgentConfig) {
 
     @Synchronized
     fun finish(answer: String) {
-        Telemetry.append(text(answer))
+        Telemetry.append(text(answer), header)
     }
 
     @Synchronized
@@ -111,6 +131,6 @@ class RequestTrace(request: BotRequest, agent: AgentConfig) {
 // Only the CLI, model and effort, never the agent's keys or runner secret.
 private fun describeAgent(agent: AgentConfig): String {
     val model = agent.model.ifBlank { "its default model" }
-    val effort = agent.effort.takeIf { it.isNotBlank() }?.let { ", $it effort" }.orEmpty()
-    return "${agent.cli} $model$effort"
+    val effort = agent.effort.ifBlank { "its default" } + " effort"
+    return "${agent.cli} $model, $effort"
 }
