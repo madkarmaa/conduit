@@ -109,7 +109,9 @@ private fun prepare(index: Int, call: JsonObject, session: ToolSession): Prepare
         }
 
     if (prepared.action !is GameAction) {
-        invalidInput("calls[$index]: $tool.${prepared.actionName} cannot run in a batch")
+        invalidInput(
+            "calls[$index]: $tool.${prepared.actionName} cannot run in a batch. Call it on its own.",
+        )
     }
 
     return prepared
