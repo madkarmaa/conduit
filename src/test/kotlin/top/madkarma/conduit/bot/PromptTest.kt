@@ -7,6 +7,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 import top.madkarma.conduit.config.ConduitConfig
+import top.madkarma.conduit.config.GameConfig
 import top.madkarma.conduit.config.RequestsConfig
 import top.madkarma.conduit.config.TriggerConfig
 import top.madkarma.conduit.events.EventType
@@ -37,6 +38,16 @@ class PromptTest {
 
         assertTrue("/conduit command" in instructions)
         assertTrue("other chat messages do not reach you" in instructions)
+    }
+
+    @Test
+    fun `full mode points to the chat history while it is on`() {
+        val history = "history action of the events tool"
+        val off = ConduitConfig(game = GameConfig(chatHistory = 0))
+
+        assertTrue(history in ConduitConfig().buildInstructions(Mode.FULL, alex))
+        assertFalse(history in ConduitConfig().buildInstructions(Mode.CHAT, alex))
+        assertFalse(history in off.buildInstructions(Mode.FULL, alex))
     }
 
     @Test

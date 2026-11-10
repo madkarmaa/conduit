@@ -23,6 +23,7 @@ import top.madkarma.conduit.mcp.AccessTokens
 import top.madkarma.conduit.mcp.McpHost
 import top.madkarma.conduit.service.ALL_TOOLS
 import top.madkarma.conduit.service.entity.Walks
+import top.madkarma.conduit.service.events.ChatHistory
 import top.madkarma.conduit.service.server.trackDatapackReloads
 
 object Conduit : ModInitializer {
@@ -57,6 +58,8 @@ object Conduit : ModInitializer {
 
         EditJournal.maxBlocks = { gameConfig.maxUndoBlocks }
         ExplosionJournal.maxBlocks = { gameConfig.maxExplosionUndoBlocks }
+        ChatHistory.size = { gameConfig.chatHistory }
+        ChatHistory.register()
 
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             ConduitCommand.register(dispatcher)
@@ -79,6 +82,7 @@ object Conduit : ModInitializer {
         ServerLifecycleEvents.SERVER_STOPPED.register { server ->
             McpHost.stop()
             EditJournal.clear()
+            ChatHistory.clear()
             Walks.clear()
             if (GameServer.current === server) GameServer.current = null
         }

@@ -16,6 +16,7 @@ fun ConduitConfig.buildInstructions(mode: Mode, asker: Asker, trigger: TriggerRu
             "/conduit command, and the conduit MCP server gives you tools that read and change the",
             "game. Their other chat messages do not reach you.",
             if (mode == Mode.CHAT) limited else "",
+            if (mode == Mode.FULL && game.chatHistory > 0) CHAT_HISTORY else "",
             if (mode == Mode.FULL && asker.role != Role.PLAYER) operatorInstructions(asker) else "",
             trigger?.let(::triggerInstructions).orEmpty(),
             "The bot posts your final answer in the chat, so keep it to a few short sentences and do",
@@ -26,6 +27,8 @@ fun ConduitConfig.buildInstructions(mode: Mode, asker: Asker, trigger: TriggerRu
         .filter { it.isNotEmpty() }
         .joinToString(" ")
 }
+
+private const val CHAT_HISTORY = "The history action of the events tool reads their recent chat."
 
 // Models tend to protect other players from requests that hurt them, and to ask those players for
 // consent. On a server, that is the operators' call, and the approval prompts already check it.

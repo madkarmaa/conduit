@@ -165,6 +165,8 @@ data class GameConfig(
     val maxUndoBlocks: Long = 2_000_000,
     /** The most blocks that undo keeps for recent explosion damage. 0 turns its recording off. */
     val maxExplosionUndoBlocks: Long = 200_000,
+    /** The most chat messages that the events history keeps. 0 turns the history off. */
+    val chatHistory: Int = 200,
 )
 
 /**

@@ -20,9 +20,10 @@ val EVENTS =
         name = "events",
         title = "Game events",
         description =
-            "Returns game events after the cursor in after, waiting up to timeout_seconds " +
-                "for one. Pass the returned next cursor to continue. Recording starts with " +
-                "the first call.",
+            "wait returns game events after the cursor in after, waiting up to " +
+                "timeout_seconds for one. Pass the returned next cursor to continue. Recording " +
+                "starts with the first call. history returns the latest chat messages since " +
+                "the server started, oldest first.",
         input =
             input {
                 optional(
@@ -62,7 +63,20 @@ val EVENTS =
                             )
                         describePage(EventFeed.poll(query))
                     },
+                "history" to
+                    AsyncAction(Access.READ) { input, _ ->
+                        describeChat(
+                            ChatHistory.recent(input.strings("players"), input.int("limit")),
+                        )
+                    },
             ),
+    )
+
+private fun describeChat(chat: List<ChatLine>): Reply =
+    lines(
+        "${chat.size} chat messages, oldest first:",
+        chat.map { "${it.time} <${it.player}> ${it.message}" },
+        dataOf("messages" to encoded(chat)),
     )
 
 private fun describePage(page: EventPage): Reply {
