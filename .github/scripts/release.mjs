@@ -45,9 +45,17 @@ const createModrinthClient = (env) =>
         features: [new AuthFeature({ token: env.MODRINTH_TOKEN, tokenPrefix: "" })],
     });
 
+// The SKIP_MODRINTH_RELEASE repository variable turns the Modrinth steps off, such as while the
+// project there is not set up yet. The GitHub release goes ahead without them.
+const skipsModrinth = (env) => env.SKIP_MODRINTH_RELEASE === "true";
+
 // Finding the project before the release starts keeps a missing token or project from leaving a
 // release on GitHub that never reached Modrinth.
-export const verifyConditions = async (_, { cwd, env }) => {
+export const verifyConditions = async (_, { cwd, env, logger }) => {
+    if (skipsModrinth(env)) {
+        logger.log("SKIP_MODRINTH_RELEASE is true, so this release skips Modrinth");
+        return;
+    }
     if (!env.MODRINTH_TOKEN) throw new Error("MODRINTH_TOKEN is not set");
 
     const modId = readModId(cwd);
@@ -71,6 +79,7 @@ export const prepare = (_, { nextRelease, cwd, env }) => {
 };
 
 export const publish = async (_, { nextRelease, cwd, env, logger }) => {
+    if (skipsModrinth(env)) return false;
     const modId = readModId(cwd);
     const minecraftVersion = readProperty(cwd, "minecraft_version");
     const versionName = `${nextRelease.version}+${minecraftVersion}`;
