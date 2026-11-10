@@ -8,14 +8,19 @@ import kotlinx.serialization.Serializable
 import net.minecraft.core.BlockPos
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.MinecraftServer
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.levelgen.structure.BoundingBox
+import net.minecraft.world.phys.Vec3
+import top.madkarma.conduit.game.entity
 import top.madkarma.conduit.game.level
 import top.madkarma.conduit.mcp.Reply
 import top.madkarma.conduit.mcp.ToolInput
 import top.madkarma.conduit.mcp.dataOf
 import top.madkarma.conduit.mcp.encoded
 import top.madkarma.conduit.mcp.lines
+import top.madkarma.conduit.service.entity.fitsAt
 
 private const val SPOT_LIMIT = 5
 
@@ -33,12 +38,12 @@ data class Spot(
 internal fun MinecraftServer.spotsReply(input: ToolInput): Reply {
     val outside = input.decodeOrNull<Bounds>("outside")?.toBox()
     val limit = if (input.has("limit")) input.int("limit") else SPOT_LIMIT
+    val entity = input.stringOrNull("entity")?.let(::entity)
     val spots =
         findSpots(
             input.stringOrNull("dimension"),
             searchArea(input),
-            outside,
-            input.boolean("loaded_only"),
+            SpotFilter(outside, input.boolean("loaded_only"), entity),
             limit,
         )
 
@@ -49,15 +54,28 @@ internal fun MinecraftServer.spotsReply(input: ToolInput): Reply {
     )
 }
 
+/** Which safe spots count: not inside `outside`, and where the entity fits when there is one. */
+internal class SpotFilter(
+    val outside: BoundingBox? = null,
+    val loadedOnly: Boolean = false,
+    val entity: Entity? = null,
+) {
+    fun accepts(level: ServerLevel, pos: BlockPos): Boolean {
+        if (outside?.isInside(pos) == true) return false
+        if (loadedOnly && !level.isLoaded(pos)) return false
+        if (!isSafeSpot(level, pos)) return false
+        return entity == null || entity.fitsAt(level, Vec3.atBottomCenterOf(pos))
+    }
+}
+
 /**
- * The safe spots of an area nearest to its center, leaving out the ones inside `outside`. Shells
- * around the center are searched outward, so a near spot ends the search early.
+ * The safe spots of an area nearest to its center that the filter accepts. Shells around the center
+ * are searched outward, so a near spot ends the search early.
  */
 internal fun MinecraftServer.findSpots(
     dimension: String?,
     area: BlockArea,
-    outside: BoundingBox?,
-    loadedOnly: Boolean,
+    filter: SpotFilter,
     limit: Int,
 ): List<Spot> {
     val level = level(dimension)
@@ -80,9 +98,7 @@ internal fun MinecraftServer.findSpots(
             break
 
         for (pos in shellPositions(center, shell)) {
-            if (!pos.isInside(min, max) || outside?.isInside(pos) == true) continue
-            if (loadedOnly && !level.isLoaded(pos)) continue
-            if (!isSafeSpot(level, pos)) continue
+            if (!pos.isInside(min, max) || !filter.accepts(level, pos)) continue
 
             found += spotAt(pos, center, level.getBlockState(pos.below()).block)
         }

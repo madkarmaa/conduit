@@ -23,7 +23,8 @@ val FIND =
                 "item, counting shulker boxes and bundles. structure, biome and poi find the " +
                 "nearest one from center, like /locate, and structure gives its box. Points of " +
                 "interest only exist in chunks loaded since they were placed. spot finds safe " +
-                "places for a player to stand, nearest first.",
+                "places for a player to stand, nearest first, or for an entity and its " +
+                "passengers to fit, such as a horse with its rider.",
         input =
             input {
                 optional("dimension", DIMENSION)
@@ -77,6 +78,10 @@ val FIND =
                         required("from", BLOCK_POS)
                         required("to", BLOCK_POS)
                     },
+                )
+                optional(
+                    "entity",
+                    stringSchema("spot only returns places where this entity UUID fits."),
                 )
                 optional("limit", LIMIT)
             },

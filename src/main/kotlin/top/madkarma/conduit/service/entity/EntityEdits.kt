@@ -1,6 +1,5 @@
 package top.madkarma.conduit.service.entity
 
-import net.minecraft.core.BlockPos
 import net.minecraft.core.UUIDUtil
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.TagParser
@@ -24,35 +23,6 @@ internal fun MinecraftServer.removeEntity(uuid: String, kill: Boolean) {
 
     EditJournal.beforeRemove(entity)
     if (kill) entity.kill(entity.level() as ServerLevel) else entity.discard()
-}
-
-/** Where a teleport put an entity: the block under its feet and whether it fits there. */
-class Landing(val entity: EntityInfo, val blockBelow: String, val free: Boolean)
-
-/** Moves an entity, players included, also across dimensions. Null keeps the dimension. */
-internal fun MinecraftServer.teleportEntity(
-    uuid: String,
-    dimension: String?,
-    position: Vector3,
-    rotation: Rotation?,
-): Landing {
-    val entity = editedEntity(uuid)
-    val level = if (dimension.isNullOrBlank()) entity.level() as ServerLevel else level(dimension)
-    val yaw = rotation?.yaw ?: entity.yRot
-    val pitch = rotation?.pitch ?: entity.xRot
-
-    if (entity !is ServerPlayer) requireEntityTicking(level, position.toMc())
-
-    if (
-        !entity.teleportTo(level, position.x, position.y, position.z, emptySet(), yaw, pitch, true)
-    ) {
-        failedPrecondition("Teleport was rejected")
-    }
-
-    // The game recreates entities other than players when they change dimension.
-    val moved = entity(uuid)
-    val below = moved.level().getBlockState(BlockPos.containing(moved.x, moved.y - 0.01, moved.z))
-    return Landing(moved.toInfo(), below.toInfo().serialized, moved.level().noCollision(moved))
 }
 
 /** Sets the velocity in blocks per tick, or adds to the current velocity. */

@@ -10,7 +10,8 @@ val MOVE_ENTITY =
         title = "Move entity",
         description =
             "teleport moves any entity, also across dimensions, and names the block it " +
-                "lands on. rotate turns it, push sets its velocity, and mount and dismount " +
+                "lands on. When the entity or its passengers would be inside blocks, it goes to " +
+                "the nearest spot within 3 blocks where they fit, or stays. rotate turns it, push sets its velocity, and mount and dismount " +
                 "change what it rides. walk makes a mob walk to position, or follow target " +
                 "while it moves. A walking mob does not despawn, and the walk ends on " +
                 "arrival, after 2 minutes or with stop.",
@@ -62,9 +63,11 @@ val MOVE_ENTITY =
                                 input.decodeOrNull<Rotation>("rotation"),
                             )
                         val stuck = if (landing.free) "" else ", stuck inside blocks"
+                        val moved =
+                            if (landing.moved) ", moved to the nearest spot where it fits" else ""
                         done(
                             "${describeEntity(landing.entity)}, standing on " +
-                                "${landing.blockBelow}$stuck",
+                                "${landing.blockBelow}$stuck$moved",
                         )
                     },
                 "rotate" to
