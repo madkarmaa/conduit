@@ -49,7 +49,7 @@ private fun structureBox(level: ServerLevel, pos: BlockPos, structure: Structure
     return if (start.isValid) start.boundingBox else null
 }
 
-private fun boundsOf(box: BoundingBox) =
+internal fun boundsOf(box: BoundingBox) =
     Bounds(
         BlockCoordinates(box.minX(), box.minY(), box.minZ()),
         BlockCoordinates(box.maxX(), box.maxY(), box.maxZ()),

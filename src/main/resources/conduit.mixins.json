@@ -19,7 +19,8 @@
         "ServerExplosionMixin",
         "ServerLevelMixin",
         "ServerPlayerMixin",
-        "StructureTemplateAccessor"
+        "StructureTemplateAccessor",
+        "TemplateStructurePieceAccessor"
     ],
     "injectors": {
         "defaultRequire": 1

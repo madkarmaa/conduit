@@ -11,7 +11,8 @@ val STRUCTURES =
             "Structure templates, as structure blocks use them. list finds saved, " +
                 "datapack and vanilla templates. save copies a region into a template. place " +
                 "pastes one with its lowest corner at origin. copy pastes a region at origin " +
-                "without saving it, also into target_dimension.",
+                "without saving it, also into target_dimension. at names the generated " +
+                "structures at pos, with the template and rotation of the piece there.",
         input =
             input {
                 optional(
@@ -24,6 +25,11 @@ val STRUCTURES =
                 optional("from", BLOCK_POS.described("Region corner for save and copy."))
                 optional("to", BLOCK_POS.described("Opposite region corner for save and copy."))
                 optional("origin", BLOCK_POS.described("Required for place and copy."))
+                optional("pos", BLOCK_POS.described("Required for at."))
+                optional(
+                    "structure",
+                    stringSchema("For compare: which structure at pos, by id."),
+                )
                 optional(
                     "target_dimension",
                     stringSchema("For copy: where to paste. Defaults to dimension."),
@@ -68,6 +74,11 @@ val STRUCTURES =
                             page,
                             dataOf("total" to JsonPrimitive(matching.size), "ids" to encoded(page)),
                         )
+                    },
+                "at" to
+                    readAction { server, input ->
+                        input.require("pos")
+                        server.structuresAtReply(input)
                     },
                 "save" to
                     AsyncAction(Access.WRITE) { input, _ ->
