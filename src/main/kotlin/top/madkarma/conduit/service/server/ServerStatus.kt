@@ -20,8 +20,12 @@ data class ServerInfo(
     val seed: Long,
     val difficulty: String,
     val tickCount: Int,
-    val mods: List<String>,
 )
+
+@Serializable data class ModInfo(val id: String, val version: String)
+
+/** The mods in the mods folder, and how many libraries they bundle. */
+@Serializable data class InstalledMods(val mods: List<ModInfo>, val bundled: Int)
 
 @Serializable
 data class Performance(
@@ -47,8 +51,18 @@ internal fun MinecraftServer.describeServer(): ServerInfo =
         seed = overworld().seed,
         difficulty = worldData.difficulty.serializedName,
         tickCount = tickCount,
-        mods = FabricLoader.getInstance().allMods.map { it.metadata.id }.sorted(),
     )
+
+// Mods bundle libraries and submodules inside their jar, which are rarely what someone looks for.
+internal fun installedMods(): InstalledMods {
+    val all = FabricLoader.getInstance().allMods
+    val topLevel = all.filter { it.containingMod.isEmpty }
+    val mods =
+        topLevel
+            .map { ModInfo(it.metadata.id, it.metadata.version.friendlyString) }
+            .sortedBy { it.id }
+    return InstalledMods(mods, all.size - topLevel.size)
+}
 
 fun MinecraftServer.performance(): Performance {
     val runtime = Runtime.getRuntime()

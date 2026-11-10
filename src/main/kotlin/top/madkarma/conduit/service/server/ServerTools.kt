@@ -17,19 +17,21 @@ val SERVER_INFO =
         title = "Server info",
         description =
             "summary reads the versions, players, seed, difficulty, TPS, MSPT, memory and " +
-                "dimensions. mods and backups list those.",
+                "dimensions. mods lists the mods with their versions, without the libraries " +
+                "they bundle. backups lists the backups.",
         input = input {},
         defaultAction = "summary",
         actions =
             mapOf(
                 "summary" to readAction { server, _ -> json(server.summary()) },
                 "mods" to
-                    readAction { server, _ ->
-                        val mods = server.describeServer().mods
+                    readAction { _, _ ->
+                        val installed = installedMods()
                         lines(
-                            "${mods.size} mods and libraries",
-                            mods,
-                            dataOf("mods" to encoded(mods)),
+                            "${installed.mods.size} mods, which bundle ${installed.bundled} " +
+                                "more libraries and submodules:",
+                            installed.mods.map { "${it.id} ${it.version}" },
+                            encodedObject(installed),
                         )
                     },
                 "backups" to
@@ -115,11 +117,10 @@ val SERVER_ADMIN =
             ),
     )
 
-// The mods action lists the mods, which would fill most of the summary.
 private fun MinecraftServer.summary(): JsonObject {
     val fields = GAME_JSON.encodeToJsonElement(describeServer()).jsonObject
     return JsonObject(
-        fields - "mods" +
+        fields +
             ("dimensions" to GAME_JSON.encodeToJsonElement(describeDimensions())) +
             ("performance" to GAME_JSON.encodeToJsonElement(performance())),
     )
