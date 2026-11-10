@@ -97,13 +97,18 @@ private fun MinecraftServer.regionReply(input: ToolInput): Reply {
 
     val region = readRegion(input.stringOrNull("dimension"), from, to, input.boolean("loaded_only"))
     if (!drawing) return summarizeRegion(region)
-    if (!paletteFits(region)) {
+    if (paletteFits(region)) return drawRegion(region)
+
+    // Stairs, panes and walls have many states, but their ids alone still show the shape.
+    val merged = byBlock(region)
+    if (!paletteFits(merged)) {
         invalidInput(
-            "The region has ${region.palette.size} block states, too many to draw. Draw fewer " +
+            "The region has ${merged.palette.size} block ids, too many to draw. Draw fewer " +
                 "layers at a time, or read it with summary.",
         )
     }
-    return drawRegion(region)
+    val note = "The region has ${region.palette.size} block states, so this draws block ids."
+    return drawRegion(merged, note)
 }
 
 private fun checkDrawable(from: BlockCoordinates, to: BlockCoordinates) {

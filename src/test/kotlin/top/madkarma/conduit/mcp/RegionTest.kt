@@ -97,4 +97,19 @@ class RegionTest {
         assertTrue(paletteFits(regionWith(78)))
         assertFalse(paletteFits(regionWith(79)))
     }
+
+    @Test
+    fun `merging by block keeps one entry per block id`() {
+        val westStairs = state("minecraft:oak_stairs[facing=west]")
+        val mixed =
+            region.copy(palette = listOf(air, stairs, westStairs), blocks = listOf(0, 1, 2, 2))
+
+        val merged = byBlock(mixed)
+
+        assertEquals(
+            listOf("minecraft:air", "minecraft:oak_stairs"),
+            merged.palette.map { it.serialized },
+        )
+        assertEquals(listOf(0, 1, 1, 1), merged.blocks)
+    }
 }

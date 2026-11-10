@@ -2,6 +2,7 @@ package top.madkarma.conduit.mcp
 
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import top.madkarma.conduit.game.BlockStateInfo
 import top.madkarma.conduit.service.world.BlockRegion
 
 // Each palette entry gets one character, and air gets ".", so the shape of a build stands out.
@@ -31,8 +32,11 @@ fun summarizeRegion(region: BlockRegion): Reply {
     return lines(header(region), rows, data)
 }
 
-/** Prints every y layer as a grid of characters, with rows along z and columns along x. */
-fun drawRegion(region: BlockRegion): Reply {
+/**
+ * Prints every y layer as a grid of characters, with rows along z and columns along x. The note
+ * follows the header.
+ */
+fun drawRegion(region: BlockRegion, note: String? = null): Reply {
     val size = region.size
 
     val symbols =
@@ -56,7 +60,8 @@ fun drawRegion(region: BlockRegion): Reply {
             "y=${region.min.y + y}\n${rows.joinToString("\n")}"
         }
 
-    val text = listOf(header(region), "Rows run along z, columns along x.") + legend + layers
+    val text =
+        listOfNotNull(header(region), note, "Rows run along z, columns along x.") + legend + layers
     return Reply(
         text.joinToString("\n"),
         dataOf("min" to encoded(region.min), "size" to encoded(region.size)),
@@ -64,6 +69,18 @@ fun drawRegion(region: BlockRegion): Reply {
 }
 
 fun paletteFits(region: BlockRegion): Boolean = region.palette.size <= SYMBOLS.length
+
+/** The region with each block's states merged into one palette entry per block id. */
+fun byBlock(region: BlockRegion): BlockRegion {
+    val ids = region.palette.map { it.id }.distinct()
+    val idIndex = ids.withIndex().associate { (index, id) -> id to index }
+    val remapped = region.palette.map { idIndex.getValue(it.id) }
+
+    return region.copy(
+        palette = ids.map { BlockStateInfo(it, emptyMap(), it) },
+        blocks = region.blocks.map { remapped[it] },
+    )
+}
 
 private fun header(region: BlockRegion): String {
     val min = region.min
