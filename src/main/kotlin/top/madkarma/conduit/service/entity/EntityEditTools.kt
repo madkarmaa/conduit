@@ -1,7 +1,6 @@
 package top.madkarma.conduit.service.entity
 
 import top.madkarma.conduit.game.EffectInfo
-import top.madkarma.conduit.game.Rotation
 import top.madkarma.conduit.mcp.*
 
 val EDIT_ENTITY =
@@ -9,8 +8,10 @@ val EDIT_ENTITY =
         name = "edit_entity",
         title = "Edit entity",
         description =
-            "spawn creates an entity in a loaded chunk, which edit_world force_chunk " +
-                "provides away from players. remove discards an entity, or kills it for its " +
+            "spawn creates any entity, such as a mob, a lightning bolt or a projectile, at " +
+                "a position or, with at, at another entity where it is at that moment. It " +
+                "needs a loaded chunk, which edit_world force_chunk provides away from " +
+                "players. remove discards an entity, or kills it for its " +
                 "loot. name, tags, health, damage, nbt, add_effect, remove_effect and " +
                 "set_attribute change it. calm ends a neutral mob's anger. owner tames an " +
                 "animal for a player, also an offline one. sit makes a tamed pet sit or " +
@@ -56,18 +57,7 @@ val EDIT_ENTITY =
         actions =
             mapOf(
                 "spawn" to
-                    writeAction { server, input ->
-                        val request =
-                            SpawnRequest(
-                                type = input.string("type"),
-                                dimension = input.stringOrNull("dimension"),
-                                position = input.decode("position"),
-                                rotation = input.decodeOrNull<Rotation>("rotation"),
-                                snbt = input.stringOrNull("snbt"),
-                                initialize = input.boolean("initialize"),
-                            )
-                        json(server.spawnEntity(request))
-                    },
+                    writeAction { server, input -> json(server.spawnEntity(spawnRequest(input))) },
                 "remove" to
                     destructiveAction { server, input ->
                         server.removeEntity(input.string("uuid"), input.boolean("kill"))
@@ -172,7 +162,21 @@ private fun InputBuilder.spawnFields() {
         stringSchema("Entity type, such as \"minecraft:villager\". Required for spawn."),
     )
     optional("dimension", DIMENSION)
-    optional("position", VEC3.described("Required for spawn."))
+    optional(
+        "position",
+        VEC3.described(
+            "Required for spawn without at. With at, the offset from that entity's feet, such " +
+                "as {\"x\":0,\"y\":-0.3,\"z\":0} for under them.",
+        ),
+    )
+    optional(
+        "at",
+        stringSchema(
+            "spawn at any entity, such as a mob, a vehicle or a player: its UUID, or a " +
+                "player's name. Its position is read at spawn time, so a moving entity is not " +
+                "missed, and its dimension is used.",
+        ),
+    )
     optional("rotation", ROTATION)
     optional(
         "initialize",
