@@ -12,7 +12,9 @@ val STRUCTURES =
                 "datapack and vanilla templates. save copies a region into a template. place " +
                 "pastes one with its lowest corner at origin. copy pastes a region at origin " +
                 "without saving it, also into target_dimension. at names the generated " +
-                "structures at pos, with the template and rotation of the piece there.",
+                "structures at pos, with the template and rotation of the piece there. " +
+                "compare checks the generated structure at pos against its templates, as the " +
+                "game placed them.",
         input =
             input {
                 optional(
@@ -25,7 +27,7 @@ val STRUCTURES =
                 optional("from", BLOCK_POS.described("Region corner for save and copy."))
                 optional("to", BLOCK_POS.described("Opposite region corner for save and copy."))
                 optional("origin", BLOCK_POS.described("Required for place and copy."))
-                optional("pos", BLOCK_POS.described("Required for at."))
+                optional("pos", BLOCK_POS.described("Required for at and compare."))
                 optional(
                     "structure",
                     stringSchema("For compare: which structure at pos, by id."),
@@ -79,6 +81,11 @@ val STRUCTURES =
                     readAction { server, input ->
                         input.require("pos")
                         server.structuresAtReply(input)
+                    },
+                "compare" to
+                    readAction { server, input ->
+                        input.require("pos")
+                        server.compareReply(input)
                     },
                 "save" to
                     AsyncAction(Access.WRITE) { input, _ ->
