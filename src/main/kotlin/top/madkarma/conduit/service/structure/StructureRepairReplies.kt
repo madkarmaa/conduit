@@ -7,8 +7,10 @@ import top.madkarma.conduit.game.toMc
 import top.madkarma.conduit.mcp.Reply
 import top.madkarma.conduit.mcp.ToolInput
 import top.madkarma.conduit.mcp.dataOf
+import top.madkarma.conduit.mcp.done
 import top.madkarma.conduit.mcp.encoded
 import top.madkarma.conduit.mcp.lines
+import top.madkarma.conduit.service.world.blockFilter
 
 private const val GROUP_LIMIT = 20
 private const val SAMPLE_POSITIONS = 3
@@ -37,6 +39,26 @@ internal fun MinecraftServer.compareReply(input: ToolInput): Reply {
             "missing" to encoded(missing),
             "different" to encoded(different),
         ),
+    )
+}
+
+internal fun MinecraftServer.restoreReply(input: ToolInput): Reply {
+    val found = structureBlocksOf(input)
+    val includeDifferent = input.boolean("include_different")
+    val filters = input.strings("blocks").map(::blockFilter)
+
+    val chosen =
+        found.blocks
+            .filter { it.missing || (includeDifferent && it.different) }
+            .filter { block -> filters.isEmpty() || filters.any { it(block.expected) } }
+    if (chosen.isEmpty()) return done("${found.structure} has no blocks to restore")
+
+    restoreBlocks(this, input.stringOrNull("dimension"), chosen)
+    val restored = differences(chosen, 0)
+    return lines(
+        "Restored ${chosen.size} blocks of ${found.structure}:",
+        restored.take(GROUP_LIMIT).map { "${it.count} ${it.block}" },
+        dataOf("restored" to encoded(restored)),
     )
 }
 

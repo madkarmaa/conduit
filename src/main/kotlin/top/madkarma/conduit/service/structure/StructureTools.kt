@@ -14,7 +14,7 @@ val STRUCTURES =
                 "without saving it, also into target_dimension. at names the generated " +
                 "structures at pos, with the template and rotation of the piece there. " +
                 "compare checks the generated structure at pos against its templates, as the " +
-                "game placed them.",
+                "game placed them, and restore puts back its missing blocks, without loot.",
         input =
             input {
                 optional(
@@ -27,10 +27,25 @@ val STRUCTURES =
                 optional("from", BLOCK_POS.described("Region corner for save and copy."))
                 optional("to", BLOCK_POS.described("Opposite region corner for save and copy."))
                 optional("origin", BLOCK_POS.described("Required for place and copy."))
-                optional("pos", BLOCK_POS.described("Required for at and compare."))
+                optional("pos", BLOCK_POS.described("Required for at, compare and restore."))
                 optional(
                     "structure",
-                    stringSchema("For compare: which structure at pos, by id."),
+                    stringSchema("For compare and restore: which structure at pos, by id."),
+                )
+                optional(
+                    "blocks",
+                    arraySchema(
+                        stringSchema(),
+                        "For restore: only these template blocks, by id or #tag.",
+                        default = EMPTY_ARRAY,
+                    ),
+                )
+                optional(
+                    "include_different",
+                    booleanSchema(
+                        "For restore: also replace blocks that differ from the template.",
+                        default = false,
+                    ),
                 )
                 optional(
                     "target_dimension",
@@ -86,6 +101,11 @@ val STRUCTURES =
                     readAction { server, input ->
                         input.require("pos")
                         server.compareReply(input)
+                    },
+                "restore" to
+                    writeAction { server, input ->
+                        input.require("pos")
+                        server.restoreReply(input)
                     },
                 "save" to
                     AsyncAction(Access.WRITE) { input, _ ->

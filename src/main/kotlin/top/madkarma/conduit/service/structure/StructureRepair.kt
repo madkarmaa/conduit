@@ -7,6 +7,7 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
 import top.madkarma.conduit.game.BlockCoordinates
+import top.madkarma.conduit.game.EditJournal
 import top.madkarma.conduit.game.level
 import top.madkarma.conduit.game.notFound
 
@@ -91,5 +92,22 @@ internal fun differences(blocks: List<TemplateBlock>, samples: Int): List<BlockD
                 group.first().current.block.takeIf { group.first().different }?.let(::blockId),
             )
         }
+
+/**
+ * Puts the template blocks back, lowest first so blocks that hang on others find them. It skips
+ * neighbor updates, like a structure placement, and places no block entity data, so a chest does
+ * not refill its loot.
+ */
+internal fun restoreBlocks(
+    server: MinecraftServer,
+    dimension: String?,
+    blocks: List<TemplateBlock>,
+) {
+    val level = server.level(dimension)
+    for (block in blocks.sortedBy { it.pos.y }) {
+        EditJournal.before(level, block.pos)
+        level.setBlock(block.pos, block.expected, Block.UPDATE_CLIENTS)
+    }
+}
 
 private fun blockId(block: Block) = BuiltInRegistries.BLOCK.getKey(block).toString()
