@@ -85,10 +85,11 @@ val FIND =
                 "blocks" to readAction { server, input -> server.blocksReply(input) },
                 "items" to readAction { server, input -> server.itemsReply(input) },
                 "spot" to readAction { server, input -> server.spotsReply(input) },
+                // It waits for chunks between short turns on the server thread, so it runs alone.
                 "structure" to
-                    readAction { server, input ->
+                    AsyncAction(Access.READ) { input, _ ->
                         locatedReply(
-                            server.locateStructure(
+                            locateStructure(
                                 input.stringOrNull("dimension"),
                                 input.string("structure"),
                                 center(input),

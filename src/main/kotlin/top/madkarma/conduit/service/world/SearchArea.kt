@@ -44,3 +44,9 @@ internal fun searchArea(input: ToolInput): BlockArea {
 data class Bounds(val from: BlockCoordinates, val to: BlockCoordinates) {
     fun toBox(): BoundingBox = BoundingBox.fromCorners(from.toMc(), to.toMc())
 }
+
+internal fun boundsOf(box: BoundingBox) =
+    Bounds(
+        BlockCoordinates(box.minX(), box.minY(), box.minZ()),
+        BlockCoordinates(box.maxX(), box.maxY(), box.maxZ()),
+    )
