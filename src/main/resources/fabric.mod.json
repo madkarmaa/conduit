@@ -6,7 +6,7 @@
     "description": "An AI bot for Minecraft servers.",
     "authors": ["MadKarma"],
     "contact": {},
-    "license": "CC0-1.0",
+    "license": "MIT",
     "icon": "assets/conduit/icon.png",
     "environment": "*",
     "entrypoints": {

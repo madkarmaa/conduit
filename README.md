@@ -344,4 +344,4 @@ Docker volumes keep the game data and the agents' logins between runs.
 
 ## License
 
-CC0-1.0, see [LICENSE](./LICENSE).
+MIT, see [LICENSE](./LICENSE).
