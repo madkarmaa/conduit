@@ -38,6 +38,8 @@ class RecordedCall(
     val text: String,
     /** How long the call took, approvals included. */
     val milliseconds: Long = 0,
+    /** How much of that it waited for approvals. */
+    val approvalMilliseconds: Long = 0,
 )
 
 /** Hears every call made with a policy. */

@@ -1,7 +1,12 @@
 package top.madkarma.conduit.mcp
 
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
+import java.util.concurrent.atomic.AtomicLong
+import kotlin.coroutines.AbstractCoroutineContextElement
+import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 import top.madkarma.conduit.LOGGER
 import top.madkarma.conduit.game.GameServer
@@ -28,11 +33,29 @@ class ToolSession(val policy: ToolPolicy, tools: List<ToolDefinition>) {
         return PreparedCall(tool, actionName, action, input)
     }
 
+    /** Asks for approvals and adds the wait to the call that asks, a batch's calls included. */
     suspend fun approve(calls: List<CalledAction>) {
-        if (calls.isNotEmpty()) policy.approvals?.approve(calls)
+        val gate = policy.approvals ?: return
+        if (calls.isEmpty()) return
+
+        val startedAt = System.currentTimeMillis()
+        try {
+            gate.approve(calls)
+        } finally {
+            currentCoroutineContext()[ApprovalWait]?.add(System.currentTimeMillis() - startedAt)
+        }
     }
 
     suspend fun call(name: String, arguments: JsonObject): CallToolResult {
+        val wait = ApprovalWait()
+        return withContext(wait) { record(name, arguments, wait) }
+    }
+
+    private suspend fun record(
+        name: String,
+        arguments: JsonObject,
+        wait: ApprovalWait,
+    ): CallToolResult {
         policy.recorder?.started(name)
         val startedAt = System.currentTimeMillis()
 
@@ -45,7 +68,7 @@ class ToolSession(val policy: ToolPolicy, tools: List<ToolDefinition>) {
             val called = prepared.called()
             val took = System.currentTimeMillis() - startedAt
             policy.recorder?.finished(
-                RecordedCall(name, called, arguments, false, reply.text, took),
+                RecordedCall(name, called, arguments, false, reply.text, took, wait.milliseconds),
             )
             toolResult(reply)
         } catch (exception: CancellationException) {
@@ -53,7 +76,9 @@ class ToolSession(val policy: ToolPolicy, tools: List<ToolDefinition>) {
         } catch (exception: Exception) {
             val failure = describeFailure(exception, name)
             val took = System.currentTimeMillis() - startedAt
-            policy.recorder?.finished(RecordedCall(name, null, arguments, true, failure, took))
+            policy.recorder?.finished(
+                RecordedCall(name, null, arguments, true, failure, took, wait.milliseconds),
+            )
             errorResult(failure)
         }
     }
@@ -75,5 +100,19 @@ class ToolSession(val policy: ToolPolicy, tools: List<ToolDefinition>) {
             else arguments
 
         LOGGER.info("{} runs {}.{} {}", policy.name, call.tool.name, call.actionName, shown)
+    }
+}
+
+/** How long one call waited for approvals, which a slow approve click adds to its time. */
+private class ApprovalWait : AbstractCoroutineContextElement(ApprovalWait) {
+    companion object Key : CoroutineContext.Key<ApprovalWait>
+
+    private val total = AtomicLong()
+
+    val milliseconds: Long
+        get() = total.get()
+
+    fun add(milliseconds: Long) {
+        total.addAndGet(milliseconds)
     }
 }

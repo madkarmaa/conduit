@@ -6,6 +6,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
 import top.madkarma.conduit.game.ConduitError
@@ -73,6 +75,27 @@ class ToolCallTest {
             ),
             recorded,
         )
+    }
+
+    @Test
+    fun `the recorder hears how long a call waited for approval`() {
+        val stop = singleActionTool("stop", AsyncAction(Access.DESTRUCTIVE) { _, _ -> Reply("") })
+        val gate = ApprovalGate { delay(150) }
+        val recorded = mutableListOf<RecordedCall>()
+        val recorder =
+            object : CallRecorder {
+                override fun finished(call: RecordedCall) {
+                    recorded += call
+                }
+            }
+        val session =
+            ToolSession(ToolPolicy("full", approvals = gate, recorder = recorder), listOf(stop))
+
+        runBlocking { session.call(stop.name, noArguments) }
+
+        val waited = recorded.single().approvalMilliseconds
+        assertTrue(waited >= 150, "waited $waited ms")
+        assertTrue(recorded.single().milliseconds >= waited)
     }
 
     @Test

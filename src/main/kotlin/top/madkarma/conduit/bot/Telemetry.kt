@@ -112,7 +112,7 @@ class RequestTrace(request: BotRequest, private val header: String) {
         calls++
         val start = LocalDateTime.now().minus(Duration.ofMillis(call.milliseconds))
         lines +=
-            "${start.format(TIME)} ${call.tool} (${call.milliseconds} ms) " +
+            "${start.format(TIME)} ${call.tool} (${describeTime(call)}) " +
                 shorten(call.arguments.toString())
         lines += "  ${if (call.failed) "failed" else "ok"}: ${shorten(call.text)}"
     }
