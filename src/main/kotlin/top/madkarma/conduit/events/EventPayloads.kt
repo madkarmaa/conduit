@@ -64,6 +64,17 @@ data class EntityAttackEvent(val player: String, val playerUuid: String, val tar
 
 @Serializable data class CommandEvent(val source: String, val command: String)
 
+// Login mods such as EasyAuth take passwords as arguments, which events must never pass on.
+private val PASSWORD_COMMANDS =
+    setOf("login", "l", "log", "register", "reg", "account", "changepassword", "unregister", "auth")
+
+/** The command with the arguments of login commands hidden. */
+internal fun hidePasswords(command: String): String {
+    val name = command.substringBefore(' ')
+    if (name.lowercase() !in PASSWORD_COMMANDS || ' ' !in command) return command
+    return "$name <hidden>"
+}
+
 internal fun chatPayload(sender: ServerPlayer, message: String) =
     ChatEvent(sender.gameProfile.name, sender.stringUUID, message)
 

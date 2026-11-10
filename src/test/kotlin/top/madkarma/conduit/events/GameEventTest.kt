@@ -1,6 +1,7 @@
 package top.madkarma.conduit.events
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import top.madkarma.conduit.parseJson
@@ -41,5 +42,13 @@ class GameEventTest {
 
         assertFalse(attack.involves(listOf("Alex")))
         assertFalse(event("{}").involves(listOf("Alex")))
+    }
+
+    @Test
+    fun `login commands hide their passwords`() {
+        assertEquals("login <hidden>", hidePasswords("login hunter2"))
+        assertEquals("account <hidden>", hidePasswords("account changePassword old new"))
+        assertEquals("tp Alex Steve", hidePasswords("tp Alex Steve"))
+        assertEquals("logout", hidePasswords("logout"))
     }
 }

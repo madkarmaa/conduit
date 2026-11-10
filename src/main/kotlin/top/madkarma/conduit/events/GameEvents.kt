@@ -44,7 +44,9 @@ object GameEvents {
     // Called from the command execution mixin.
     @JvmStatic
     fun onCommand(source: String, command: String) {
-        EventBus.publish(EventType.COMMAND) { CommandEvent(source, command.removePrefix("/")) }
+        EventBus.publish(EventType.COMMAND) {
+            CommandEvent(source, hidePasswords(command.removePrefix("/")))
+        }
     }
 
     private fun registerPlayerEvents() {
