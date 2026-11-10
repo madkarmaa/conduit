@@ -45,18 +45,24 @@ internal fun MinecraftServer.resolvePlayerId(ref: String): UUID {
 
     // The name cache's own lookup by name calls the Mojang API on a miss, which would block the
     // server thread. Comparing the cached names of the known players avoids that.
-    val known = knownPlayerIds().associateBy { lastKnownName(it) }.filterKeys { it.isNotEmpty() }
-    known.entries
-        .firstOrNull { it.key.equals(ref, ignoreCase = true) }
-        ?.let {
-            return it.value
-        }
-    uniqueNameMatch(known.keys, ref)?.let {
-        return known.getValue(it)
-    }
+    val known = knownPlayerIds().groupBy { lastKnownName(it) }.filterKeys { it.isNotEmpty() }
+    val name =
+        known.keys.firstOrNull { it.equals(ref, ignoreCase = true) }
+            ?: uniqueNameMatch(known.keys, ref)
+    if (name != null) return preferredId(name, known.getValue(name), joinsWithOfflineIds())
 
     if (joinsWithOfflineIds()) return UUIDUtil.createOfflinePlayerUUID(ref)
     notFound("Unknown player: $ref")
+}
+
+/**
+ * A server that switched between online and offline mode keeps a saved file for each UUID a name
+ * had. The one that joining players get now is the one meant.
+ */
+internal fun preferredId(name: String, ids: List<UUID>, joinsOffline: Boolean): UUID {
+    val offline = UUIDUtil.createOfflinePlayerUUID(name)
+    val current = if (joinsOffline) ids.firstOrNull { it == offline } else null
+    return current ?: ids.firstOrNull { it != offline } ?: ids.first()
 }
 
 /**
