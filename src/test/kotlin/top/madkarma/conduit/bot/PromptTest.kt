@@ -41,6 +41,17 @@ class PromptTest {
     }
 
     @Test
+    fun `both modes tell the agent to look facts up instead of assuming them`() {
+        val config = ConduitConfig()
+
+        for (mode in Mode.entries) {
+            val instructions = config.buildInstructions(mode, alex)
+            assertTrue("Never assume or make up anything about the game" in instructions)
+            assertTrue("look things up again" in instructions)
+        }
+    }
+
+    @Test
     fun `full mode points to the chat history while it is on`() {
         val history = "history action of the events tool"
         val off = ConduitConfig(game = GameConfig(chatHistory = 0))

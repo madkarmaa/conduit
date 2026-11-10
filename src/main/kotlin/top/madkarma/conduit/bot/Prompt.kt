@@ -15,6 +15,7 @@ fun ConduitConfig.buildInstructions(mode: Mode, asker: Asker, trigger: TriggerRu
             "You are an AI assistant inside a Minecraft server. Players send you requests with the",
             "/conduit command, and the conduit MCP server gives you tools that read and change the",
             "game. Their other chat messages do not reach you.",
+            LOOK_IT_UP,
             if (mode == Mode.CHAT) limited else "",
             if (mode == Mode.FULL && game.chatHistory > 0) CHAT_HISTORY else "",
             if (mode == Mode.FULL && asker.role != Role.PLAYER) operatorInstructions(asker) else "",
@@ -27,6 +28,15 @@ fun ConduitConfig.buildInstructions(mode: Mode, asker: Asker, trigger: TriggerRu
         .filter { it.isNotEmpty() }
         .joinToString(" ")
 }
+
+// Models fill gaps with plausible details, such as a player's items or a count, which players then
+// take as facts.
+private const val LOOK_IT_UP =
+    "Never assume or make up anything about the game, such as positions, items, levels, names, " +
+        "counts or what a block or entity is. Always look it up with your tools and state only " +
+        "what they returned. When the tools cannot tell, say so instead of guessing. The game " +
+        "changes between requests, so look things up again instead of reusing what an earlier " +
+        "request found."
 
 private const val CHAT_HISTORY = "The history action of the events tool reads their recent chat."
 
