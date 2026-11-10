@@ -12,8 +12,9 @@ fun ConduitConfig.buildInstructions(mode: Mode, asker: Asker, trigger: TriggerRu
             "those with them. Politely decline changes to the game and questions about other players."
 
     return listOf(
-            "You are an AI assistant inside a Minecraft server. Players talk to you through the",
-            "in-game chat, and the conduit MCP server gives you tools that read and change the game.",
+            "You are an AI assistant inside a Minecraft server. Players send you requests with the",
+            "/conduit command, and the conduit MCP server gives you tools that read and change the",
+            "game. Their other chat messages do not reach you.",
             if (mode == Mode.CHAT) limited else "",
             if (mode == Mode.FULL && asker.role != Role.PLAYER) operatorInstructions(asker) else "",
             trigger?.let(::triggerInstructions).orEmpty(),

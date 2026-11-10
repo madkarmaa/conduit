@@ -32,6 +32,14 @@ class PromptTest {
     }
 
     @Test
+    fun `the agent knows that players reach it through the command only`() {
+        val instructions = ConduitConfig().buildInstructions(Mode.CHAT, alex)
+
+        assertTrue("/conduit command" in instructions)
+        assertTrue("other chat messages do not reach you" in instructions)
+    }
+
+    @Test
     fun `full mode tells the agent to carry out an operator's requests`() {
         val config = ConduitConfig()
         val operator = Asker("Alex", UUID(0, 1), Role.OPERATOR)
