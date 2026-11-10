@@ -61,9 +61,7 @@ internal fun MinecraftServer.breakBlock(
     pos: BlockCoordinates,
     dropItems: Boolean,
 ) {
-    val level = level(dimension)
-    EditJournal.before(level, pos.toMc())
-    level.destroyBlock(pos.toMc(), dropItems)
+    level(dimension).destroyBlock(pos.toMc(), dropItems)
 }
 
 internal fun MinecraftServer.mergeBlockEntity(
@@ -91,7 +89,6 @@ internal fun place(
         invalidInput("Position ${position.x} ${position.y} ${position.z} is outside the world")
     }
 
-    EditJournal.before(level, position)
     val changed = level.setBlock(position, block.state, flags)
     val nbt = block.nbt ?: return changed
 

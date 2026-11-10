@@ -39,12 +39,13 @@ val UNDO =
         title = "Undo edits",
         description =
             "Undoes edits of edit_blocks, edit_world explode, structures, inventory, " +
-                "edit_entity, move_entity and edit_player, one edit per call, offline players " +
+                "edit_entity, move_entity and edit_player, and the blocks that run_command " +
+                "changes, one edit per call, offline players " +
                 "included, and the damage of recent explosions, such as creeper holes. list " +
                 "shows the recent edits, newest first, optionally near center. undo restores " +
                 "the given edits, or your newest, and overwrites what changed since, except " +
-                "that an explosion keeps blocks placed since. It cannot undo run_command, " +
-                "dropped items, fire, falling blocks or edits before a restart.",
+                "that an explosion keeps blocks placed since. It cannot undo other effects of " +
+                "run_command, dropped items, fire, falling blocks or edits before a restart.",
         seesOtherPlayers = true,
         input =
             input {

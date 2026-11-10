@@ -40,7 +40,11 @@ object EditJournal {
         }
     }
 
-    /** Saves a block before a recorded call changes it. Does nothing outside recorded calls. */
+    /**
+     * Saves a block before a recorded call changes it. Does nothing outside recorded calls. Every
+     * block change of the world calls it, so it must stay cheap there.
+     */
+    @JvmStatic
     fun before(level: ServerLevel, pos: BlockPos) {
         current.get()?.save(level, pos)
     }

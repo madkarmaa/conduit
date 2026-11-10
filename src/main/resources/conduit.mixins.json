@@ -10,6 +10,7 @@
         "CommandsMixin",
         "FurnaceResultSlotMixin",
         "ItemEntityMixin",
+        "LevelMixin",
         "LivingEntityMixin",
         "MerchantResultSlotMixin",
         "MobMixin",

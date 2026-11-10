@@ -7,7 +7,6 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
 import top.madkarma.conduit.game.BlockCoordinates
-import top.madkarma.conduit.game.EditJournal
 import top.madkarma.conduit.game.level
 import top.madkarma.conduit.game.notFound
 
@@ -105,7 +104,6 @@ internal fun restoreBlocks(
 ) {
     val level = server.level(dimension)
     for (block in blocks.sortedBy { it.pos.y }) {
-        EditJournal.before(level, block.pos)
         level.setBlock(block.pos, block.expected, Block.UPDATE_CLIENTS)
     }
 }
