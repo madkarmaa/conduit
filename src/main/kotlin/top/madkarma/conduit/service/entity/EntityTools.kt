@@ -116,6 +116,8 @@ fun describeEntity(entity: EntityInfo): String {
         entity.health?.let {
             " ${round(it.toDouble())}/${round((entity.maxHealth ?: it).toDouble())}hp"
         }
-    val name = entity.customName?.takeIf { it.isNotEmpty() }?.let { " \"$it\"" }
+    // Players have no custom name, but their name tells them apart.
+    val player = entity.name.takeIf { entity.type == "minecraft:player" }
+    val name = (entity.customName ?: player)?.takeIf { it.isNotEmpty() }?.let { " \"$it\"" }
     return "${entity.uuid} ${entity.type}${name.orEmpty()} ${entity.dimension} ${position(entity.position)}${health.orEmpty()}"
 }
