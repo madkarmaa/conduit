@@ -11,7 +11,8 @@ val LIST_PLAYERS =
         description =
             "online lists the online players with game mode, position, health and food. " +
                 "known lists every player with saved data. banned lists the player and IP " +
-                "bans. whitelisted shows the whitelist.",
+                "bans. whitelisted shows the whitelist. Both show each entry's UUID and mark entries that " +
+                "no joining player matches.",
         seesOtherPlayers = true,
         input = input {},
         defaultAction = "online",
@@ -36,16 +37,7 @@ val LIST_PLAYERS =
                         )
                     },
                 "banned" to readAction { server, _ -> bansReply(server.listBans()) },
-                "whitelisted" to
-                    readAction { server, _ ->
-                        val whitelist = server.listWhitelist()
-                        val state = if (whitelist.enabled) "on" else "off"
-                        lines(
-                            "Whitelist $state, ${whitelist.players.size} players",
-                            whitelist.players,
-                            encodedObject(whitelist),
-                        )
-                    },
+                "whitelisted" to readAction { server, _ -> whitelistReply(server.listWhitelist()) },
             ),
     )
 
@@ -143,17 +135,5 @@ private fun MinecraftServer.advancementsReply(input: ToolInput): Reply {
         "${advancements.size} advancements",
         rows,
         dataOf("advancements" to encoded(advancements)),
-    )
-}
-
-private fun bansReply(bans: BanList): Reply {
-    val rows =
-        (bans.players + bans.ips).map {
-            "${it.target}: ${it.reason}, by ${it.source} until ${it.expires ?: "forever"}"
-        }
-    return lines(
-        "${bans.players.size} player bans, ${bans.ips.size} IP bans",
-        rows,
-        encodedObject(bans),
     )
 }

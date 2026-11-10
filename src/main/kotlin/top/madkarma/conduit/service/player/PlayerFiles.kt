@@ -55,8 +55,20 @@ internal fun MinecraftServer.resolvePlayerId(ref: String): UUID {
         return known.getValue(it)
     }
 
-    if (!usesAuthentication()) return UUIDUtil.createOfflinePlayerUUID(ref)
+    if (joinsWithOfflineIds()) return UUIDUtil.createOfflinePlayerUUID(ref)
     notFound("Unknown player: $ref")
+}
+
+/**
+ * Whether players join with offline UUIDs, made from their exact names. A server without
+ * authentication gives them, unless a proxy in front of it forwards online UUIDs, which the online
+ * players then show.
+ */
+internal fun MinecraftServer.joinsWithOfflineIds(): Boolean {
+    if (usesAuthentication()) return false
+    val players = playerList.players
+    return players.isEmpty() ||
+        players.any { it.uuid == UUIDUtil.createOfflinePlayerUUID(it.gameProfile.name) }
 }
 
 internal fun MinecraftServer.isOnline(id: UUID): Boolean = playerList.getPlayer(id) != null

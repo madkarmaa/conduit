@@ -1,5 +1,7 @@
 package top.madkarma.conduit.service.player
 
+import net.minecraft.server.MinecraftServer
+import net.minecraft.server.players.NameAndId
 import top.madkarma.conduit.mcp.*
 
 val MODERATION =
@@ -9,7 +11,10 @@ val MODERATION =
         description =
             "kick disconnects a player. ban bans a player, also an offline one, for some " +
                 "minutes or for good. pardon lifts a ban. whitelist_add and whitelist_remove " +
-                "change the whitelist, and server_settings turns it on.",
+                "change the whitelist, and server_settings turns it on. Use these instead of " +
+                "the vanilla /ban, /whitelist and /op commands, which look names up online and " +
+                "can store a UUID that players joining an offline server never have. A UUID " +
+                "as player names one exact entry, such as a stale one in the whitelist.",
         input =
             input {
                 required("player", PLAYER)
@@ -30,8 +35,9 @@ val MODERATION =
                 "ban" to
                     destructiveAction { server, input ->
                         val reason = input.stringOrNull("reason") ?: "Banned by an operator"
-                        server.ban(input.string("player"), reason, input.intOrNull("minutes"))
-                        done("Player banned")
+                        val banned =
+                            server.ban(input.string("player"), reason, input.intOrNull("minutes"))
+                        done("Banned ${describe(banned)}")
                     },
                 "pardon" to
                     writeAction { server, input ->
@@ -40,13 +46,23 @@ val MODERATION =
                     },
                 "whitelist_add" to
                     writeAction { server, input ->
-                        server.addToWhitelist(input.string("player"))
-                        done("Added to the whitelist")
+                        val added = server.addToWhitelist(input.string("player"))
+                        done("Added ${describe(added)} to the whitelist${server.caseNote(added)}")
                     },
                 "whitelist_remove" to
                     writeAction { server, input ->
-                        server.removeFromWhitelist(input.string("player"))
-                        done("Removed from the whitelist")
+                        val removed = server.removeFromWhitelist(input.string("player"))
+                        done("Removed ${describe(removed)} from the whitelist")
                     },
             ),
     )
+
+// A name in another case makes another offline UUID, so the player would not match the entry.
+// Only a name the server has not seen yet becomes a UUID this way. A known player keeps theirs.
+private fun MinecraftServer.caseNote(profile: NameAndId): String =
+    if (joinsWithOfflineIds() && profile.hasName() && lastKnownName(profile.id()).isEmpty()) {
+        ". Players join this server with offline UUIDs, which depend on the exact case of the " +
+            "name."
+    } else {
+        ""
+    }
