@@ -5,7 +5,10 @@
     "name": "Conduit",
     "description": "An AI bot for Minecraft servers.",
     "authors": ["MadKarma"],
-    "contact": {},
+    "contact": {
+        "sources": "https://github.com/madkarmaa/conduit",
+        "issues": "https://github.com/madkarmaa/conduit/issues"
+    },
     "license": "MIT",
     "icon": "assets/conduit/icon.png",
     "environment": "*",
