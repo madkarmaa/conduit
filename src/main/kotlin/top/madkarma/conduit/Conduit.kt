@@ -22,6 +22,7 @@ import top.madkarma.conduit.game.GameServer
 import top.madkarma.conduit.mcp.AccessTokens
 import top.madkarma.conduit.mcp.McpHost
 import top.madkarma.conduit.service.ALL_TOOLS
+import top.madkarma.conduit.service.entity.RiderTeleports
 import top.madkarma.conduit.service.entity.Walks
 import top.madkarma.conduit.service.events.ChatHistory
 import top.madkarma.conduit.service.server.trackDatapackReloads
@@ -69,6 +70,7 @@ object Conduit : ModInitializer {
             if (server.tickCount % STATUS_INTERVAL_TICKS == 0) Bot.showStatus(server)
             Triggers.onTick(server)
             Walks.onTick(server)
+            RiderTeleports.onTick(server)
         }
 
         // Singleplayer worlds start and stop an integrated server each time the player opens one.
@@ -84,6 +86,7 @@ object Conduit : ModInitializer {
             EditJournal.clear()
             ChatHistory.clear()
             Walks.clear()
+            RiderTeleports.clear()
             if (GameServer.current === server) GameServer.current = null
         }
     }

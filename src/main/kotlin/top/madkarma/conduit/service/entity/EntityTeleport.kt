@@ -11,13 +11,15 @@ import top.madkarma.conduit.mcp.round
 
 /**
  * Where a teleport put an entity: the block under its feet, whether it fits there, and whether it
- * went to the nearest spot where it fits instead of the target.
+ * went to the nearest spot where it fits instead of the target. A vehicle whose riders went ahead
+ * to an unloaded chunk names them instead, and follows them there.
  */
 class Landing(
     val entity: EntityInfo,
     val blockBelow: String,
     val free: Boolean,
     val moved: Boolean = false,
+    val ridersAhead: List<String> = emptyList(),
 )
 
 /** Moves an entity, players included, also across dimensions. Null keeps the dimension. */
@@ -33,6 +35,11 @@ internal fun MinecraftServer.teleportEntity(
     val pitch = rotation?.pitch ?: entity.xRot
 
     val target = position.toMc()
+    // Players load the chunks around them, so riders can go ahead and their vehicle follow them.
+    val ticking = level.isPositionEntityTicking(BlockPos.containing(target))
+    if (entity !is ServerPlayer && !ticking && entity.passengers.any { it is ServerPlayer }) {
+        return ridersAhead(entity, level, target)
+    }
     if (entity !is ServerPlayer) requireEntityTicking(level, target)
     val destination = destinationFor(entity, level, target)
 
@@ -52,13 +59,28 @@ internal fun MinecraftServer.teleportEntity(
     }
 
     // The game recreates entities other than players when they change dimension.
-    val moved = entity(uuid)
+    val moved = findEntity(entity.uuid) ?: entity
     val below = moved.level().getBlockState(BlockPos.containing(moved.x, moved.y - 0.01, moved.z))
     return Landing(
         moved.toInfo(),
         below.toInfo().serialized,
         moved.level().noCollision(moved),
         destination != target,
+    )
+}
+
+private fun MinecraftServer.ridersAhead(
+    vehicle: Entity,
+    level: ServerLevel,
+    target: Vec3,
+): Landing {
+    val riders = vehicle.passengers.filterIsInstance<ServerPlayer>()
+    RiderTeleports.start(this, vehicle, level, target)
+    return Landing(
+        vehicle.toInfo(),
+        "",
+        free = true,
+        ridersAhead = riders.map { it.gameProfile.name },
     )
 }
 

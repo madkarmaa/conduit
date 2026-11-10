@@ -11,7 +11,8 @@ val MOVE_ENTITY =
         description =
             "teleport moves any entity, also across dimensions, and names the block it " +
                 "lands on. When the entity or its passengers would be inside blocks, it goes to " +
-                "the nearest spot within 3 blocks where they fit, or stays. rotate turns it, push sets its velocity, and mount and dismount " +
+                "the nearest spot within 3 blocks where they fit, or stays. A vehicle sent to an " +
+                "unloaded chunk sends its riders ahead and follows them once the chunk loads. rotate turns it, push sets its velocity, and mount and dismount " +
                 "change what it rides. walk makes a mob walk to position, or follow target " +
                 "while it moves. A walking mob does not despawn, and the walk ends on " +
                 "arrival, after 2 minutes or with stop.",
@@ -62,6 +63,8 @@ val MOVE_ENTITY =
                                 input.decode("position"),
                                 input.decodeOrNull<Rotation>("rotation"),
                             )
+                        if (landing.ridersAhead.isNotEmpty())
+                            return@writeAction ridersAheadReply(landing)
                         val stuck = if (landing.free) "" else ", stuck inside blocks"
                         val moved =
                             if (landing.moved) ", moved to the nearest spot where it fits" else ""
@@ -116,4 +119,12 @@ val MOVE_ENTITY =
                         done("Stopped")
                     },
             ),
+    )
+
+// The chunk loads around the riders within seconds, and the vehicle joins them then.
+private fun ridersAheadReply(landing: Landing): Reply =
+    done(
+        "${landing.ridersAhead.joinToString(", ")} went ahead, since the chunk there was not " +
+            "loaded. ${landing.entity.type} ${landing.entity.uuid} follows once it loads, within " +
+            "15 seconds, and they ride it again.",
     )
