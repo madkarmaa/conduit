@@ -13,7 +13,9 @@ val GAME_DATA =
         description =
             "Looks up ids and content, datapacks included. registries lists the " +
                 "registries, entries the ids in one, and tags its tags. recipes finds recipes " +
-                "by type or result. recipe and loot_table return datapack JSON.",
+                "by type or result. recipe and loot_table return datapack JSON. loot_tables " +
+                "sums up the tables whose id has filter, one line each, with every entry's " +
+                "chance per roll, and with item only those that can give that item or #tag.",
         input =
             input {
                 optional("registry", stringSchema("Required for entries and tags."))
@@ -50,6 +52,12 @@ val GAME_DATA =
                         default = "",
                     ),
                 )
+                optional(
+                    "item",
+                    stringSchema(
+                        "For loot_tables: an item id or #tag that the table's own entries give.",
+                    ),
+                )
                 optional("offset", OFFSET)
                 optional("limit", LIMIT)
             },
@@ -82,6 +90,7 @@ val GAME_DATA =
                     },
                 "loot_table" to
                     readAction { server, input -> done(server.readLootTable(input.string("id"))) },
+                "loot_tables" to readAction { server, input -> server.lootTablesReply(input) },
             ),
     )
 
@@ -96,6 +105,16 @@ private fun MinecraftServer.entriesReply(input: ToolInput): Reply {
         )
     val rows = entries.ids.map { id -> entries.titles[id]?.let { "$id \"$it\"" } ?: id }
     return lines("${entries.total} matching entries", rows, encodedObject(entries))
+}
+
+private fun MinecraftServer.lootTablesReply(input: ToolInput): Reply {
+    val (total, tables) =
+        page(lootSummaries(input.string("filter"), input.stringOrNull("item")), input) { it.id }
+    return lines(
+        "$total matching loot tables, pools split by |",
+        tables.map { "${it.id}: ${it.pools.joinToString(" | ")}" },
+        dataOf("total" to JsonPrimitive(total), "tables" to encoded(tables)),
+    )
 }
 
 private fun MinecraftServer.recipesReply(input: ToolInput): Reply {
