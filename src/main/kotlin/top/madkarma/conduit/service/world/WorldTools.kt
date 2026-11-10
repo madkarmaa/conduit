@@ -77,12 +77,20 @@ private fun heights(server: MinecraftServer, input: ToolInput): Reply {
 
     if (points == null) {
         val height = server.columnHeight(dimension, input.int("x"), input.int("z"), heightmap)
-        return done(if (height.first().isLetter()) height else "y=$height")
+        if (!height.first().isLetter()) return done("y=$height")
+        return done(
+            listOfNotNull(height, FLOORS_NOTE.takeIf { "floors" in height }).joinToString("\n"),
+        )
     }
     if (input.has("x") || input.has("z")) invalidInput("Set either x and z, or points")
 
     val lines = points.map {
         "${it.x} ${it.z} ${server.columnHeight(dimension, it.x, it.z, heightmap)}"
     }
-    return done(lines.joinToString("\n"))
+    val note = FLOORS_NOTE.takeIf { lines.any { "floors" in it } }
+    return done((lines + listOfNotNull(note)).joinToString("\n"))
 }
+
+// Agents otherwise check each floor with get_blocks before they teleport someone there.
+private const val FLOORS_NOTE =
+    "Each floor is a feet y with room to stand on a safe block, ready for a teleport."
