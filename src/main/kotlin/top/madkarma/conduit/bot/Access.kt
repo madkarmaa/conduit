@@ -19,8 +19,17 @@ enum class Mode {
     val id: String = name.lowercase()
 }
 
-class Asker(val name: String, val uuid: UUID) {
-    constructor(player: ServerPlayer) : this(player.gameProfile.name, player.uuid)
+/** How far a player's word goes. The agent carries out the requests of operators as asked. */
+enum class Role {
+    OPERATOR,
+    PLAYER,
+}
+
+class Asker(val name: String, val uuid: UUID, val role: Role = Role.PLAYER) {
+    constructor(
+        player: ServerPlayer,
+        role: Role,
+    ) : this(player.gameProfile.name, player.uuid, role)
 }
 
 // Read tools that show nothing about other players, or only the asking player's data.
@@ -39,8 +48,8 @@ private val DEFAULT_CHAT_TOOLS =
 fun ConduitConfig.agent(mode: Mode): AgentConfig =
     if (mode == Mode.FULL) agents.full else agents.chat
 
-fun MinecraftServer.modeFor(player: ServerPlayer, config: ConduitConfig): Mode? =
-    config.modeFor(player.stringUUID, playerList.isOp(player.nameAndId()))
+fun MinecraftServer.roleOf(player: ServerPlayer): Role =
+    if (playerList.isOp(player.nameAndId())) Role.OPERATOR else Role.PLAYER
 
 /**
  * Operators and allowed players get full mode while it is enabled. Everyone else gets chat mode

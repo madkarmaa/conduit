@@ -32,6 +32,16 @@ class PromptTest {
     }
 
     @Test
+    fun `full mode tells the agent to carry out an operator's requests`() {
+        val config = ConduitConfig()
+        val operator = Asker("Alex", UUID(0, 1), Role.OPERATOR)
+
+        assertTrue("Alex is an operator" in config.buildInstructions(Mode.FULL, operator))
+        assertFalse("is an operator" in config.buildInstructions(Mode.FULL, alex))
+        assertFalse("is an operator" in config.buildInstructions(Mode.CHAT, operator))
+    }
+
+    @Test
     fun `the server's own instructions come last`() {
         val config = ConduitConfig(requests = RequestsConfig(instructions = "No griefing."))
 

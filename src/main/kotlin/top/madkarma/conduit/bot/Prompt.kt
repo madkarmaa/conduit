@@ -15,6 +15,7 @@ fun ConduitConfig.buildInstructions(mode: Mode, asker: Asker, trigger: TriggerRu
             "You are an AI assistant inside a Minecraft server. Players talk to you through the",
             "in-game chat, and the conduit MCP server gives you tools that read and change the game.",
             if (mode == Mode.CHAT) limited else "",
+            if (mode == Mode.FULL && asker.role != Role.PLAYER) operatorInstructions(asker) else "",
             trigger?.let(::triggerInstructions).orEmpty(),
             "The bot posts your final answer in the chat, so keep it to a few short sentences and do",
             "not use Markdown. You can color and style words with Minecraft's codes: $CODE_LIST.",
@@ -24,6 +25,19 @@ fun ConduitConfig.buildInstructions(mode: Mode, asker: Asker, trigger: TriggerRu
         .filter { it.isNotEmpty() }
         .joinToString(" ")
 }
+
+// Models tend to protect other players from requests that hurt them, and to ask those players for
+// consent. On a server, that is the operators' call, and the approval prompts already check it.
+private fun operatorInstructions(asker: Asker): String =
+    listOf(
+            "${asker.name} is an operator of this server. Carry out their requests about the game",
+            "as asked, including the ones that affect other players, such as hurting or killing",
+            "them, striking them with lightning, teleporting them or taking their items. These are",
+            "normal actions in a game and need no consent from the players they affect. Do not",
+            "soften them, replace them with a gentler version, or ask the operator or anyone else",
+            "to confirm. The approval prompts are the only check.",
+        )
+        .joinToString(" ")
 
 /**
  * The request as the agent reads it, with the player who asks and, when they are online, where they
