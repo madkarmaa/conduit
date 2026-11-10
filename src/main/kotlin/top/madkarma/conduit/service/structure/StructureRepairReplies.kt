@@ -57,7 +57,8 @@ internal fun MinecraftServer.restoreReply(input: ToolInput): Reply {
     val restored = differences(chosen, 0)
     return lines(
         "Restored ${chosen.size} blocks of ${found.structure}:",
-        restored.take(GROUP_LIMIT).map { "${it.count} ${it.block}" },
+        restored.take(GROUP_LIMIT).map { "${it.count} ${it.block}" } +
+            listOfNotNull(moreLine(restored)),
         dataOf("restored" to encoded(restored)),
     )
 }
@@ -78,6 +79,12 @@ private fun groupLines(title: String, groups: List<BlockDifference>): List<Strin
             val positions = group.positions.joinToString(", ") { "${it.x} ${it.y} ${it.z}" }
             "${group.count} ${group.block}$now at $positions"
         }
-    val more = groups.size - GROUP_LIMIT
-    return listOf("$title:") + rows + listOfNotNull("$more more blocks".takeIf { more > 0 })
+    return listOf("$title:") + rows + listOfNotNull(moreLine(groups))
+}
+
+/** The blocks of the groups past the listed ones, so the listed counts add up to the total. */
+internal fun moreLine(groups: List<BlockDifference>): String? {
+    val rest = groups.drop(GROUP_LIMIT)
+    if (rest.isEmpty()) return null
+    return "${rest.sumOf { it.count }} more blocks of ${rest.size} other kinds"
 }
