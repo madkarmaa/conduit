@@ -1,8 +1,9 @@
 package top.madkarma.conduit.mcp
 
+import java.math.BigDecimal
+import java.math.RoundingMode
 import kotlin.math.abs
 import kotlin.math.floor
-import kotlin.math.roundToLong
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -73,10 +74,14 @@ fun position(value: Vector3?): String {
     return listOf(value.x, value.y, value.z).joinToString(" ") { round(it) }
 }
 
-/** Rounds to two decimals and leaves out a zero fraction, like 12.5 or 64. */
+/**
+ * Rounds to two decimals and leaves out a zero fraction, like 12.5 or 64. Large numbers stay plain,
+ * like 12940255.5, since agents copy what they read into their next calls.
+ */
 fun round(value: Double): String {
-    val rounded = (value * 100).roundToLong() / 100.0
-    return if (rounded == floor(rounded)) rounded.toLong().toString() else rounded.toString()
+    if (!value.isFinite()) return value.toString()
+    val rounded = BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP).stripTrailingZeros()
+    return rounded.toPlainString()
 }
 
 fun dataOf(vararg fields: Pair<String, JsonElement>): JsonObject = JsonObject(mapOf(*fields))

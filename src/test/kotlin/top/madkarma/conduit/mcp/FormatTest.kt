@@ -75,6 +75,8 @@ class FormatTest {
         assertEquals("1.23", round(1.234))
         assertEquals("-3.26", round(-3.257))
         assertEquals("0", round(-0.001))
+        assertEquals("12940255.5", round(1.29402555E7))
+        assertEquals("-21091008.5", round(-2.10910085E7))
     }
 
     @Test
