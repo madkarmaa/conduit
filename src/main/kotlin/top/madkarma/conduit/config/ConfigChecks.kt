@@ -1,7 +1,6 @@
 package top.madkarma.conduit.config
 
 import java.net.URI
-import java.util.UUID
 
 private val AGENT_CLIS = setOf("antigravity", "claude", "codex", "opencode")
 
@@ -96,24 +95,6 @@ private fun agentProblems(path: String, agent: AgentConfig): List<String> =
         "$path.apiKey must be set, or $path.dangerouslyUseSubscriptionCredentials turned on"
             .takeIf { agent.apiKey.isBlank() && !agent.dangerouslyUseSubscriptionCredentials },
     )
-
-private fun ConduitConfig.accessProblems(): List<String> {
-    val lists =
-        mapOf(
-            "access.full.allow" to access.full.allow,
-            "access.full.deny" to access.full.deny,
-            "access.chat.allow" to access.chat.allow,
-            "access.chat.deny" to access.chat.deny,
-        )
-
-    return lists.flatMap { (path, entries) ->
-        entries.mapIndexedNotNull { index, entry ->
-            "$path[$index].uuid must be a UUID".takeIf { !isUuid(entry.uuid) }
-        }
-    }
-}
-
-private fun isUuid(text: String): Boolean = runCatching { UUID.fromString(text) }.isSuccess
 
 /** Names are "tool" or "tool.action". */
 private fun unknownTools(

@@ -59,13 +59,17 @@ Operators change who gets a mode with `/conduit access`, which saves the change 
   `/conduit access deny <player> chat` keeps one player out. While it is off, chat mode answers only
   the players that `/conduit access allow <player> chat` let in.
 
+The player in `access.owner` always gets full mode, and operators cannot deny it to them. The owner
+also has every operator subcommand and answers approvals, even without operator status. Set it to a
+name, which works in online and offline mode, or to a UUID, which survives renames.
+
 The agent remembers earlier requests. Every player has a conversation of their own in each mode.
 
 ### Approvals
 
 Before the agent runs an action that is hard to undo, such as `run_command`, `edit_blocks` `fill`
-or `moderation` `kick`, the asker and every online operator get the action with its arguments and
-an `[Approve]`, an `[Approve all]` and a `[Deny]` button. A click from the asker or an operator
+or `moderation` `kick`, the asker, every online operator and the owner get the action with its
+arguments and an `[Approve]`, an `[Approve all]` and a `[Deny]` button. A click from any of them
 decides, and `[Approve all]` also lets the rest of the request run without asking again. When
 nobody answers within `approvals.timeoutSeconds`, which the prompt shows, the action does not run.
 Either way the agent learns what happened, and the time spent waiting does not count against the
@@ -186,6 +190,7 @@ command lists the problems and keeps the old config.
 | `agents.<mode>.mcpUrl`                                | `http://minecraft:25585/mcp`                                  | Where the agent container reaches the MCP server                                      |
 | `access.operators`                                    | `true`                                                        | Operators get full mode                                                               |
 | `access.full`, `access.chat`                          | none                                                          | The players `/conduit access` allowed into or denied a mode, by UUID                  |
+| `access.owner`                                        | none                                                          | The player, by name or UUID, who has every power and always gets full mode            |
 | `tools.readOnly`                                      | `false`                                                       | Full mode only gets the actions that read                                             |
 | `tools.chat.allow`                                    | the chat tools below                                          | The only tools chat mode gets                                                         |
 | `tools.chat.deny`                                     | none                                                          | Tools chat mode never gets. Without `allow`, it gets every other tool                 |

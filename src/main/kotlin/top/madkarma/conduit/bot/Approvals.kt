@@ -67,8 +67,7 @@ object Approvals {
         if (choice !in choices) return
 
         val server = player.level().server
-        val allowed = player.uuid == waiting.asker || server.playerList.isOp(player.nameAndId())
-        if (!allowed) return
+        if (player.uuid != waiting.asker && !server.decidesApprovals(player)) return
 
         val decision = Decision(choice != "deny", choice == "approve_all", player.gameProfile.name)
         waiting.decision.complete(decision)

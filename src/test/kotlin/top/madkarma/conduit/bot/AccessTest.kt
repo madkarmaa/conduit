@@ -39,10 +39,10 @@ class AccessTest {
     fun `operators and allowed players get full mode`() {
         val allowed = ConduitConfig(access = AccessConfig(full = ModeAccess(allow = onlyAlex)))
 
-        assertEquals(Mode.FULL, ConduitConfig().modeFor(alexId, operator = true))
-        assertEquals(Mode.CHAT, ConduitConfig().modeFor(alexId, operator = false))
-        assertEquals(Mode.FULL, allowed.modeFor(alexId, operator = false))
-        assertEquals(Mode.CHAT, allowed.modeFor(steveId, operator = false))
+        assertEquals(Mode.FULL, ConduitConfig().modeFor(alexId, Role.OPERATOR))
+        assertEquals(Mode.CHAT, ConduitConfig().modeFor(alexId, Role.PLAYER))
+        assertEquals(Mode.FULL, allowed.modeFor(alexId, Role.PLAYER))
+        assertEquals(Mode.CHAT, allowed.modeFor(steveId, Role.PLAYER))
     }
 
     @Test
@@ -50,8 +50,24 @@ class AccessTest {
         val denied = ConduitConfig(access = AccessConfig(full = ModeAccess(deny = onlyAlex)))
         val noOperators = ConduitConfig(access = AccessConfig(operators = false))
 
-        assertEquals(Mode.CHAT, denied.modeFor(alexId, operator = true))
-        assertEquals(Mode.CHAT, noOperators.modeFor(alexId, operator = true))
+        assertEquals(Mode.CHAT, denied.modeFor(alexId, Role.OPERATOR))
+        assertEquals(Mode.CHAT, noOperators.modeFor(alexId, Role.OPERATOR))
+    }
+
+    @Test
+    fun `the owner gets full mode even when denied, without operators and without being one`() {
+        val owner =
+            ConduitConfig(
+                access =
+                    AccessConfig(
+                        operators = false,
+                        full = ModeAccess(deny = onlyAlex),
+                        owner = "Alex",
+                    ),
+            )
+
+        assertEquals(Mode.FULL, owner.modeFor(alexId, Role.OWNER))
+        assertEquals(Mode.CHAT, owner.withAgents(full = false).modeFor(alexId, Role.OWNER))
     }
 
     @Test
@@ -60,15 +76,15 @@ class AccessTest {
             ConduitConfig(access = AccessConfig(full = ModeAccess(allow = onlyAlex)))
                 .withAgents(full = false)
 
-        assertEquals(Mode.CHAT, config.modeFor(alexId, operator = true))
+        assertEquals(Mode.CHAT, config.modeFor(alexId, Role.OPERATOR))
     }
 
     @Test
     fun `an enabled chat mode answers everyone but the denied players`() {
         val config = ConduitConfig(access = AccessConfig(chat = ModeAccess(deny = onlyAlex)))
 
-        assertNull(config.modeFor(alexId, operator = false))
-        assertEquals(Mode.CHAT, config.modeFor(steveId, operator = false))
+        assertNull(config.modeFor(alexId, Role.PLAYER))
+        assertEquals(Mode.CHAT, config.modeFor(steveId, Role.PLAYER))
     }
 
     @Test
@@ -77,8 +93,8 @@ class AccessTest {
             ConduitConfig(access = AccessConfig(chat = ModeAccess(allow = onlyAlex)))
                 .withAgents(chat = false)
 
-        assertEquals(Mode.CHAT, config.modeFor(alexId, operator = false))
-        assertNull(config.modeFor(steveId, operator = false))
+        assertEquals(Mode.CHAT, config.modeFor(alexId, Role.PLAYER))
+        assertNull(config.modeFor(steveId, Role.PLAYER))
     }
 
     @Test

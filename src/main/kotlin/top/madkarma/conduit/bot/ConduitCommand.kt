@@ -12,6 +12,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider
 import com.mojang.brigadier.tree.ArgumentCommandNode
 import com.mojang.brigadier.tree.CommandNode
 import com.mojang.brigadier.tree.LiteralCommandNode
+import java.util.function.Predicate
 import net.minecraft.commands.CommandSourceStack
 import net.minecraft.commands.Commands
 import net.minecraft.commands.SharedSuggestionProvider
@@ -19,12 +20,15 @@ import net.minecraft.network.chat.Component
 
 private typealias Subcommand = (CommandSourceStack, String?) -> Unit
 
-private val OPERATORS = Commands.hasPermission<CommandSourceStack>(Commands.LEVEL_GAMEMASTERS)
+private val GAMEMASTERS = Commands.hasPermission<CommandSourceStack>(Commands.LEVEL_GAMEMASTERS)
+
+// The owner has the operators' subcommands even without operator status.
+private val OPERATORS = Predicate<CommandSourceStack> { GAMEMASTERS.test(it) || it.actsAsOwner() }
 
 /**
  * /conduit <request> asks the bot, and /conduit cancel takes back the player's newest request.
- * Operators also have status, reload, forget, access and telemetry, and cancel with a target. Other
- * players never see those, not even as suggestions.
+ * Operators and the owner also have status, reload, forget, access and telemetry, and cancel with a
+ * target. Other players never see those, not even as suggestions.
  *
  * Brigadier always prefers a literal over the request argument, so a request that starts with a
  * subcommand word would reach the subcommand. The subcommand nodes therefore take the request

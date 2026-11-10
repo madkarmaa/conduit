@@ -36,6 +36,21 @@ class ConfigChecksTest {
     }
 
     @Test
+    fun `the deny list of full mode must not name the owner`() {
+        val alex = AccessEntry("Alex", "00000000-0000-0000-0000-000000000001")
+        val denied = { owner: String ->
+            VALID_CONFIG.copy(
+                access = AccessConfig(full = ModeAccess(deny = listOf(alex)), owner = owner),
+            )
+        }
+        val expected = listOf("access.full.deny must not name the owner Alex")
+
+        assertEquals(expected, problemsOf(denied("Alex")))
+        assertEquals(expected, problemsOf(denied(alex.uuid)))
+        assertEquals(emptyList(), problemsOf(denied("Steve")))
+    }
+
+    @Test
     fun `undo may be turned off`() {
         assertEquals(
             emptyList(),

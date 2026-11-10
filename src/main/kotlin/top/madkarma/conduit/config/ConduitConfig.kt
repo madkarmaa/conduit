@@ -96,7 +96,22 @@ data class AccessConfig(
     val operators: Boolean = true,
     val full: ModeAccess = ModeAccess(),
     val chat: ModeAccess = ModeAccess(),
-)
+    /**
+     * The player with every power in Conduit, by name or UUID. Only this file sets it, so operators
+     * cannot lock them out.
+     */
+    val owner: String? = null,
+) {
+    /**
+     * Whether a player is the owner. A UUID depends on whether the server is in online mode, so a
+     * name matches in either mode. A UUID survives renames. Names match exactly, since an offline
+     * server treats names that differ in case as other players.
+     */
+    fun isOwner(name: String, uuid: String): Boolean {
+        val owner = owner?.trim()?.takeIf { it.isNotEmpty() } ?: return false
+        return owner == name || owner.equals(uuid, ignoreCase = true)
+    }
+}
 
 /** A denied player never gets the mode, and an allowed one gets it while its agent is in use. */
 @Serializable

@@ -14,10 +14,11 @@ import top.madkarma.conduit.service.player.resolvePlayerId
 
 /** /conduit access, which lets players into a mode or keeps them out, in the config file. */
 object AccessCommand {
-    /** Shows who gets each mode besides its default players. */
+    /** Shows the owner, and who gets each mode besides its default players. */
     fun show(source: CommandSourceStack) {
         val config = Conduit.config ?: return configInvalid(source)
 
+        source.sendSystemMessage(botMessage("owner: ${config.access.owner ?: "none"}."))
         Mode.entries.forEach { mode ->
             source.sendSystemMessage(botMessage(describe(mode, config)))
         }
@@ -31,6 +32,11 @@ object AccessCommand {
             } catch (error: ConduitError) {
                 return source.sendFailure(Component.literal(error.message.orEmpty()))
             }
+
+        val owner = Conduit.config?.access?.isOwner(entry.name, entry.uuid) == true
+        if (owner && !allowed) {
+            return source.sendFailure(Component.literal("${entry.name} is Conduit's owner."))
+        }
 
         val problems = Conduit.updateConfig { written ->
             written.withModeAccess(mode.id) {

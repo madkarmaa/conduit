@@ -22,10 +22,9 @@ object Bot {
      */
     fun ask(server: MinecraftServer, player: ServerPlayer, text: String): String? {
         val config = Conduit.config ?: return "Conduit is off until its config is fixed."
-        val role = server.roleOf(player)
+        val role = server.roleOf(player, config)
         val mode =
-            config.modeFor(player.stringUUID, role == Role.OPERATOR)
-                ?: return "You are not allowed to ask Conduit."
+            config.modeFor(player.stringUUID, role) ?: return "You are not allowed to ask Conduit."
         if (lines.values.any { line -> line.has { it.asker.uuid == player.uuid } }) {
             return "Wait until Conduit answers your previous request."
         }

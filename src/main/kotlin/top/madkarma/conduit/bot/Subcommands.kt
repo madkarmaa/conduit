@@ -43,10 +43,22 @@ object Subcommands {
         if (target == null) return cancelOwn(source)
 
         val mode = Mode.entries.firstOrNull { it.id == target }
-        val cancelled =
-            if (mode != null) Bot.cancel { it === Bot.line(mode).running() }
-            else Bot.cancel { it.asker.name.equals(target, ignoreCase = true) }
+        val targeted = { request: BotRequest ->
+            if (mode != null) request === Bot.line(mode).running()
+            else request.asker.name.equals(target, ignoreCase = true)
+        }
+        // Operators cannot stop the owner's work.
+        val protected = { request: BotRequest ->
+            request.asker.role == Role.OWNER && !source.actsAsOwner()
+        }
 
+        if (Mode.entries.any { line -> Bot.line(line).has { targeted(it) && protected(it) } }) {
+            return source.sendFailure(
+                Component.literal("Only the owner can cancel their requests."),
+            )
+        }
+
+        val cancelled = Bot.cancel(targeted)
         source.sendSystemMessage(
             botMessage(if (cancelled) "Cancelled." else "There was nothing to cancel."),
         )
@@ -77,8 +89,11 @@ object Subcommands {
     }
 
     private fun forgetTarget(source: CommandSourceStack, target: String?): String {
+        // Operators cannot wipe the owner's conversation.
+        val keep = if (source.actsAsOwner()) null else source.server.ownerId()
+
         when (target) {
-            "all" -> Conversations.forgetAll()
+            "all" -> Conversations.forgetAll(keep)
 
             null -> {
                 val player =
@@ -88,7 +103,11 @@ object Subcommands {
                 return "you"
             }
 
-            else -> Conversations.forgetPlayer(source.server.resolvePlayerId(target))
+            else -> {
+                val id = source.server.resolvePlayerId(target)
+                if (id == keep) throw ConduitError.FailedPrecondition("Only the owner can do that.")
+                Conversations.forgetPlayer(id)
+            }
         }
 
         return if (target == "all") "everyone" else target

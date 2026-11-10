@@ -11,13 +11,14 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
+import top.madkarma.conduit.Conduit
 import top.madkarma.conduit.LOGGER
 import top.madkarma.conduit.game.GameServer
 import top.madkarma.conduit.mcp.CalledAction
 
 private const val ARGUMENTS_LENGTH = 200
 
-/** Sends a message to the asker and every online operator, who decide on approvals. */
+/** Sends a message to the asker and everyone online who decides on approvals. */
 internal fun MinecraftServer.tellAudience(asker: Asker, message: Component) {
     audience(asker).forEach { it.sendSystemMessage(message) }
 }
@@ -42,7 +43,12 @@ internal fun MinecraftServer.remindAudience(asker: Asker, message: Component) {
 }
 
 private fun MinecraftServer.audience(asker: Asker): List<ServerPlayer> =
-    playerList.players.filter { it.uuid == asker.uuid || playerList.isOp(it.nameAndId()) }
+    playerList.players.filter { it.uuid == asker.uuid || decidesApprovals(it) }
+
+/** Operators and the owner decide on the approvals of every request. */
+internal fun MinecraftServer.decidesApprovals(player: ServerPlayer): Boolean =
+    playerList.isOp(player.nameAndId()) ||
+        Conduit.config?.access?.isOwner(player.gameProfile.name, player.stringUUID) == true
 
 /** The approval prompt, with `[Approve]`, `[Approve all]` and `[Deny]` buttons with the nonce. */
 internal fun prompt(

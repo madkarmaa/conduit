@@ -38,9 +38,14 @@ object Conversations {
     /** Starts fresh conversations for a player, in both modes. */
     fun forgetPlayer(uuid: UUID) = forget(listOf(uuid.toString(), chatKey(uuid)))
 
+    /** Starts fresh conversations for everyone, except the kept player's. */
     @Synchronized
-    fun forgetAll() {
-        save(load().let { it.copy(base = it.base + 1) })
+    fun forgetAll(keep: UUID? = null) {
+        val stored = load()
+        // Raising the base moves everyone, so the kept keys go one lower to stay where they are.
+        val kept = keep?.let { listOf(it.toString(), chatKey(it)) }.orEmpty()
+        val lowered = kept.associateWith { stored.keys.getOrDefault(it, 0) - 1 }
+        save(stored.copy(base = stored.base + 1, keys = stored.keys + lowered))
     }
 
     @Synchronized
