@@ -16,6 +16,7 @@
         "MobMixin",
         "PlayerAdvancementsMixin",
         "ResultSlotMixin",
+        "SavedDataStorageAccessor",
         "ServerCommonPacketListenerImplMixin",
         "ServerExplosionMixin",
         "ServerLevelMixin",

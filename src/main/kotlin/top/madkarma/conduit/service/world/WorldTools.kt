@@ -15,7 +15,11 @@ val WORLD_INFO =
                 "and noon is 6000. game_rules lists the game rules. height returns the y of " +
                 "the first free block above a column, or above each column in points. Under " +
                 "a ceiling, such as in the Nether, it lists the floors to stand on. chunk " +
-                "tells whether a column's chunk is loaded or forced, with entity counts.",
+                "tells whether a column's chunk is loaded or forced, with entity counts. saved_data " +
+                "lists the ids of the world's saved data, and with id reads one, such as " +
+                "minecraft:scoreboard. Mods also keep data there that blocks, entities and " +
+                "players do not hold, such as names they give to places. With dimension, it " +
+                "reads that dimension's own saved data.",
         input =
             input {
                 optional("dimension", DIMENSION)
@@ -38,6 +42,14 @@ val WORLD_INFO =
                         minItems = 1,
                         maxItems = MAX_HEIGHT_POINTS,
                     ),
+                )
+                optional(
+                    "id",
+                    stringSchema("Saved data id for saved_data, such as \"minecraft:scoreboard\"."),
+                )
+                optional(
+                    "path",
+                    stringSchema("NBT path into the saved data, such as \"Objectives[0]\"."),
                 )
                 optional(
                     "heightmap",
@@ -67,6 +79,7 @@ val WORLD_INFO =
                         val chunkZ = Math.floorDiv(input.int("z"), 16)
                         json(server.describeChunk(input.stringOrNull("dimension"), chunkX, chunkZ))
                     },
+                "saved_data" to readAction { server, input -> server.savedDataReply(input) },
             ),
     )
 
